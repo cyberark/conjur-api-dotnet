@@ -1,9 +1,10 @@
 ﻿namespace Conjur
 {
     using System;
-    using System.IO;
     using System.Net;
     using System.Net.Security;
+    using System.Runtime.Serialization;
+    using System.Runtime.Serialization.Json;
     using System.Security.Cryptography.X509Certificates;
     using System.Text.RegularExpressions;
 
@@ -11,6 +12,7 @@
     {
         private ServicePoint sp;
         private Uri applianceUri;
+        private string account;
 
         public Client(string applianceUri)
         {
@@ -25,11 +27,19 @@
             }
         }
 
-        public string Info()
+        public string GetAccountName()
+        {
+            if (this.account == null)
+                this.account = Info().account;
+            return this.account;
+        }
+
+        private ServerInfo Info()
         {
             this.ValidateBaseUri();
-            var wr = WebRequest.CreateHttp(this.applianceUri + "info");
-            return new StreamReader(wr.GetResponse().GetResponseStream()).ReadToEnd();
+            var wr = WebRequest.Create(this.applianceUri + "info");
+            var serializer = new DataContractJsonSerializer(typeof(ServerInfo));
+            return (ServerInfo)serializer.ReadObject(wr.GetResponse().GetResponseStream());
         }
 
         private static Uri NormalizeBaseUri(string uri)
@@ -83,7 +93,7 @@
                 ServicePointManager.ServerCertificateValidationCallback = 
                     new RemoteCertificateValidationCallback(ValidateCertificate);
 
-                var wr = WebRequest.CreateHttp(this.applianceUri + "info");
+                var wr = WebRequest.Create(this.applianceUri + "info");
                 wr.Method = "HEAD";
                 try
                 {
@@ -93,18 +103,27 @@
                 {
                     // forgotten /api at the end of the Uri? Try again.
                     this.applianceUri = new Uri(this.applianceUri + "api/");
-                    wr = WebRequest.CreateHttp(this.applianceUri + "info");
+                    wr = WebRequest.Create(this.applianceUri + "info");
                     wr.Method = "HEAD";
                     wr.GetResponse();
                 }
 
                 // so it doesn't get garbage collected
-                this.sp = wr.ServicePoint;
+                HttpWebRequest hwr = wr as HttpWebRequest;
+                if (hwr != null)
+                    this.sp = hwr.ServicePoint;
             }
             finally
             {
                 ServicePointManager.ServerCertificateValidationCallback = oldCallback;
             }
+        }
+
+        [DataContract]
+        internal class ServerInfo
+        {
+            [DataMember]
+            internal string account;
         }
     }
 }

@@ -3,10 +3,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{17D848FC-457D-49F0-B9A3-D87920AA8A8A}</ProjectGuid>
+    <ProjectGuid>{334DEF97-4AA5-4B7B-B388-03362E0356CE}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Conjur</RootNamespace>
-    <AssemblyName>conjur-api</AssemblyName>
+    <RootNamespace>ConjurTest</RootNamespace>
+    <AssemblyName>ConjurTest</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -29,12 +29,22 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.Xml" />
+    <Reference Include="nunit.framework">
+      <HintPath>..\packages\NUnit.3.0.1\lib\net45\nunit.framework.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Client.cs" />
+    <Compile Include="ClientTest.cs" />
+    <Compile Include="WebMocker.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\conjur-api\conjur-api.csproj">
+      <Project>{17D848FC-457D-49F0-B9A3-D87920AA8A8A}</Project>
+      <Name>conjur-api</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
 </Project>
