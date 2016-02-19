@@ -4,6 +4,7 @@
 // <summary>
 //     Base Conjur client class implementation.
 // </summary>
+
 namespace Conjur
 {
     using System;
@@ -13,6 +14,7 @@ namespace Conjur
     using System.Runtime.Serialization;
     using System.Runtime.Serialization.Json;
     using System.Security.Cryptography.X509Certificates;
+    using System.Text;
     using System.Text.RegularExpressions;
 
     /// <summary>
@@ -47,13 +49,30 @@ namespace Conjur
 
         /// <summary>
         /// Gets or sets the authenticator used to establish Conjur identity.
-        /// This gets automatically set by <see cref="Client.LogIn()"/>.
+        /// This gets automatically set by setting <see cref="Client.Credential"/>.
         /// </summary>
         /// <value>The authenticator.</value>
         public IAuthenticator Authenticator
         {
             get;
             set;
+        }
+
+        /// <summary>
+        /// Sets the username and API key to authenticate.
+        /// This initializes <see cref="Client.Authenticator"/>.
+        /// Use <see cref="Client.LogIn"/> to use a password.
+        /// </summary>
+        /// <value>The credential of user name and API key, where user name is
+        /// for example "bob" or "host/jenkins".</value>
+        public NetworkCredential Credential
+        {
+            set
+            {
+                this.Authenticator = new ApiKeyAuthenticator(
+                    new Uri(this.ApplianceUri + "authn"), 
+                    value);
+            }
         }
 
         /// <summary>
@@ -68,7 +87,8 @@ namespace Conjur
         }
 
         /// <summary>
-        /// Logs in using a password.
+        /// Logs in using a password. Sets <see cref="Authenticator"/>
+        /// <seealso cref="Credential"/>
         /// </summary>
         /// <returns>The API key.</returns>
         /// <param name="userName">User name to log in as (for example "bob"
@@ -76,15 +96,47 @@ namespace Conjur
         /// <param name="password">Password of the user.</param>
         public string LogIn(string userName, string password)
         {
+            return this.LogIn(new NetworkCredential(userName, password));
+        }
+
+        /// <summary>
+        /// Logs in using a password. Sets <see cref="Authenticator"/>
+        /// <seealso cref="Credential"/>
+        /// </summary>
+        /// <returns>The API key.</returns>
+        /// <param name="credential">The credential of user name and password, 
+        /// where user name is for example "bob" or "host/jenkins".</param>
+        public string LogIn(NetworkCredential credential)
+        {
             this.ValidateBaseUri();
             var wr = this.Request("authn/users/login");
             wr.PreAuthenticate = true;
-            wr.Credentials = new NetworkCredential(userName, password);
+            wr.Credentials = credential;
             var apiKey = Read(wr);
 
-            this.Authenticator = new ApiKeyAuthenticator(
-                new Uri(this.ApplianceUri + "authn"), userName, apiKey);
+            this.Credential = new NetworkCredential(credential.UserName, apiKey);
             return apiKey;
+        }
+
+        /// <summary>
+        /// Create a WebRequest for the specified path.
+        /// </summary>
+        /// <param name="path">Path, NOT including the leading slash.</param>
+        /// <returns>A WebRequest for the specified appliance path.</returns>
+        public WebRequest Request(string path)
+        {
+            return WebRequest.Create(this.applianceUri + path);
+        }
+
+        /// <summary>
+        /// Create an authenticated WebRequest for the specified path.
+        /// </summary>
+        /// <param name="path">Path, NOT including the leading slash.</param>
+        /// <returns>A WebRequest for the specified appliance path, with 
+        /// authorization header set using <see cref="Authenticator"/>.</returns>
+        public WebRequest AuthenticatedRequest(string path)
+        {
+            return this.ApplyAuthentication(this.Request(path));
         }
 
         /// <summary>
@@ -141,14 +193,12 @@ namespace Conjur
             return new StreamReader(request.GetResponse().GetResponseStream()).ReadToEnd();
         }
 
-        /// <summary>
-        /// Create a WebRequest for the specified path.
-        /// </summary>
-        /// <param name="path">Path, NOT including the leading slash.</param>
-        /// <returns>A WebRequest for the specified appliance path.</returns>
-        private WebRequest Request(string path)
+        private WebRequest ApplyAuthentication(WebRequest webRequest)
         {
-            return WebRequest.Create(this.applianceUri + path);
+            var token = Convert.ToBase64String(
+                            Encoding.UTF8.GetBytes(this.Authenticator.GetToken()));
+            webRequest.Headers["Authorization"] = "Token token=\"" + token + "\"";
+            return webRequest;
         }
 
         /// <summary>

@@ -36,6 +36,12 @@ namespace ConjurTest
             private Uri uri;
             MemoryStream requestStream;
 
+            public override WebHeaderCollection Headers
+            {
+                get;
+                set;
+            }
+
             public override Uri RequestUri
             {
                 get
@@ -85,6 +91,7 @@ namespace ConjurTest
             {
                 this.uri = uri;
                 this.content = content;
+                Headers = new WebHeaderCollection();
             }
 
             public override WebResponse GetResponse()

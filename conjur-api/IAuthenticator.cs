@@ -2,23 +2,21 @@
 //     Copyright (c) 2016 Conjur Inc. All rights reserved.
 // </copyright>
 // <summary>
-// Interface for authenticators. 
-// Authenticators apply authentication to a web request.
+// Interface for authenticators.
 // </summary>
 namespace Conjur
 {
-    using System.Net;
-
     /// <summary>
-    /// Interface for authenticators. 
-    /// Authenticators apply authentication to a web request.
+    /// Interface for authenticators, which are used to generate Conjur
+    /// authentication tokens.
     /// </summary>
     public interface IAuthenticator
     {
         /// <summary>
-        /// Apply the authentication to a WebRequest.
+        /// Obtain a Conjur authentication token.
         /// </summary>
-        /// <param name="webRequest">Web request to apply the authentication to.</param>
-        void Apply(HttpWebRequest webRequest);
+        /// <returns>Conjur authentication token in verbatim form.
+        /// It needs to be base64-encoded to be used in a web request.</returns>
+        string GetToken();
     }
 }

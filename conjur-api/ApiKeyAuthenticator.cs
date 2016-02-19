@@ -10,7 +10,6 @@ namespace Conjur
     using System;
     using System.IO;
     using System.Net;
-    using System.Text;
 
     /// <summary>
     /// API key authenticator.
@@ -18,42 +17,31 @@ namespace Conjur
     public class ApiKeyAuthenticator : IAuthenticator
     {
         private readonly Uri uri;
-        private readonly string apiKey;
+        private readonly NetworkCredential credential;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Conjur.ApiKeyAuthenticator"/> class.
         /// </summary>
         /// <param name="authnUri">Authentication base URI, for example 
         /// "https://example.com/api/authn".</param>
-        /// <param name="userName">Authn user name, such as "bob" or "host/jenkins".</param>
-        /// <param name="apiKey">API key of that user.</param>
-        public ApiKeyAuthenticator(Uri authnUri, string userName, string apiKey)
+        /// <param name="credential">User name and API key to use, where 
+        /// username is for example "bob" or "host/jenkins".</param>
+        public ApiKeyAuthenticator(Uri authnUri, NetworkCredential credential)
         {
-            this.uri = new Uri(authnUri + "/users/" + WebUtility.UrlEncode(userName)
+            this.credential = credential;
+            this.uri = new Uri(authnUri + "/users/"
+                + WebUtility.UrlEncode(credential.UserName)
                 + "/authenticate");
-            this.apiKey = apiKey;
         }
 
         #region IAuthenticator implementation
 
         /// <summary>
-        /// Apply the authentication to a WebRequest.
+        /// Obtain a Conjur authentication token.
         /// </summary>
-        /// <param name="webRequest">Web request to apply the authentication to.</param>
-        public void Apply(System.Net.HttpWebRequest webRequest)
-        {
-            webRequest.Headers["Authorization"] = "Token token=\""
-            + this.Base64Token() + "\"";
-        }
-
-        #endregion
-
-        private string Base64Token()
-        {
-            return Convert.ToBase64String(Encoding.UTF8.GetBytes(this.Token()));
-        }
-
-        private string Token()
+        /// <returns>Conjur authentication token in verbatim form.
+        /// It needs to be base64-encoded to be used in a web request.</returns>
+        public string GetToken()
         {
             // TODO: reuse token until it expires
             var request = WebRequest.Create(this.uri);
@@ -62,11 +50,13 @@ namespace Conjur
             var stream = request.GetRequestStream();
             using (var writer = new StreamWriter(stream))
             {
-                writer.Write(this.apiKey);
+                writer.Write(this.credential.Password);
             }
 
             return new StreamReader(request.GetResponse().GetResponseStream())
                 .ReadToEnd();
         }
+
+        #endregion
     }
 }

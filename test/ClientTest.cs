@@ -1,7 +1,6 @@
 ﻿using NUnit.Framework;
 using System;
 using System.Net;
-using System.Text;
 using Conjur;
 
 namespace ConjurTest
@@ -39,6 +38,9 @@ namespace ConjurTest
             var apiKey = client.LogIn("admin", "secret");
             Assert.AreEqual("api-key", apiKey);
             VerifyAuthenticator(client.Authenticator);
+            var testRequest = client.AuthenticatedRequest("info");
+            Assert.AreEqual("Token token=\"dG9rZW4=\"", // "token" base64ed
+                testRequest.Headers["Authorization"]);
         }
 
         private void VerifyAuthenticator(IAuthenticator authenticator)
@@ -50,11 +52,7 @@ namespace ConjurTest
                 Assert.AreEqual("POST", wr.Method);
                 Assert.AreEqual("api-key", req.Body);
             };
-            var request = WebRequest.CreateHttp("https://example.com/");
-            authenticator.Apply(request);
-            var token = Convert.ToBase64String(Encoding.UTF8.GetBytes("token"));
-            Assert.AreEqual("Token token=\"" + token + "\"", 
-                request.Headers["Authorization"]);
+            Assert.AreEqual("token", authenticator.GetToken());
         }
     }
 }
