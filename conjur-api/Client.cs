@@ -1,4 +1,10 @@
-﻿namespace Conjur
+﻿// <copyright file="Client.cs" company="Conjur Inc.">
+//     Copyright (c) 2016 Conjur Inc. All rights reserved.
+// </copyright>
+// <summary>
+//     Base Conjur client class implementation.
+// </summary>
+namespace Conjur
 {
     using System;
     using System.IO;
@@ -9,17 +15,28 @@
     using System.Security.Cryptography.X509Certificates;
     using System.Text.RegularExpressions;
 
+    /// <summary>
+    /// Conjur API client.
+    /// </summary>
     public class Client
     {
         private ServicePoint sp;
         private Uri applianceUri;
         private string account;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Conjur.Client"/> class.
+        /// </summary>
+        /// <param name="applianceUri">Appliance URI.</param>
         public Client(string applianceUri)
         {
             this.applianceUri = NormalizeBaseUri(applianceUri);
         }
 
+        /// <summary>
+        /// Gets the appliance URI.
+        /// </summary>
+        /// <value>The appliance URI.</value>
         public Uri ApplianceUri
         {
             get
@@ -28,10 +45,14 @@
             }
         }
 
+        /// <summary>
+        /// Gets the name of the Conjur organization account.
+        /// </summary>
+        /// <returns>The account name.</returns>
         public string GetAccountName()
         {
             if (this.account == null)
-                this.account = Info().account;
+                this.account = this.Info().account;
             return this.account;
         }
 
@@ -39,37 +60,27 @@
         /// Logs in using a password.
         /// </summary>
         /// <returns>The API key.</returns>
-        /// <param name="userName">User name.</param>
-        /// <param name="password">Password.</param>
+        /// <param name="userName">User name to log in as (for example "bob"
+        /// or "host/example.com".</param>
+        /// <param name="password">Password of the user.</param>
         public string LogIn(string userName, string password)
         {
             this.ValidateBaseUri();
-            var wr = Request("authn/users/login");
+            var wr = this.Request("authn/users/login");
             wr.PreAuthenticate = true;
             wr.Credentials = new NetworkCredential(userName, password);
             var apiKey = Read(wr);
+
             // TODO: actually do something with the api key
             return apiKey;
         }
 
-        private WebRequest Request(string path)
-        {
-            return WebRequest.Create(this.applianceUri + path);
-        }
-
-        static private string Read(WebRequest request)
-        {
-            return new StreamReader(request.GetResponse().GetResponseStream()).ReadToEnd();
-        }
-
-        private ServerInfo Info()
-        {
-            this.ValidateBaseUri();
-            var wr = Request("info");
-            var serializer = new DataContractJsonSerializer(typeof(ServerInfo));
-            return (ServerInfo)serializer.ReadObject(wr.GetResponse().GetResponseStream());
-        }
-
+        /// <summary>
+        /// Normalizes the base URI, removing double slashes and adding a trailing
+        /// slash, as necessary.
+        /// </summary>
+        /// <returns>The normalized base URI.</returns>
+        /// <param name="uri">Base appliance URI to normalize.</param>
         private static Uri NormalizeBaseUri(string uri)
         {
             // appliance's nginx doesn't like double slashes,
@@ -82,6 +93,15 @@
             return new Uri(Regex.Replace(normalizedUri, "(?<!/)\\z", "/"));
         }
 
+        /// <summary>
+        /// Validates the Conjur appliance certificate. 
+        /// <see cref="RemoteCertificateValidationCallback"/> 
+        /// </summary>
+        /// <returns><c>true</c>, if certificate was valid, <c>false</c> otherwise.</returns>
+        /// <param name="sender">Sender of the validation request.</param>
+        /// <param name="certificate">Certificate to be validated.</param>
+        /// <param name="chain">Certificate chain, as resolved by the system.</param>
+        /// <param name="sslPolicyErrors">SSL policy errors from the system.</param>
         private static bool ValidateCertificate(
             object sender, 
             X509Certificate certificate, 
@@ -99,6 +119,43 @@
             }
         }
 
+        /// <summary>
+        /// Read the response of a WebRequest.
+        /// </summary>
+        /// <returns>The contents of the response.</returns>
+        /// <param name="request">Request to read from.</param>
+        private static string Read(WebRequest request)
+        {
+            return new StreamReader(request.GetResponse().GetResponseStream()).ReadToEnd();
+        }
+
+        /// <summary>
+        /// Create a WebRequest for the specified path.
+        /// </summary>
+        /// <param name="path">Path, NOT including the leading slash.</param>
+        /// <returns>A WebRequest for the specified appliance path.</returns>
+        private WebRequest Request(string path)
+        {
+            return WebRequest.Create(this.applianceUri + path);
+        }
+
+        /// <summary>
+        /// Get the server info.
+        /// </summary>
+        /// <returns>Server information.</returns>
+        private ServerInfo Info()
+        {
+            this.ValidateBaseUri();
+            var wr = this.Request("info");
+            var serializer = new DataContractJsonSerializer(typeof(ServerInfo));
+            return (ServerInfo)serializer.ReadObject(wr.GetResponse().GetResponseStream());
+        }
+
+        /// <summary>
+        /// Validates the appliance base URI.
+        /// Tries to connect to /info; if not successful, try again adding an /api prefix.
+        /// Also sets up certificate validation.
+        /// </summary>
         private void ValidateBaseUri()
         {
             /*
@@ -121,7 +178,7 @@
                 ServicePointManager.ServerCertificateValidationCallback = 
                     new RemoteCertificateValidationCallback(ValidateCertificate);
 
-                var wr = Request("info");
+                var wr = this.Request("info");
                 wr.Method = "HEAD";
                 try
                 {
@@ -131,7 +188,7 @@
                 {
                     // forgotten /api at the end of the Uri? Try again.
                     this.applianceUri = new Uri(this.applianceUri + "api/");
-                    wr = Request("info");
+                    wr = this.Request("info");
                     wr.Method = "HEAD";
                     wr.GetResponse();
                 }
