@@ -46,6 +46,17 @@ namespace Conjur
         }
 
         /// <summary>
+        /// Gets or sets the authenticator used to establish Conjur identity.
+        /// This gets automatically set by <see cref="Client.LogIn()"/>.
+        /// </summary>
+        /// <value>The authenticator.</value>
+        public IAuthenticator Authenticator
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets the name of the Conjur organization account.
         /// </summary>
         /// <returns>The account name.</returns>
@@ -71,7 +82,8 @@ namespace Conjur
             wr.Credentials = new NetworkCredential(userName, password);
             var apiKey = Read(wr);
 
-            // TODO: actually do something with the api key
+            this.Authenticator = new ApiKeyAuthenticator(
+                new Uri(this.ApplianceUri + "authn"), userName, apiKey);
             return apiKey;
         }
 

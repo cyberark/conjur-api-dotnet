@@ -34,6 +34,7 @@ namespace ConjurTest
             private string method = "GET";
             private ICredentials credentials;
             private Uri uri;
+            MemoryStream requestStream;
 
             public override Uri RequestUri
             {
@@ -91,6 +92,19 @@ namespace ConjurTest
                 if (Verifier != null)
                     Verifier(this);
                 return new MockResponse(this.content);
+            }
+
+            public override Stream GetRequestStream()
+            {
+                return requestStream = new MemoryStream();
+            }
+
+            public string Body
+            {
+                get
+                {
+                    return Encoding.UTF8.GetString(requestStream.ToArray());
+                }
             }
         }
 
