@@ -1,6 +1,7 @@
 ﻿namespace Conjur
 {
     using System;
+    using System.IO;
     using System.Net;
     using System.Net.Security;
     using System.Runtime.Serialization;
@@ -34,10 +35,37 @@
             return this.account;
         }
 
+        /// <summary>
+        /// Logs in using a password.
+        /// </summary>
+        /// <returns>The API key.</returns>
+        /// <param name="userName">User name.</param>
+        /// <param name="password">Password.</param>
+        public string LogIn(string userName, string password)
+        {
+            this.ValidateBaseUri();
+            var wr = Request("authn/users/login");
+            wr.PreAuthenticate = true;
+            wr.Credentials = new NetworkCredential(userName, password);
+            var apiKey = Read(wr);
+            // TODO: actually do something with the api key
+            return apiKey;
+        }
+
+        private WebRequest Request(string path)
+        {
+            return WebRequest.Create(this.applianceUri + path);
+        }
+
+        static private string Read(WebRequest request)
+        {
+            return new StreamReader(request.GetResponse().GetResponseStream()).ReadToEnd();
+        }
+
         private ServerInfo Info()
         {
             this.ValidateBaseUri();
-            var wr = WebRequest.Create(this.applianceUri + "info");
+            var wr = Request("info");
             var serializer = new DataContractJsonSerializer(typeof(ServerInfo));
             return (ServerInfo)serializer.ReadObject(wr.GetResponse().GetResponseStream());
         }
@@ -93,7 +121,7 @@
                 ServicePointManager.ServerCertificateValidationCallback = 
                     new RemoteCertificateValidationCallback(ValidateCertificate);
 
-                var wr = WebRequest.Create(this.applianceUri + "info");
+                var wr = Request("info");
                 wr.Method = "HEAD";
                 try
                 {
@@ -103,7 +131,7 @@
                 {
                     // forgotten /api at the end of the Uri? Try again.
                     this.applianceUri = new Uri(this.applianceUri + "api/");
-                    wr = WebRequest.Create(this.applianceUri + "info");
+                    wr = Request("info");
                     wr.Method = "HEAD";
                     wr.GetResponse();
                 }

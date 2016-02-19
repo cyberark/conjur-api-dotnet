@@ -8,22 +8,22 @@ namespace ConjurTest
 {
     public class WebMocker: IWebRequestCreate
     {
-        private IDictionary<Uri, string> responses = new Dictionary<Uri, string>();
+        private IDictionary<Uri, MockRequest> responses = new Dictionary<Uri, MockRequest>();
 
         public WebMocker()
         {
         }
 
-        public void Mock(Uri uri, string content)
+        public MockRequest Mock(Uri uri, string content)
         {
-            responses[uri] = content;
+            return responses[uri] = new MockRequest(uri, content);
         }
 
         #region IWebRequestCreate implementation
 
         public WebRequest Create(Uri uri)
         {
-            return new MockRequest(responses[uri]);
+            return responses[uri];
         }
 
         #endregion
@@ -31,21 +31,65 @@ namespace ConjurTest
         public class MockRequest : WebRequest
         {
             private readonly string content;
+            private string method = "GET";
+            private ICredentials credentials;
+            private Uri uri;
 
-            override public string Method
+            public override Uri RequestUri
             {
+                get
+                {
+                    return uri;
+                }
+            }
+
+            public override string Method
+            {
+                get
+                {
+                    return this.method;
+                }
+                set
+                {
+                    this.method = value;
+                }
+            }
+
+            public override bool PreAuthenticate
+            {
+                get
+                {
+                    return base.PreAuthenticate;
+                }
                 set
                 {
                 }
             }
 
-            public MockRequest(string content)
+            public override ICredentials Credentials
             {
+                get
+                {
+                    return credentials;
+                }
+                set
+                {
+                    credentials = value;
+                }
+            }
+
+            public Action<WebRequest> Verifier;
+
+            public MockRequest(Uri uri, string content)
+            {
+                this.uri = uri;
                 this.content = content;
             }
 
             public override WebResponse GetResponse()
             {
+                if (Verifier != null)
+                    Verifier(this);
                 return new MockResponse(this.content);
             }
         }
