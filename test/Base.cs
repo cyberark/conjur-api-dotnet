@@ -13,6 +13,7 @@ namespace Conjur.Test
         static Base()
         {
             WebRequest.RegisterPrefix("test", Mocker);
+            Mocker.Mock(new Uri("test:///info"), "{ \"account\": \"test-account\" }");
         }
 
         protected Base()

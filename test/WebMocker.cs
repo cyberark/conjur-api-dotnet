@@ -3,6 +3,7 @@ using System.Net;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Reflection;
 
 namespace Conjur.Test
 {
@@ -24,6 +25,8 @@ namespace Conjur.Test
 
         public WebRequest Create(Uri uri)
         {
+            if (!responses.ContainsKey(uri))
+                throw new KeyNotFoundException(uri.ToString());
             return responses[uri];
         }
 
@@ -130,6 +133,68 @@ namespace Conjur.Test
                 return new MemoryStream(Encoding.UTF8.GetBytes(content));
             }
         }
+
+        public class MockResponseException : WebException
+        {
+            public HttpStatusCode Code;
+
+            public MockResponseException(HttpStatusCode code, string message)
+                : base(Message(code, message), null, 
+                       WebExceptionStatus.ProtocolError, Response(code, message))
+            {
+                this.Code = code;
+            }
+
+            new static string Message(HttpStatusCode code, string message)
+            {
+                return "The remote server returned an error: (" + (int)code + ") "
+                + message;
+            }
+
+            new private static HttpWebResponse Response(HttpStatusCode code, string description)
+            {
+                // HACK: there is no public way of creating an HttpWebResponse, but
+                // we use it to get to the status code. So synthesize one using
+                // reflection that's just good enough.
+                object[] cargs =
+                    { 
+                        null, // uri
+                        null, // method
+                        new WebConnectionData()
+                            .Set("StatusCode", code)
+                            .Set("StatusDescription", description)
+                            .Unwrap(),
+                        null // CookieContainer
+                    };
+                return Activator.CreateInstance(typeof(HttpWebResponse), 
+                    BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, cargs, null) as HttpWebResponse;
+            }
+
+            private class WebConnectionData
+            {
+                private readonly object data;
+                private readonly Type type;
+
+                public WebConnectionData()
+                {
+                    this.data = Activator.CreateInstance("System", "System.Net.WebConnectionData").Unwrap();
+                    this.type = this.data.GetType();
+                    Set("Headers", new WebHeaderCollection());
+                }
+
+                public WebConnectionData Set(string field, object value)
+                {
+                    type.GetField(field).SetValue(data, value);
+                    return this;
+                }
+
+                public object Unwrap()
+                {
+                    return data;
+                }
+            }
+
+        }
     }
 }
-

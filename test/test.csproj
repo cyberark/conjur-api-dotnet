@@ -39,6 +39,7 @@
     <Compile Include="VariablesTest.cs" />
     <Compile Include="Base.cs" />
     <Compile Include="MockAuthenticator.cs" />
+    <Compile Include="HostFactoryTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

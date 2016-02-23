@@ -10,7 +10,6 @@ namespace Conjur.Test
         [Test]
         public void TestInfo()
         {
-            Mocker.Mock(new Uri("test:///info"), "{ \"account\": \"test-account\" }");
             Assert.AreEqual("test-account", Client.GetAccountName());
         }
 
