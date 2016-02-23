@@ -39,3 +39,4 @@ Thumbs.db
 #dotCover
 *.dotCover
 StyleCop.Cache
+TestResult.xml
