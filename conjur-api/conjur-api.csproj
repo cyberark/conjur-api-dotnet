@@ -37,6 +37,8 @@
     <Compile Include="Client.cs" />
     <Compile Include="IAuthenticator.cs" />
     <Compile Include="ApiKeyAuthenticator.cs" />
+    <Compile Include="Variable.cs" />
+    <Compile Include="Extensions.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

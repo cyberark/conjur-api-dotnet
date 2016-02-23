@@ -3,31 +3,21 @@ using System;
 using System.Net;
 using Conjur;
 
-namespace ConjurTest
+namespace Conjur.Test
 {
-    [TestFixture]
-    public class ClientTest
+    public class ClientTest : Base
     {
-        private readonly Conjur.Client client;
-        private readonly WebMocker mocker = new WebMocker();
-
-        public ClientTest()
-        {
-            WebRequest.RegisterPrefix("test", mocker);
-            client = new Conjur.Client("test:///");
-        }
-
         [Test]
         public void TestInfo()
         {
-            mocker.Mock(new Uri("test:///info"), "{ \"account\": \"test-account\" }");
-            Assert.AreEqual("test-account", client.GetAccountName());
+            Mocker.Mock(new Uri("test:///info"), "{ \"account\": \"test-account\" }");
+            Assert.AreEqual("test-account", Client.GetAccountName());
         }
 
         [Test]
         public void TestLogin()
         {
-            mocker.Mock(new Uri("test:///authn/users/login"), "api-key").Verifier = 
+            Mocker.Mock(new Uri("test:///authn/users/login"), "api-key").Verifier = 
                 (WebRequest wr) =>
             {
                 var cred = wr.Credentials.GetCredential(wr.RequestUri, "basic");
@@ -35,17 +25,17 @@ namespace ConjurTest
                 Assert.AreEqual("secret", cred.Password);
             };
 
-            var apiKey = client.LogIn("admin", "secret");
+            var apiKey = Client.LogIn("admin", "secret");
             Assert.AreEqual("api-key", apiKey);
-            VerifyAuthenticator(client.Authenticator);
-            var testRequest = client.AuthenticatedRequest("info");
+            VerifyAuthenticator(Client.Authenticator);
+            var testRequest = Client.AuthenticatedRequest("info");
             Assert.AreEqual("Token token=\"dG9rZW4=\"", // "token" base64ed
                 testRequest.Headers["Authorization"]);
         }
 
         private void VerifyAuthenticator(IAuthenticator authenticator)
         {
-            mocker.Mock(new Uri("test:///authn/users/admin/authenticate"), "token")
+            Mocker.Mock(new Uri("test:///authn/users/admin/authenticate"), "token")
                 .Verifier = (WebRequest wr) =>
             {
                 var req = wr as WebMocker.MockRequest;

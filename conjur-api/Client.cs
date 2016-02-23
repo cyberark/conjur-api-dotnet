@@ -112,7 +112,7 @@ namespace Conjur
             var wr = this.Request("authn/users/login");
             wr.PreAuthenticate = true;
             wr.Credentials = credential;
-            var apiKey = Read(wr);
+            var apiKey = wr.Read();
 
             this.Credential = new NetworkCredential(credential.UserName, apiKey);
             return apiKey;
@@ -181,16 +181,6 @@ namespace Conjur
                 default:
                     return false;
             }
-        }
-
-        /// <summary>
-        /// Read the response of a WebRequest.
-        /// </summary>
-        /// <returns>The contents of the response.</returns>
-        /// <param name="request">Request to read from.</param>
-        private static string Read(WebRequest request)
-        {
-            return new StreamReader(request.GetResponse().GetResponseStream()).ReadToEnd();
         }
 
         private WebRequest ApplyAuthentication(WebRequest webRequest)

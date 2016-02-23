@@ -4,11 +4,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace ConjurTest
+namespace Conjur.Test
 {
     public class WebMocker: IWebRequestCreate
     {
-        private IDictionary<Uri, MockRequest> responses = new Dictionary<Uri, MockRequest>();
+        private readonly IDictionary<Uri, MockRequest> responses = 
+            new Dictionary<Uri, MockRequest>();
 
         public WebMocker()
         {
