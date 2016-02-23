@@ -45,6 +45,18 @@ namespace Conjur
         }
 
         /// <summary>
+        /// Creates an object representing a Conjur resource.
+        /// </summary>
+        /// <param name="client">Conjur client instance.</param>
+        /// <param name="kind">Resource kind.</param>
+        /// <param name="id">Resource identifier.</param>
+        /// <returns>Object representing the specified resource.</returns>
+        public static Resource Resource(this Client client, string kind, string id)
+        {
+            return new Resource(client, kind, id);
+        }
+
+        /// <summary>
         /// Read the response of a WebRequest.
         /// </summary>
         /// <returns>The contents of the response.</returns>

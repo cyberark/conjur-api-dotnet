@@ -14,9 +14,8 @@ namespace Conjur
     /// </summary>
     /// Variable is a named piece of (usually secret) data stored securely on a
     /// Conjur server.
-    public class Variable
+    public class Variable : Resource
     {
-        private readonly Client client;
         private readonly string path;
 
         /// <summary>
@@ -26,8 +25,8 @@ namespace Conjur
         /// <param name="name">The variable name.</param>
         /// <seealso cref="Extensions.Variable"/>
         public Variable(Client client, string name)
+            : base(client, "variable", name)
         {
-            this.client = client;
             this.path = "variables/" + WebUtility.UrlEncode(name);
         }
 
@@ -37,7 +36,7 @@ namespace Conjur
         /// <returns>The value.</returns>
         public string GetValue()
         {
-            return this.client.AuthenticatedRequest(this.path + "/value").Read();
+            return this.Client.AuthenticatedRequest(this.path + "/value").Read();
         }
     }
 }

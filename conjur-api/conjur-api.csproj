@@ -43,6 +43,7 @@
     <Compile Include="JsonSerializer.cs" />
     <Compile Include="HostFactoryToken.cs" />
     <Compile Include="UnauthorizedException.cs" />
+    <Compile Include="Resource.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
