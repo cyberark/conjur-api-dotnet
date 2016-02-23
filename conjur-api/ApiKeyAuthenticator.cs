@@ -53,8 +53,7 @@ namespace Conjur
                 writer.Write(this.credential.Password);
             }
 
-            return new StreamReader(request.GetResponse().GetResponseStream())
-                .ReadToEnd();
+            return request.Read();
         }
 
         #endregion

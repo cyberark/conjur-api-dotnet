@@ -27,7 +27,7 @@ namespace Conjur
         }
 
         /// <summary>
-        /// Creates an object representing a named variable.
+        /// Creates an object representing the named variable.
         /// </summary>
         /// Note the existence of the variable is not verified.
         /// <param name="client">Conjur client to use to connect.</param>

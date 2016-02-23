@@ -70,7 +70,7 @@ namespace Conjur
             set
             {
                 this.Authenticator = new ApiKeyAuthenticator(
-                    new Uri(this.ApplianceUri + "authn"), 
+                    new Uri(this.ValidateBaseUri() + "authn"), 
                     value);
             }
         }
@@ -125,7 +125,7 @@ namespace Conjur
         /// <returns>A WebRequest for the specified appliance path.</returns>
         public WebRequest Request(string path)
         {
-            return WebRequest.Create(this.applianceUri + path);
+            return WebRequest.Create(this.ValidateBaseUri() + path);
         }
 
         /// <summary>
@@ -137,6 +137,62 @@ namespace Conjur
         public WebRequest AuthenticatedRequest(string path)
         {
             return this.ApplyAuthentication(this.Request(path));
+        }
+
+        /// <summary>
+        /// Validates the appliance base URI.
+        /// Tries to connect to /info; if not successful, try again adding an /api prefix.
+        /// Also sets up certificate validation.
+        /// </summary>
+        /// <returns>The validated base appliance URI.</returns>
+        public Uri ValidateBaseUri()
+        {
+            /*
+                HACK: This dance is to make sure the validation callback only applies to our server.
+                There's no way to set per-request validation in .NET < 4.5, but it is my
+                understanding that ServicePoints (which are per-server) store the validators
+                for later usage. Thus we set the default validator, make a request to
+                instantiate a ServicePoint, then stash it in an instance variable so
+                that it doesn't get garbage collected. Finally we restore the original.
+            */
+
+            if (this.sp != null)
+            {
+                return this.applianceUri;
+            }
+
+            var oldCallback = ServicePointManager.ServerCertificateValidationCallback;
+            try
+            {
+                ServicePointManager.ServerCertificateValidationCallback = 
+                    new RemoteCertificateValidationCallback(ValidateCertificate);
+
+                var wr = WebRequest.Create(this.applianceUri + "info");
+                wr.Method = "HEAD";
+                try
+                {
+                    wr.GetResponse();
+                }
+                catch (WebException)
+                {
+                    // forgotten /api at the end of the Uri? Try again.
+                    this.applianceUri = new Uri(this.applianceUri + "api/");
+                    wr = WebRequest.Create(this.applianceUri + "info");
+                    wr.Method = "HEAD";
+                    wr.GetResponse();
+                }
+
+                // so it doesn't get garbage collected
+                HttpWebRequest hwr = wr as HttpWebRequest;
+                if (hwr != null)
+                    this.sp = hwr.ServicePoint;
+
+                return this.applianceUri;
+            }
+            finally
+            {
+                ServicePointManager.ServerCertificateValidationCallback = oldCallback;
+            }
         }
 
         /// <summary>
@@ -185,6 +241,9 @@ namespace Conjur
 
         private WebRequest ApplyAuthentication(WebRequest webRequest)
         {
+            if (this.Authenticator == null)
+                throw new InvalidOperationException("Authentication required.");
+
             var token = Convert.ToBase64String(
                             Encoding.UTF8.GetBytes(this.Authenticator.GetToken()));
             webRequest.Headers["Authorization"] = "Token token=\"" + token + "\"";
@@ -197,63 +256,9 @@ namespace Conjur
         /// <returns>Server information.</returns>
         private ServerInfo Info()
         {
-            this.ValidateBaseUri();
             var wr = this.Request("info");
             var serializer = new DataContractJsonSerializer(typeof(ServerInfo));
             return (ServerInfo)serializer.ReadObject(wr.GetResponse().GetResponseStream());
-        }
-
-        /// <summary>
-        /// Validates the appliance base URI.
-        /// Tries to connect to /info; if not successful, try again adding an /api prefix.
-        /// Also sets up certificate validation.
-        /// </summary>
-        private void ValidateBaseUri()
-        {
-            /*
-                HACK: This dance is to make sure the validation callback only applies to our server.
-                There's no way to set per-request validation in .NET < 4.5, but it is my
-                understanding that ServicePoints (which are per-server) store the validators
-                for later usage. Thus we set the default validator, make a request to
-                instantiate a ServicePoint, then stash it in an instance variable so
-                that it doesn't get garbage collected. Finally we restore the original.
-            */
-
-            if (this.sp != null)
-            {
-                return;
-            }
-                
-            var oldCallback = ServicePointManager.ServerCertificateValidationCallback;
-            try
-            {
-                ServicePointManager.ServerCertificateValidationCallback = 
-                    new RemoteCertificateValidationCallback(ValidateCertificate);
-
-                var wr = this.Request("info");
-                wr.Method = "HEAD";
-                try
-                {
-                    wr.GetResponse();
-                }
-                catch (WebException)
-                {
-                    // forgotten /api at the end of the Uri? Try again.
-                    this.applianceUri = new Uri(this.applianceUri + "api/");
-                    wr = this.Request("info");
-                    wr.Method = "HEAD";
-                    wr.GetResponse();
-                }
-
-                // so it doesn't get garbage collected
-                HttpWebRequest hwr = wr as HttpWebRequest;
-                if (hwr != null)
-                    this.sp = hwr.ServicePoint;
-            }
-            finally
-            {
-                ServicePointManager.ServerCertificateValidationCallback = oldCallback;
-            }
         }
 
         [DataContract]

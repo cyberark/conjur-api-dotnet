@@ -28,9 +28,6 @@ namespace Conjur.Test
             var apiKey = Client.LogIn("admin", "secret");
             Assert.AreEqual("api-key", apiKey);
             VerifyAuthenticator(Client.Authenticator);
-            var testRequest = Client.AuthenticatedRequest("info");
-            Assert.AreEqual("Token token=\"dG9rZW4=\"", // "token" base64ed
-                testRequest.Headers["Authorization"]);
         }
 
         private void VerifyAuthenticator(IAuthenticator authenticator)
@@ -43,6 +40,20 @@ namespace Conjur.Test
                 Assert.AreEqual("api-key", req.Body);
             };
             Assert.AreEqual("token", authenticator.GetToken());
+        }
+
+        [Test]
+        public void TestAuthenticatedRequest()
+        {
+            Mocker.Mock(new Uri("test:///info"), "{ \"account\": \"test-account\" }");
+            Client.Authenticator = new MockAuthenticator();
+            var testRequest = Client.AuthenticatedRequest("info");
+            Assert.AreEqual("Token token=\"dG9rZW4=\"", // "token" base64ed
+                testRequest.Headers["Authorization"]);
+
+            Client.Authenticator = null;
+            Assert.Throws<InvalidOperationException>(() => 
+                Client.AuthenticatedRequest("info"));
         }
     }
 }

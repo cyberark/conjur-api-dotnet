@@ -6,7 +6,7 @@ namespace Conjur.Test
     {
         public string GetToken()
         {
-            return "mock token";
+            return "token";
         }
     }
 }
