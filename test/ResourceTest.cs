@@ -18,14 +18,14 @@ namespace Conjur.Test
 
             var mock = Mocker.Mock(new Uri("test:///authz/test-account/resources/chunky/bacon/" +
                                "?check=true&privilege=fry"), "");
-            Assert.IsTrue(resource.CanI("fry"));
+            Assert.IsTrue(resource.Check("fry"));
 
             mock.Verifier = (WebRequest) =>
             {
                 throw new WebMocker.MockResponseException(
                     HttpStatusCode.Forbidden, "Forbidden");
             };
-            Assert.IsFalse(resource.CanI("fry"));
+            Assert.IsFalse(resource.Check("fry"));
         }
     }
 }

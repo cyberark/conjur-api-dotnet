@@ -53,12 +53,13 @@ namespace Conjur
         }
 
         /// <summary>
-        /// Determines whether the authenticated user has the specified privilege
+        /// Determines whether the authenticated user holds the specified privilege
         /// on this resource.
         /// </summary>
-        /// <returns><c>true</c> if this instance has the specified privilege; otherwise, <c>false</c>.</returns>
+        /// <returns><c>true</c> if the authenticated user holds the specified 
+        /// privilege; otherwise, <c>false</c>.</returns>
         /// <param name="privilege">Privilege to check.</param>
-        public bool CanI(string privilege)
+        public bool Check(string privilege)
         {
             var req = this.Client.AuthenticatedRequest(this.ResourcePath
                           + "/?check=true&privilege=" + WebUtility.UrlEncode(privilege));
