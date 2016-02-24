@@ -31,7 +31,7 @@ namespace Conjur
         }
 
         /// <summary>
-        /// Gets the most recet value of the variable.
+        /// Gets the most recent value of the variable.
         /// </summary>
         /// <returns>The value.</returns>
         public string GetValue()

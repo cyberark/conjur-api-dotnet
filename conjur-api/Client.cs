@@ -11,7 +11,6 @@ namespace Conjur
     using System.Net;
     using System.Net.Security;
     using System.Runtime.Serialization;
-    using System.Runtime.Serialization.Json;
     using System.Security.Cryptography.X509Certificates;
     using System.Text;
     using System.Text.RegularExpressions;
@@ -255,9 +254,7 @@ namespace Conjur
         /// <returns>Server information.</returns>
         private ServerInfo Info()
         {
-            var wr = this.Request("info");
-            var serializer = new DataContractJsonSerializer(typeof(ServerInfo));
-            return JsonSerializer<ServerInfo>.Read(wr);
+            return JsonSerializer<ServerInfo>.Read(this.Request("info"));
         }
 
         [DataContract]
