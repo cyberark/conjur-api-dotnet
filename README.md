@@ -63,7 +63,7 @@ namespace Conjur.doc.DotNetExample
                 Console.WriteLine("{0} has the value: {1}", variableId, conjurVariable.GetValue());
             }
 
-            // Create a host and get the apiKey - we'll need this to Conjurize a host
+            // Create a host and get the apiKey - this is needed to Conjurize a host
             // First create a host object
             //   parameters: client - contains the authentication token and conjur URI
             Host conjurHost = new Host(conjurClient);
