@@ -41,6 +41,8 @@
     <Compile Include="MockAuthenticator.cs" />
     <Compile Include="HostFactoryTest.cs" />
     <Compile Include="ResourceTest.cs" />
+    <Compile Include="CertificateVerificationTest.cs" />
+    <Compile Include="Certificates.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -51,5 +53,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Certificates\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Certificates\SelfSigned.pem" />
+    <EmbeddedResource Include="Certificates\SignedBySelfSigned.pem" />
   </ItemGroup>
 </Project>

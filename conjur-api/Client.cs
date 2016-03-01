@@ -31,6 +31,7 @@ namespace Conjur
         public Client(string applianceUri)
         {
             this.applianceUri = NormalizeBaseUri(applianceUri);
+            this.TrustedCertificates = new X509Certificate2Collection();
         }
 
         /// <summary>
@@ -71,6 +72,16 @@ namespace Conjur
                     new Uri(this.ValidateBaseUri() + "authn"), 
                     value);
             }
+        }
+
+        /// <summary>
+        /// Gets the collection of extra certificates trusted for authenticating the
+        /// Conjur server in addition to the system ones.
+        /// </summary>
+        /// <value>The trusted certificates collection.</value>
+        public X509Certificate2Collection TrustedCertificates
+        {
+            get;
         }
 
         /// <summary>
@@ -163,7 +174,7 @@ namespace Conjur
             try
             {
                 ServicePointManager.ServerCertificateValidationCallback = 
-                    new RemoteCertificateValidationCallback(ValidateCertificate);
+                    new RemoteCertificateValidationCallback(this.ValidateCertificate);
 
                 var wr = WebRequest.Create(this.applianceUri + "info");
                 wr.Method = "HEAD";
@@ -220,7 +231,7 @@ namespace Conjur
         /// <param name="certificate">Certificate to be validated.</param>
         /// <param name="chain">Certificate chain, as resolved by the system.</param>
         /// <param name="sslPolicyErrors">SSL policy errors from the system.</param>
-        private static bool ValidateCertificate(
+        private bool ValidateCertificate(
             object sender, 
             X509Certificate certificate, 
             X509Chain chain, 
@@ -229,7 +240,7 @@ namespace Conjur
             switch (sslPolicyErrors)
             {
                 case SslPolicyErrors.RemoteCertificateChainErrors:
-                    // TODO: do real validation
+                    return chain.VerifyWithExtraRoots(certificate, this.TrustedCertificates);
                 case SslPolicyErrors.None:
                     return true;
                 default:

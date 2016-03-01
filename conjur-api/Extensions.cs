@@ -9,6 +9,7 @@ namespace Conjur
 {
     using System.IO;
     using System.Net;
+    using System.Security.Cryptography.X509Certificates;
 
     /// <summary>
     /// Utility extension methods.
@@ -65,6 +66,38 @@ namespace Conjur
         {
             return new StreamReader(request.GetResponse().GetResponseStream())
                 .ReadToEnd();
+        }
+
+        internal static bool VerifyWithExtraRoots(
+            this X509Chain chain,
+            X509Certificate certificate,
+            X509Certificate2Collection extraRoots)
+        {
+            chain.ChainPolicy.ExtraStore.AddRange(extraRoots);
+            if (chain.Build(new X509Certificate2(certificate)))
+                return true;
+            else
+            {
+                // .NET returns UntrustedRoot status flag if the certificate is not in
+                // the SYSTEM trust store. Check if it's the only problem with the chain.
+                var onlySystemUntrusted = 
+                    chain.ChainStatus.Length == 1 &&
+                    chain.ChainStatus[0].Status == X509ChainStatusFlags.UntrustedRoot;
+
+                // Sanity check that indeed that is the only problem with the root
+                // certificate.
+                var rootCert = chain.ChainElements[chain.ChainElements.Count - 1];
+                var rootOnlySystemUntrusted = 
+                    rootCert.ChainElementStatus.Length == 1 &&
+                    rootCert.ChainElementStatus[0].Status
+                    == X509ChainStatusFlags.UntrustedRoot;
+
+                // Double check it's indeed one of the extra roots we've been given.
+                var rootIsUserTrusted = extraRoots.Contains(rootCert.Certificate);
+
+                return 
+                    onlySystemUntrusted && rootOnlySystemUntrusted && rootIsUserTrusted;
+            }
         }
     }
 }
