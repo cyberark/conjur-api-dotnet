@@ -1,0 +1,95 @@
+﻿using System;
+using System.Net;
+using System.Text;
+using Conjur;
+
+namespace Example
+{
+    class Program
+    {
+        // this example shows how to use the Conjur .NET api to
+        // login, get a secret value, & check a permission
+        // the credentials are passed as arguments.
+        // Credentials are typically a hostId and api_key or
+        // userId and password
+        static void Main(string[] args)
+        {
+            if (args.Length < 4)
+            {
+                Console.WriteLine("Usage: Example <applianceName> <username> <password> <variableId> <hostFactoryToken>");
+                return;
+            }
+            string applianceName = args[0];
+            string username = args[1];
+            string password = args[2];
+            string variableId = args[3];
+            string token = args[4];
+
+            // Instantiate a Conjur Client object.
+            //  parameter: applianceUri - conjur appliance URI (including /api)
+            //  return: Client object - if URI is incorrect errors thrown when used
+            string uri = String.Format("https://{0}/api", applianceName);
+            Client conjurClient = new Client(uri);
+
+            // Login with Conjur credentials like userid and password,
+            // or hostid and api_key, etc
+            //  parameters: username - conjur user or host id for example
+            //              password - conjur user password or host api key for example
+            try
+            {
+                string conjurAuthToken = conjurClient.LogIn(username, password);
+                Console.WriteLine("Logged in as '{0}' to '{1}'", username, applianceName);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Authentication failed. An exception occurred '{0}'", e);
+            }
+    // Check if this user has permission to get the value of variableId
+    // That requires exectue permissions on the variable
+
+    // Instantiate a Variable object
+    //   parameters: client - contains authentication token and conjur URI
+    //               name - the name of the variable
+    Variable conjurVariable = new Variable(conjurClient, variableId);
+
+            // Check if the current user has "execute" privilege required to get
+            // the value of the variable
+            //   parameters: privilege - string name of the priv to check for
+            try
+            {
+                bool isAllowed = conjurVariable.Check("execute");
+                if (isAllowed)
+                {
+                    Console.WriteLine("You do not have permissions to get the value of '{0}'", variableId);
+                }
+                else
+                {
+                    Console.WriteLine("'{0}' has the value: '{1}'", variableId, conjurVariable.GetValue());
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Permission check failed. An exception occurred '{0}'", e);
+            }
+
+            // Use a hostfactory token to create a host
+            // This example assumes the host factory token was created through
+            // the UI or CLI and passed to this application. Read more
+            // about HostFactory on developer.conjur.net
+            HostFactoryToken hfToken = new HostFactoryToken(conjurClient, token);
+
+            // Create a host and get the apiKey 
+            //   parameters: hostName - the name of the new Conjur host identity
+            try
+            {
+                Host host = hfToken.CreateHost("exampleHost");
+                Console.WriteLine("Created host: {0}, apiKey: {1}", host.Id, host.ApiKey);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Failed to create a host. An exception occurred '{0}'", e);
+            }
+            
+        }
+    }
+}

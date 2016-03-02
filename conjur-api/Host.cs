@@ -25,6 +25,16 @@ namespace Conjur
         private NetworkCredential credential;
 
         /// <summary>
+        /// Initializes a new instance of <see cref="Conjur.Host"/> class.
+        /// Currently this is only used by HostFactory from CreateHost
+        /// </summary>
+        public Host()
+        {
+            this.id = "";
+            this.api_key = "";
+        }
+
+        /// <summary>
         /// Gets the identifier.
         /// </summary>
         /// <value>The identifier.</value>
@@ -35,7 +45,18 @@ namespace Conjur
                 return this.id;
             }
         }
-
+   
+        /// <summary>
+        /// Gets the api_key if it was just created.
+        /// </summary>
+        /// <value>The identifier.</value>
+        public string ApiKey
+        {
+            get
+            {
+                return this.api_key;
+            }
+        }
         /// <summary>
         /// Gets the authn username corresponding to the host.
         /// </summary>
