@@ -4,12 +4,13 @@
 // <summary>
 //     Utility extension methods.
 // </summary>
-
 namespace Conjur
 {
+    using System;
     using System.IO;
     using System.Net;
     using System.Security.Cryptography.X509Certificates;
+    using System.Text.RegularExpressions;
 
     /// <summary>
     /// Utility extension methods.
@@ -55,6 +56,24 @@ namespace Conjur
         public static Resource Resource(this Client client, string kind, string id)
         {
             return new Resource(client, kind, id);
+        }
+
+        /// <summary>
+        /// Imports all certificates from a PEM file.
+        /// </summary>
+        /// <param name="collection">Certificate collection.</param>
+        /// <param name="fileName">PEM file path.</param>
+        public static void ImportPem(
+            this X509Certificate2Collection collection,
+            string fileName)
+        {
+            const string HEADER = "-----BEGIN CERTIFICATE-----";
+            const string FOOTER = "-----END CERTIFICATE-----";
+            var re = new Regex(HEADER + "(.*?)" + FOOTER, RegexOptions.Singleline);
+            foreach (Match match in re.Matches(File.ReadAllText(fileName)))
+            {
+                collection.Import(Convert.FromBase64String(match.Groups[1].Value));
+            }
         }
 
         /// <summary>
