@@ -10,6 +10,7 @@ namespace Conjur
     using System;
     using System.IO;
     using System.Net;
+    using System.Threading;
 
     /// <summary>
     /// API key authenticator.
@@ -18,6 +19,13 @@ namespace Conjur
     {
         private readonly Uri uri;
         private readonly NetworkCredential credential;
+
+        // NOTE: since the timer executes on a different
+        // thread we cannot use token == null, but need
+        // the extra boolean
+        private string token;
+        private bool tokenExpired = true;
+        private Timer timer;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Conjur.ApiKeyAuthenticator"/> class.
@@ -32,6 +40,7 @@ namespace Conjur
             this.uri = new Uri(authnUri + "/users/"
                 + WebUtility.UrlEncode(credential.UserName)
                 + "/authenticate");
+            this.timer = new Timer((_) => this.tokenExpired = true);
         }
 
         #region IAuthenticator implementation
@@ -43,19 +52,27 @@ namespace Conjur
         /// It needs to be base64-encoded to be used in a web request.</returns>
         public string GetToken()
         {
-            // TODO: reuse token until it expires
-            var request = WebRequest.Create(this.uri);
-            request.Method = "POST";
-
-            var stream = request.GetRequestStream();
-            using (var writer = new StreamWriter(stream))
+            if (this.tokenExpired)
             {
-                writer.Write(this.credential.Password);
+                var request = WebRequest.Create(this.uri);
+                request.Method = "POST";
+
+                using (var writer = new StreamWriter(request.GetRequestStream()))
+                    writer.Write(this.credential.Password);
+
+                this.token = request.Read();
+                this.StartTokenTimer(new TimeSpan(0, 7, 30));
             }
 
-            return request.Read();
+            return this.token;
         }
 
         #endregion
+
+        internal void StartTokenTimer(TimeSpan timeout)
+        {
+            this.tokenExpired = false;
+            this.timer.Change(timeout, Timeout.InfiniteTimeSpan);
+        }
     }
 }
