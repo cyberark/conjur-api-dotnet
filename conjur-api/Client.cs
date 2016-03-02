@@ -20,9 +20,9 @@ namespace Conjur
     /// </summary>
     public class Client
     {
-        private ServicePoint sp;
         private Uri applianceUri;
         private string account;
+        private bool urlValidated = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Conjur.Client"/> class.
@@ -156,23 +156,9 @@ namespace Conjur
         /// <returns>The validated base appliance URI.</returns>
         public Uri ValidateBaseUri()
         {
-            /*
-                HACK: This dance is to make sure the validation callback only applies to our server.
-                There's no way to set per-request validation in .NET < 4.5, but it is my
-                understanding that ServicePoints (which are per-server) store the validators
-                for later usage. Thus we set the default validator, make a request to
-                instantiate a ServicePoint, then stash it in an instance variable so
-                that it doesn't get garbage collected. Finally we restore the original.
-            */
-
-            if (this.sp != null)
+            if (!urlValidated)
             {
-                return this.applianceUri;
-            }
-
-            var oldCallback = ServicePointManager.ServerCertificateValidationCallback;
-            try
-            {
+                // TODO: figure out how to avoid changing the default for all hosts
                 ServicePointManager.ServerCertificateValidationCallback = 
                     new RemoteCertificateValidationCallback(this.ValidateCertificate);
 
@@ -190,18 +176,10 @@ namespace Conjur
                     wr.Method = "HEAD";
                     wr.GetResponse();
                 }
-
-                // so it doesn't get garbage collected
-                HttpWebRequest hwr = wr as HttpWebRequest;
-                if (hwr != null)
-                    this.sp = hwr.ServicePoint;
-
-                return this.applianceUri;
+                this.urlValidated = true;
             }
-            finally
-            {
-                ServicePointManager.ServerCertificateValidationCallback = oldCallback;
-            }
+
+            return this.applianceUri;
         }
 
         /// <summary>
