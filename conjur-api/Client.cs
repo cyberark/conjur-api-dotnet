@@ -105,7 +105,7 @@ namespace Conjur
         /// <param name="password">Password of the user.</param>
         public string LogIn(string userName, string password)
         {
-            return LogIn(new NetworkCredential(userName, password));
+            return this.LogIn(new NetworkCredential(userName, password));
         }
 
         /// <summary>

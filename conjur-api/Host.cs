@@ -17,22 +17,15 @@ namespace Conjur
     [DataContract]
     public class Host
     {
+        // these data members are assigned by a deserializer
+        #pragma warning disable 169
         [DataMember]
         private string id;
         [DataMember]
         private string api_key;
+        #pragma warning restore 169
 
         private NetworkCredential credential;
-
-        /// <summary>
-        /// Initializes a new instance of <see cref="Conjur.Host"/> class.
-        /// Currently this is only used by HostFactory from CreateHost
-        /// </summary>
-        public Host()
-        {
-            this.id = "";
-            this.api_key = "";
-        }
 
         /// <summary>
         /// Gets the identifier.
@@ -45,11 +38,11 @@ namespace Conjur
                 return this.id;
             }
         }
-   
+
         /// <summary>
-        /// Gets the api_key if it was just created.
+        /// Gets the API key.
         /// </summary>
-        /// <value>The identifier.</value>
+        /// <value>The API key, or null if unknown.</value>
         public string ApiKey
         {
             get
@@ -57,6 +50,7 @@ namespace Conjur
                 return this.api_key;
             }
         }
+
         /// <summary>
         /// Gets the authn username corresponding to the host.
         /// </summary>
@@ -80,11 +74,11 @@ namespace Conjur
             {
                 if (this.credential == null)
                 {
-                    if (this.api_key == null)
+                    if (this.ApiKey == null)
                         throw new InvalidOperationException("Unknown host API key");
                     
                     this.credential = new NetworkCredential(
-                        this.UserName, this.api_key);
+                        this.UserName, this.ApiKey);
                 }
 
                 return this.credential;
