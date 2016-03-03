@@ -31,16 +31,14 @@ Usage: Example  <applianceURL>
                 <password> 
                 <variableId>
                 <hostFactoryToken>
-```
-
-The sample requires the following parameters:
-
+                
     applianceURL: the applianceURL including /api e.g. https://conjurmaster.myorg.com/api
     applianceCertificatePath: the path and name of the Conjur appliance certificate. The easiest way to get the certifiate is to use the Conjur CLI command `conjur init -h conjurmaster.myorg.com -f .conjurrc`. The certificate can be taken from any system you have run the Conjur CLI from.
     username: username of a user in Conjur
     password: password of a user in Conjur
     variableId: the name of an existing variable in Conjur that has a value set and the user has execute permissions for
     hostFactoryToken: a hostfactory token. The easiest way to test is to add a hostfactory to a layer using the Conjur CLI command `conjur hostfactory create` and `conjur hostfactory token create`.
+```
 
 ## Example
 
