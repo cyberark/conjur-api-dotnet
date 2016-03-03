@@ -37,13 +37,13 @@ applianceURL: the applianceURL including /api e.g. https://conjurmaster.myorg.co
 
 applianceCertificatePath: the path and name of the Conjur appliance certificate. The easiest way to get the certifiate is to use the Conjur CLI command `conjur init -h conjurmaster.myorg.com -f .conjurrc`. The certificate can be taken from any system you have run the Conjur CLI from.
 
-username: username of a user in Conjur
+username: Username of a user in Conjur. Alternatively can be a hostname.
 
-password: password of a user in Conjur
+password: Password of a user in Conjur. Alternatively can be a host apiKey.
 
-variableId: the name of an existing variable in Conjur that has a value set and the user has execute permissions for
+variableId: The name of an existing variable in Conjur that has a value set and for which the `username` has execute permissions.
 
-hostFactoryToken: a hostfactory token. The easiest way to test is to add a hostfactory to a layer using the Conjur CLI command `conjur hostfactory create` and `conjur hostfactory token create`.
+hostFactoryToken: A hostfactory token. The easiest way to get a host factory token for testing is to add a hostfactory to a layer using the Conjur CLI command `conjur hostfactory create` and `conjur hostfactory token create`. Take the token returned from that call and pass it as the hostFactoryToken parameter to this example.
 
 ## Example
 
