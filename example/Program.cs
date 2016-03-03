@@ -34,7 +34,7 @@ namespace Example
             // If the Conjur root certificate is not in the system trust store,
             // add it as trusted explicitly
             if (certPath.Length > 0)
-                conjurClient.TrustedCertificates.Import(certPath);
+                conjurClient.TrustedCertificates.ImportPem(certPath);
 
             // Login with Conjur userid and password,
             // or hostid and api_key, etc
@@ -66,13 +66,14 @@ namespace Example
             try
             {
                 bool isAllowed = conjurVariable.Check("execute");
-                if (isAllowed)
+                if (!isAllowed)
                 {
                     Console.WriteLine("You do not have permissions to get the value of '{0}'", variableId);
                 }
                 else
                 {
-                    Console.WriteLine("'{0}' has the value: '{1}'", variableId, conjurVariable.GetValue());
+                    string value = conjurVariable.GetValue();
+                    Console.WriteLine("'{0}' has the value: '{1}'", variableId, value);
                 }
             }
             catch (Exception e)
@@ -80,21 +81,24 @@ namespace Example
                 Console.WriteLine("Permission check failed. An exception occurred '{0}'", e);
             }
 
+            // Use a hostfactory token to create a host
+            // This example assumes the host factory token was created through
+            // the UI or CLI and passed to this application. Read more
+            // about HostFactory on developer.conjur.net
+            HostFactoryToken hfToken = new HostFactoryToken(conjurClient, token);
+
             // Create a host and get the apiKey 
             //   parameters: hostName - the name of the new Conjur host identity
             try
             {
-                Host host = conjurClient.CreateHost("exampleHost", token);
+                Host host = hfToken.CreateHost("exampleHost");
                 Console.WriteLine("Created host: {0}, apiKey: {1}", host.Id, host.ApiKey);
-
-                // now you can log in as the host
-                conjurClient.Credential = host.Credential;
             }
             catch (Exception e)
             {
                 Console.WriteLine("Failed to create a host. An exception occurred '{0}'", e);
             }
-            
+
         }
     }
 }
