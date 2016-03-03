@@ -1,8 +1,49 @@
 # Conjur API for .NET
 
-## Installing
+This is a *Draft* implementation of the .NET API for [Conjur](https://developer.conjur.net/).
+This implementation includes an example that shows how to:
 
-## Example Usage
+    - Authenticate
+    - Check permissions to get the value of a variable
+    - Get the value of a variable
+    - Use a Host Factory token to create a new Host and get an apiKey to use with Conjur
+
+## Building
+
+This sample was built and tested with Visual Studio 2015. 
+
+To load in Visual Studio, from the Visual Studio File menu select Open > Project/Solution > api-dotnet.sln and build the solution. This will create:
+
+    - conjur-api.dll: the .NET version of the Conjur API.
+    - ConjurTest.dll: test DLL used for automated testing of the Conjur .NET API
+    - example.exe: sample application that uses the Conjur API.
+
+Optionally, to build in a Docker container, it is recommended to use Mono and xbuild.
+
+## Usage
+
+To run the sample in Visual Studio, set the `example` project as the Startup Project.  To do so, in the Solution Explorer right click over `example` and select `Set as Startup Project`. 
+
+```sh
+Usage: Example  <applianceURL>
+                <applianceCertificatePath>
+                <username> 
+                <password> 
+                <variableId>
+                <hostFactoryToken>
+```
+
+The sample requires the following parameters:
+    applianceURL: the applianceURL including /api e.g. https://conjurmaster.myorg.com/api
+    applianceCertificatePath: the path and name of the Conjur appliance certificate. The easiest way to get the certifiate is to use the Conjur CLI command `conjur init -h conjurmaster.myorg.com -f .conjurrc`. The certificate can be taken from any system you have run the Conjur CLI from.
+    username: username of a user in Conjur
+    password: password of a user in Conjur
+    variableId: the name of an existing variable in Conjur that has a value set and the user has execute permissions for
+    hostFactoryToken: a hostfactory token. The easiest way to test is to add a hostfactory to a layer using the Conjur CLI command `conjur hostfactory create` and `conjur hostfactory token create`.
+
+
+.NET API for access to 
+## Example
 
 ```sh
 using System;
