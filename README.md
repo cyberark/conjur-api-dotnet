@@ -43,7 +43,7 @@ namespace Conjur.doc.DotNetExample
             string conjurAuthToken = conjurClient.Login(username, password);
 
             // Check if this user has permission to get the value of variableId
-            // That requires exectue permissions on the variable
+            // That requires execute permissions on the variable
 
             // Instantiate a Variable object
             //   parameters: client - contains authentication token and conjur URI
