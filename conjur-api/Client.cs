@@ -117,10 +117,13 @@ namespace Conjur
         /// where user name is for example "bob" or "host/jenkins".</param>
         public string LogIn(NetworkCredential credential)
         {
-            this.ValidateBaseUri();
             var wr = this.Request("authn/users/login");
-            wr.PreAuthenticate = true;
-            wr.Credentials = credential;
+
+            // there seems to be no sane way to force WebRequest to authenticate 
+            // properly by itself, so generate the header manually
+            var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(
+                credential.UserName + ":" + credential.Password));
+            wr.Headers["Authorization"] = "Basic " + auth;
             var apiKey = wr.Read();
 
             this.Credential = new NetworkCredential(credential.UserName, apiKey);
