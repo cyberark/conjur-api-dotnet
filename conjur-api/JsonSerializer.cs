@@ -12,8 +12,8 @@ namespace Conjur
 
         static public T Read(WebRequest request)
         {
-            return instance.ReadObject(
-                request.GetResponse().GetResponseStream()) as T;
+            using (var stream = request.GetResponse().GetResponseStream())
+                return instance.ReadObject(stream) as T;
         }
     }
 }

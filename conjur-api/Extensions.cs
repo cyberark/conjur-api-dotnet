@@ -83,8 +83,9 @@ namespace Conjur
         /// <param name="request">Request to read from.</param>
         internal static string Read(this WebRequest request)
         {
-            return new StreamReader(request.GetResponse().GetResponseStream())
-                .ReadToEnd();
+            using (var reader
+                = new StreamReader(request.GetResponse().GetResponseStream()))
+                return reader.ReadToEnd();
         }
 
         internal static bool VerifyWithExtraRoots(

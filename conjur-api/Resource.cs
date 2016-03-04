@@ -63,9 +63,11 @@ namespace Conjur
         {
             var req = this.Client.AuthenticatedRequest(this.ResourcePath
                           + "/?check=true&privilege=" + WebUtility.UrlEncode(privilege));
+            req.Method = "HEAD";
+
             try
             {
-                req.GetResponse();
+                req.GetResponse().Close();
                 return true;
             }
             catch (WebException exn)

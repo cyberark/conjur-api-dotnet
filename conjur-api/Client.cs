@@ -122,7 +122,7 @@ namespace Conjur
             // there seems to be no sane way to force WebRequest to authenticate 
             // properly by itself, so generate the header manually
             var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(
-                credential.UserName + ":" + credential.Password));
+                               credential.UserName + ":" + credential.Password));
             wr.Headers["Authorization"] = "Basic " + auth;
             var apiKey = wr.Read();
 
@@ -169,7 +169,7 @@ namespace Conjur
                 wr.Method = "HEAD";
                 try
                 {
-                    wr.GetResponse();
+                    wr.GetResponse().Close();
                 }
                 catch (WebException)
                 {
@@ -177,7 +177,7 @@ namespace Conjur
                     this.applianceUri = new Uri(this.applianceUri + "api/");
                     wr = WebRequest.Create(this.applianceUri + "info");
                     wr.Method = "HEAD";
-                    wr.GetResponse();
+                    wr.GetResponse().Close();
                 }
                 this.urlValidated = true;
             }

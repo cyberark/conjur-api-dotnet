@@ -132,6 +132,11 @@ namespace Conjur.Test
             {
                 return new MemoryStream(Encoding.UTF8.GetBytes(content));
             }
+
+            public override void Close()
+            {
+                // noop
+            }
         }
 
         public class MockResponseException : WebException
