@@ -9,7 +9,7 @@ namespace Conjur
 {
     using System.Net;
 
-    public class HostFactoryToken
+    internal class HostFactoryToken
     {
         private readonly string token;
         private readonly Client client;

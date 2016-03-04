@@ -81,18 +81,19 @@ namespace Example
                 Console.WriteLine("Permission check failed. An exception occurred '{0}'", e);
             }
 
-            // Use a hostfactory token to create a host
-            // This example assumes the host factory token was created through
-            // the UI or CLI and passed to this application. Read more
-            // about HostFactory on developer.conjur.net
-            HostFactoryToken hfToken = new HostFactoryToken(conjurClient, token);
-
             // Create a host and get the apiKey 
             //   parameters: hostName - the name of the new Conjur host identity
             try
             {
-                Host host = hfToken.CreateHost("exampleHost");
+                // Use a hostfactory token to create a host
+                // This example assumes the host factory token was created through
+                // the UI or CLI and passed to this application. Read more
+                // about HostFactory on developer.conjur.net
+                Host host = conjurClient.CreateHost("exampleHost", token);
                 Console.WriteLine("Created host: {0}, apiKey: {1}", host.Id, host.ApiKey);
+
+                // now you can log in as the host
+                conjurClient.Credential = host.Credential;
             }
             catch (Exception e)
             {
