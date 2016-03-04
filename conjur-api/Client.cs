@@ -159,7 +159,7 @@ namespace Conjur
         /// <returns>The validated base appliance URI.</returns>
         public Uri ValidateBaseUri()
         {
-            if (!urlValidated)
+            if (!this.urlValidated)
             {
                 // TODO: figure out how to avoid changing the default for all hosts
                 ServicePointManager.ServerCertificateValidationCallback = 
@@ -179,6 +179,7 @@ namespace Conjur
                     wr.Method = "HEAD";
                     wr.GetResponse().Close();
                 }
+
                 this.urlValidated = true;
             }
 

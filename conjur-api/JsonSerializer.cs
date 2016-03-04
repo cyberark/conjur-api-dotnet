@@ -1,19 +1,26 @@
-﻿using System.Runtime.Serialization.Json;
-using System.Net;
+﻿// <copyright file="JsonSerializer.cs" company="Conjur Inc.">
+//     Copyright (c) 2016 Conjur Inc. All rights reserved.
+// </copyright>
+// <summary>
+// JSON utilities.
+// </summary>
 
 namespace Conjur
 {
-    static class JsonSerializer<T> where T: class
+    using System.Net;
+    using System.Runtime.Serialization.Json;
+
+    internal static class JsonSerializer<T> where T : class
     {
         // Analysis disable once StaticFieldInGenericType
         // (The behaviour is exactly what I want: one instance per T.)
-        static readonly DataContractJsonSerializer instance = 
+        private static readonly DataContractJsonSerializer Instance =
             new DataContractJsonSerializer(typeof(T));
 
-        static public T Read(WebRequest request)
+        public static T Read(WebRequest request)
         {
             using (var stream = request.GetResponse().GetResponseStream())
-                return instance.ReadObject(stream) as T;
+                return Instance.ReadObject(stream) as T;
         }
     }
 }
