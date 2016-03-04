@@ -27,6 +27,10 @@ namespace Conjur
 
         private NetworkCredential credential;
 
+        private Host()
+        {
+        }
+
         /// <summary>
         /// Gets the identifier.
         /// </summary>

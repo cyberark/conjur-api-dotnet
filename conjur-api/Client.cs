@@ -18,7 +18,7 @@ namespace Conjur
     /// <summary>
     /// Conjur API client.
     /// </summary>
-    public class Client
+    public partial class Client
     {
         private Uri applianceUri;
         private string account;

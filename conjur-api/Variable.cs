@@ -24,7 +24,7 @@ namespace Conjur
         /// <param name="client">Conjur client to use to connect.</param>
         /// <param name="name">The variable name.</param>
         /// <seealso cref="Extensions.Variable"/>
-        public Variable(Client client, string name)
+        internal Variable(Client client, string name)
             : base(client, "variable", name)
         {
             this.path = "variables/" + WebUtility.UrlEncode(name);

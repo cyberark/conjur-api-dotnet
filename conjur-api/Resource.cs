@@ -29,7 +29,7 @@ namespace Conjur
         /// <param name="client">Conjur client used to manipulate this resource.</param>
         /// <param name="kind">Resource kind.</param>
         /// <param name="id">Resource identifier.</param>
-        public Resource(Client client, string kind, string id)
+        internal Resource(Client client, string kind, string id)
         {
             this.Client = client;
             this.kind = kind;

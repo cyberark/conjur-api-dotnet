@@ -44,6 +44,7 @@
     <Compile Include="HostFactoryToken.cs" />
     <Compile Include="UnauthorizedException.cs" />
     <Compile Include="Resource.cs" />
+    <Compile Include="Client.Methods.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
