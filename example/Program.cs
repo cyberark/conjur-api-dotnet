@@ -13,7 +13,7 @@ namespace Example
         // userId and password
         static void Main(string[] args)
         {
-            if (args.Length < 4)
+            if (args.Length < 6)
             {
                 Console.WriteLine("Usage: Example <applianceHostName> <applianceCertificatePath> <username> <password> <variableId> <hostFactoryToken>");
                 return;
@@ -89,7 +89,8 @@ namespace Example
                 // This example assumes the host factory token was created through
                 // the UI or CLI and passed to this application. Read more
                 // about HostFactory on developer.conjur.net
-                Host host = conjurClient.CreateHost("exampleHost", token);
+                string hostname = String.Format("exampleHost{0}", System.DateTime.Now.ToString("yyyMMddHHmmss")); 
+                Host host = conjurClient.CreateHost(hostname, token);
                 Console.WriteLine("Created host: {0}, apiKey: {1}", host.Id, host.ApiKey);
 
                 // now you can log in as the host
