@@ -18,11 +18,7 @@ namespace Conjur.Test
         {
             Mocker.Mock(new Uri("test:///authn/users/login"), "api-key").Verifier = 
                 (WebRequest wr) =>
-            {
-                var cred = wr.Credentials.GetCredential(wr.RequestUri, "basic");
-                Assert.AreEqual("admin", cred.UserName);
-                Assert.AreEqual("secret", cred.Password);
-            };
+            Assert.AreEqual("Basic YWRtaW46c2VjcmV0", wr.Headers["Authorization"]);
 
             var apiKey = Client.LogIn("admin", "secret");
             Assert.AreEqual("api-key", apiKey);
