@@ -12,9 +12,11 @@ finish() {
 trap finish EXIT
 
 umask 077
+set +x # don't show the keys in logs
 echo "$PKCS" | base64 -d > $PFX
 echo "$SN" | base64 -d > $SNKEY
 echo -n "$PKCS_PASS" > $PASS
+set -x
 umask 022
 
 cp $BIN $BIN.unsigned

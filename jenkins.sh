@@ -11,4 +11,4 @@ if [ -z `docker images -q $TAG` ]; then
 fi
 
 ./build.sh
-[ $1 == "--no-sign" ] || ./sign.sh
+[ "$1" == "--no-sign" ] || ./sign.sh
