@@ -30,7 +30,7 @@ namespace Conjur
         /// <param name="applianceUri">Appliance URI.</param>
         public Client(string applianceUri, string account)
         {
-            this.accout = account;
+            this.account = account;
             this.applianceUri = NormalizeBaseUri(applianceUri);
             this.TrustedCertificates = new X509Certificate2Collection();
         }

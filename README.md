@@ -10,7 +10,7 @@ This implementation includes an example that shows how to:
 
 ## Building
 
-This sample was built and tested with Visual Studio 2015. 
+This sample was built and tested with Visual Studio 2015.
 
 To load in Visual Studio, from the Visual Studio File menu select Open > Project/Solution > api-dotnet.sln and build the solution. This will create:
 
@@ -22,20 +22,23 @@ Optionally, to build in a Docker container, it is recommended to use Mono and xb
 
 ## Usage
 
-To run the sample in Visual Studio, set the `example` project as the Startup Project.  To do so, in the Solution Explorer right click over `example` and select `Set as Startup Project`. 
+To run the sample in Visual Studio, set the `example` project as the Startup Project.  To do so, in the Solution Explorer right click over `example` and select `Set as Startup Project`.
 
 ```sh
 Usage: Example  <applianceURL>
                 <applianceCertificatePath>
-                <username> 
-                <password> 
+                <accountName>
+                <username>
+                <password>
                 <variableId>
                 <hostFactoryToken>
 ```
 
-applianceURL: the applianceURL including /api e.g. https://conjurmaster.myorg.com/api
+applianceURL: the applianceURL e.g. https://conjurmaster.myorg.com/
 
 applianceCertificatePath: the path and name of the Conjur appliance certificate. The easiest way to get the certifiate is to use the Conjur CLI command `conjur init -h conjurmaster.myorg.com -f .conjurrc`. The certificate can be taken from any system you have run the Conjur CLI from.
+
+accountName: The name of the account in Conjur.
 
 username: Username of a user in Conjur. Alternatively can be a hostname.
 

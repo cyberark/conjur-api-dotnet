@@ -16,7 +16,7 @@ namespace Conjur.Test
         [Test]
         public void TestLogin()
         {
-            Mocker.Mock(new Uri("test:///authn/" + TestAccount + "/login"), "api-key").Verifier = 
+            Mocker.Mock(new Uri("test:///authn/" + TestAccount + "/login"), "api-key").Verifier =
                 (WebRequest wr) =>
             Assert.AreEqual("Basic YWRtaW46c2VjcmV0", wr.Headers["Authorization"]);
 
@@ -47,7 +47,7 @@ namespace Conjur.Test
                 testRequest.Headers["Authorization"]);
 
             Client.Authenticator = null;
-            Assert.Throws<InvalidOperationException>(() => 
+            Assert.Throws<InvalidOperationException>(() =>
                 Client.AuthenticatedRequest("info"));
         }
     }

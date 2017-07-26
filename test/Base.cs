@@ -8,7 +8,7 @@ namespace Conjur.Test
     public abstract class Base
     {
         protected readonly Conjur.Client Client;
-        protected readonly string testAccount = 'test-account';
+        protected readonly string TestAccount = "test-account";
         static protected readonly WebMocker Mocker = new WebMocker();
 
         static Base()
@@ -18,9 +18,7 @@ namespace Conjur.Test
 
         protected Base()
         {
-            TestAccount = testAccount;
-            Client = new Conjur.Client("test:///", testAccount);
+            Client = new Conjur.Client("test:///", TestAccount);
         }
     }
 }
-
