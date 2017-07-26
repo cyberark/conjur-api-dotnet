@@ -70,7 +70,7 @@ namespace Conjur
             set
             {
                 this.Authenticator = new ApiKeyAuthenticator(
-                    new Uri(this.ValidateBaseUri() + "authn"),
+                    new Uri(this.ValidateBaseUri() + "authn"), this.GetAccountName(),
                     value);
             }
         }

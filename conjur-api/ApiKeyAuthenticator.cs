@@ -30,14 +30,14 @@ namespace Conjur
         /// <summary>
         /// Initializes a new instance of the <see cref="Conjur.ApiKeyAuthenticator"/> class.
         /// </summary>
-        /// <param name="authnUri">Authentication base URI, for example 
+        /// <param name="authnUri">Authentication base URI, for example
         /// "https://example.com/api/authn".</param>
-        /// <param name="credential">User name and API key to use, where 
+        /// <param name="credential">User name and API key to use, where
         /// username is for example "bob" or "host/jenkins".</param>
-        public ApiKeyAuthenticator(Uri authnUri, NetworkCredential credential)
+        public ApiKeyAuthenticator(Uri authnUri, string account, NetworkCredential credential)
         {
             this.credential = credential;
-            this.uri = new Uri(authnUri + "/users/"
+            this.uri = new Uri(authnUri + "/" + account + "/"
                 + WebUtility.UrlEncode(credential.UserName)
                 + "/authenticate");
             this.timer = new Timer((_) => this.tokenExpired = true);
