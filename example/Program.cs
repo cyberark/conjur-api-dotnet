@@ -13,23 +13,24 @@ namespace Example
         // userId and password
         static void Main(string[] args)
         {
-            if (args.Length < 6)
+            if (args.Length < 7)
             {
-                Console.WriteLine("Usage: Example <applianceHostName> <applianceCertificatePath> <username> <password> <variableId> <hostFactoryToken>");
+                Console.WriteLine("Usage: Example <applianceHostName> <applianceCertificatePath> <accountName> <username> <password> <variableId> <hostFactoryToken>");
                 return;
             }
             string applianceName = args[0];
             string certPath = args[1];
-            string username = args[2];
-            string password = args[3];
-            string variableId = args[4];
-            string token = args[5];
+            string account = args[2];
+            string username = args[3];
+            string password = args[4];
+            string variableId = args[5];
+            string token = args[6];
 
             // Instantiate a Conjur Client object.
             //  parameter: applianceUri - conjur appliance URI (including /api)
             //  return: Client object - if URI is incorrect errors thrown when used
-            string uri = String.Format("https://{0}/api", applianceName);
-            var conjurClient = new Client(uri);
+            string uri = String.Format("https://{0}", applianceName);
+            var conjurClient = new Client(uri, account);
 
             // If the Conjur root certificate is not in the system trust store,
             // add it as trusted explicitly
