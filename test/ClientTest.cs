@@ -10,13 +10,13 @@ namespace Conjur.Test
         [Test]
         public void TestInfo()
         {
-            Assert.AreEqual("test-account", Client.GetAccountName());
+            Assert.AreEqual(TestAccount, Client.GetAccountName());
         }
 
         [Test]
         public void TestLogin()
         {
-            Mocker.Mock(new Uri("test:///authn/users/login"), "api-key").Verifier = 
+            Mocker.Mock(new Uri("test:///authn/" + TestAccount + "/login"), "api-key").Verifier = 
                 (WebRequest wr) =>
             Assert.AreEqual("Basic YWRtaW46c2VjcmV0", wr.Headers["Authorization"]);
 

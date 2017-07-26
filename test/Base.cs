@@ -8,17 +8,18 @@ namespace Conjur.Test
     public abstract class Base
     {
         protected readonly Conjur.Client Client;
+        protected readonly string testAccount = 'test-account';
         static protected readonly WebMocker Mocker = new WebMocker();
 
         static Base()
         {
             WebRequest.RegisterPrefix("test", Mocker);
-            Mocker.Mock(new Uri("test:///info"), "{ \"account\": \"test-account\" }");
         }
 
         protected Base()
         {
-            Client = new Conjur.Client("test:///");
+            TestAccount = testAccount;
+            Client = new Conjur.Client("test:///", testAccount);
         }
     }
 }
