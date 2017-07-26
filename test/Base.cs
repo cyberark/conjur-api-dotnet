@@ -9,6 +9,7 @@ namespace Conjur.Test
     {
         protected readonly Conjur.Client Client;
         protected readonly string TestAccount = "test-account";
+        protected readonly string LoginName = "admin";
         static protected readonly WebMocker Mocker = new WebMocker();
 
         static Base()

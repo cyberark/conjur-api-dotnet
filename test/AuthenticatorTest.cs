@@ -16,16 +16,16 @@ namespace Conjur.Test
                 Assert.AreEqual("POST", wr.Method);
                 Assert.AreEqual("api-key", req.Body);
             };
-            
-            Mocker.Mock(new Uri("test:///authn/users/username/authenticate"), "token1")
+
+            Mocker.Mock(new Uri("test:///authn/" + TestAccount + "/" + LoginName + "/authenticate"), "token1")
                 .Verifier = verifier;
-            
-            var credential = new NetworkCredential("username", "api-key");
-            var authenticator = new ApiKeyAuthenticator(new Uri("test:///authn"), credential);
+
+            var credential = new NetworkCredential(LoginName, "api-key");
+            var authenticator = new ApiKeyAuthenticator(new Uri("test:///authn"), TestAccount ,credential);
 
             Assert.AreEqual("token1", authenticator.GetToken());
 
-            Mocker.Mock(new Uri("test:///authn/users/username/authenticate"), "token2")
+            Mocker.Mock(new Uri("test:///authn/" + TestAccount + "/" + LoginName + "/authenticate"), "token2")
                 .Verifier = verifier;
 
             Assert.AreEqual("token1", authenticator.GetToken());
@@ -37,4 +37,3 @@ namespace Conjur.Test
         }
     }
 }
-

@@ -27,7 +27,7 @@ namespace Conjur.Test
 
         private void VerifyAuthenticator(IAuthenticator authenticator)
         {
-            Mocker.Mock(new Uri("test:///authn/users/admin/authenticate"), "token")
+            Mocker.Mock(new Uri("test:///authn/" + TestAccount + "/" + LoginName + "/authenticate"), "token")
                 .Verifier = (WebRequest wr) =>
             {
                 var req = wr as WebMocker.MockRequest;
