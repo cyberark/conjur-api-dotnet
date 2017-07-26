@@ -49,10 +49,11 @@ hostFactoryToken: A hostfactory token. The easiest way to get a host factory tok
 
 ```sh
     // Instantiate a Conjur Client object.
-    //  parameter: URI - conjur appliance URI (including /api)
+    //  parameter: URI - conjur appliance URI
+    //  parameter: ACCOUNT - conjur account name
     //  return: Client object - if URI is incorrect errors thrown when used
-    Uri uri = new Uri("https://myorg.com/api");
-    Client conjurClient = new Client(uri);
+    Uri uri = new Uri("https://myorg.com");
+    Client conjurClient = new Client(uri, account);
 
     // Login with Conjur credentials like userid and password,
     // or hostid and api_key, etc
