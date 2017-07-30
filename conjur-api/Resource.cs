@@ -45,8 +45,8 @@ namespace Conjur
             get
             {
                 if (this.resourcePath == null)
-                    this.resourcePath = "authz/" +
-                    WebUtility.UrlEncode(this.Client.GetAccountName()) + "/resources/" +
+                    this.resourcePath = "resources/" +
+                    WebUtility.UrlEncode(this.Client.GetAccountName()) + "/" +
                     WebUtility.UrlEncode(this.kind) + "/" + WebUtility.UrlEncode(this.id);
                 return this.resourcePath;
             }
@@ -56,7 +56,7 @@ namespace Conjur
         /// Determines whether the authenticated user holds the specified privilege
         /// on this resource.
         /// </summary>
-        /// <returns><c>true</c> if the authenticated user holds the specified 
+        /// <returns><c>true</c> if the authenticated user holds the specified
         /// privilege; otherwise, <c>false</c>.</returns>
         /// <param name="privilege">Privilege to check.</param>
         public bool Check(string privilege)
