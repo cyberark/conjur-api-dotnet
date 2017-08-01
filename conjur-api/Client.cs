@@ -22,7 +22,6 @@ namespace Conjur
     {
         private Uri applianceUri;
         private string account;
-        private bool urlValidated = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Conjur.Client"/> class.
@@ -70,7 +69,7 @@ namespace Conjur
             set
             {
                 this.Authenticator = new ApiKeyAuthenticator(
-                    new Uri(this.ValidateBaseUri() + "authn"), this.GetAccountName(),
+                    new Uri(this.applianceUri + "authn"), this.GetAccountName(),
                     value);
             }
         }
@@ -137,7 +136,7 @@ namespace Conjur
         /// <returns>A WebRequest for the specified appliance path.</returns>
         public WebRequest Request(string path)
         {
-            return WebRequest.Create(this.ValidateBaseUri() + path);
+            return WebRequest.Create(this.applianceUri + path);
         }
 
         /// <summary>
@@ -149,41 +148,6 @@ namespace Conjur
         public WebRequest AuthenticatedRequest(string path)
         {
             return this.ApplyAuthentication(this.Request(path));
-        }
-
-        /// <summary>
-        /// Validates the appliance base URI.
-        /// Tries to connect to /info; if not successful, try again adding an /api prefix.
-        /// Also sets up certificate validation.
-        /// </summary>
-        /// <returns>The validated base appliance URI.</returns>
-        public Uri ValidateBaseUri()
-        {
-            if (!this.urlValidated)
-            {
-                // TODO: figure out how to avoid changing the default for all hosts
-                ServicePointManager.ServerCertificateValidationCallback =
-                    new RemoteCertificateValidationCallback(this.ValidateCertificate);
-
-                var wr = WebRequest.Create(this.applianceUri + "info");
-                wr.Method = "HEAD";
-                try
-                {
-                    wr.GetResponse().Close();
-                }
-                catch (WebException)
-                {
-                    // forgotten /api at the end of the Uri? Try again.
-                    this.applianceUri = new Uri(this.applianceUri + "api/");
-                    wr = WebRequest.Create(this.applianceUri + "info");
-                    wr.Method = "HEAD";
-                    wr.GetResponse().Close();
-                }
-
-                this.urlValidated = true;
-            }
-
-            return this.applianceUri;
         }
 
         /// <summary>
