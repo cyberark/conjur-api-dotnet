@@ -27,7 +27,7 @@ namespace Example
             string token = args[6];
 
             // Instantiate a Conjur Client object.
-            //  parameter: applianceUri - conjur appliance URI (including /api)
+            //  parameter: applianceUri - conjur appliance URI
             //  return: Client object - if URI is incorrect errors thrown when used
             string uri = String.Format("https://{0}", applianceName);
             var conjurClient = new Client(uri, account);
