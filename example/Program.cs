@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Net;
 using Conjur;
 
@@ -80,6 +80,26 @@ namespace Example
             catch (Exception e)
             {
                 Console.WriteLine("Permission check failed. An exception occurred '{0}'", e);
+            }
+
+            // Create a host and get the apiKey 
+            //   parameters: hostName - the name of the new Conjur host identity
+            try
+            {
+                // Use a hostfactory token to create a host
+                // This example assumes the host factory token was created through
+                // the UI or CLI and passed to this application. Read more
+                // about HostFactory on developer.conjur.net
+                string hostname = String.Format("exampleHost{0}", System.DateTime.Now.ToString("yyyMMddHHmmss")); 
+                Host host = conjurClient.CreateHost(hostname, token);
+                Console.WriteLine("Created host: {0}, apiKey: {1}", host.Id, host.ApiKey);
+
+                // now you can log in as the host
+                conjurClient.Credential = host.Credential;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Failed to create a host. An exception occurred '{0}'", e);
             }
 
         }

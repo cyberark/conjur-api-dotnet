@@ -39,6 +39,7 @@
     <Compile Include="VariablesTest.cs" />
     <Compile Include="Base.cs" />
     <Compile Include="MockAuthenticator.cs" />
+    <Compile Include="HostFactoryTest.cs" />
     <Compile Include="ResourceTest.cs" />
     <Compile Include="CertificateVerificationTest.cs" />
     <Compile Include="Certificates.cs" />
