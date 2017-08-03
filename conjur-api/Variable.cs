@@ -8,6 +8,7 @@
 namespace Conjur
 {
     using System.Net;
+    using System.Text;
 
     /// <summary>
     /// Conjur variable reference.
@@ -37,6 +38,17 @@ namespace Conjur
         public string GetValue()
         {
             return this.Client.AuthenticatedRequest(this.path).Read();
+        }
+
+        public void AddSecret(string val)
+        {
+            WebRequest webRequest = this.Client.AuthenticatedRequest(this.path);
+            webRequest.Method = "POST";
+
+            byte[] data = Encoding.UTF8.GetBytes(val);
+            webRequest.ContentType = "text\\plain";
+            webRequest.ContentLength = data.Length;
+            webRequest.GetRequestStream().Write(data, 0, data.Length);
         }
     }
 }

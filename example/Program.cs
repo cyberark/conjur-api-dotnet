@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿using System;
+=======
+﻿﻿﻿using System;
+>>>>>>> Add create secret method
 using System.Net;
 using Conjur;
 
@@ -73,8 +77,10 @@ namespace Example
                 }
                 else
                 {
-                    string value = conjurVariable.GetValue();
-                    Console.WriteLine("'{0}' has the value: '{1}'", variableId, value);
+                    conjurVariable.AddSecret("ExampleValue");
+
+                    string val = conjurVariable.GetValue();
+                    Console.WriteLine("'{0}' has the value: '{1}'", variableId, val);
                 }
             }
             catch (Exception e)
