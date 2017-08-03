@@ -25,18 +25,6 @@ namespace Conjur
         }
 
         /// <summary>
-        /// Creates a host using a host factory token.
-        /// </summary>
-        /// <returns>The created host.</returns>
-        /// <param name="name">Name of the host to create.</param>
-        /// <param name="hostFactoryToken">Host factory token.</param>
-        public Host CreateHost(string name, string hostFactoryToken)
-        {
-            return new HostFactoryToken(this, hostFactoryToken)
-                .CreateHost(name);
-        }
-
-        /// <summary>
         /// Creates an object representing a Conjur resource.
         /// </summary>
         /// <param name="kind">Resource kind.</param>
