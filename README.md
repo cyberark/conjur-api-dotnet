@@ -6,7 +6,6 @@ This implementation includes an example that shows how to:
     - Authenticate
     - Check permissions to get the value of a variable
     - Get the value of a variable
-    - Use a Host Factory token to create a new Host and get an apiKey to use with Conjur
 
 ## Building
 
@@ -31,7 +30,6 @@ Usage: Example  <applianceURL>
                 <username>
                 <password>
                 <variableId>
-                <hostFactoryToken>
 ```
 
 applianceURL: the applianceURL e.g. https://conjurmaster.myorg.com/
@@ -45,8 +43,6 @@ username: Username of a user in Conjur. Alternatively can be a hostname.
 password: Password of a user in Conjur. Alternatively can be a host apiKey.
 
 variableId: The name of an existing variable in Conjur that has a value set and for which the `username` has execute permissions.
-
-hostFactoryToken: A hostfactory token. The easiest way to get a host factory token for testing is to add a hostfactory to a layer using the Conjur CLI command `conjur hostfactory create` and `conjur hostfactory token create`. Take the token returned from that call and pass it as the hostFactoryToken parameter to this example.
 
 ## Example
 
