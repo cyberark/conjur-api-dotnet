@@ -13,9 +13,9 @@ namespace Example
         // userId and password
         static void Main(string[] args)
         {
-            if (args.Length < 6)
+            if (args.Length < 7)
             {
-                Console.WriteLine("Usage: Example <applianceHostName> <applianceCertificatePath> <accountName> <username> <password> <variableId>");
+                Console.WriteLine("Usage: Example <applianceHostName> <applianceCertificatePath> <accountName> <username> <password> <variableId> <hostFactoryToken>");
                 return;
             }
             string applianceName = args[0];
@@ -24,6 +24,7 @@ namespace Example
             string username = args[3];
             string password = args[4];
             string variableId = args[5];
+            string token = args[6];
 
             // Instantiate a Conjur Client object.
             //  parameter: applianceUri - conjur appliance URI
