@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-﻿using System;
-=======
-﻿﻿﻿using System;
->>>>>>> Add create secret method
+﻿﻿﻿﻿using System;
 using System.Net;
 using Conjur;
 
