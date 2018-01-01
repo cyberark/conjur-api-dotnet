@@ -7,7 +7,8 @@
 
 namespace Conjur
 {
-    using System.Net;
+    using System;
+    using System.Json;
 
     /// <summary>
     /// Conjur variable reference.
@@ -27,7 +28,7 @@ namespace Conjur
         internal Variable(Client client, string name)
             : base(client, "variable", name)
         {
-            this.path = "variables/" + WebUtility.UrlEncode(name);
+            this.path = "variables/" + Uri.EscapeDataString(name);
         }
 
         /// <summary>
@@ -37,6 +38,27 @@ namespace Conjur
         public string GetValue()
         {
             return this.Client.AuthenticatedRequest(this.path + "/value").Read();
+        }
+
+        /// <summary>
+        /// Adds a value to the variable.
+        /// </summary>
+        /// <param name="value">Value to be added to the Variable.</param>
+        public void AddValue(string value)
+        {
+            var req = this.Client.AuthenticatedRequest($"{this.path}/values");
+            req.Method = "POST";
+            req.ContentType = "application/json";
+
+            using (var dataStream = req.GetRequestStream()) {
+                JsonObject jsonObject = new JsonObject();
+                jsonObject.Add("value", value);
+                using (var dataStreamWriter = new System.IO.StreamWriter(dataStream)) {
+                    dataStreamWriter.Write(jsonObject.ToString());
+                }
+            }
+
+            req.GetResponse().Close();
         }
     }
 }

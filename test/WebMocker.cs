@@ -35,6 +35,7 @@ namespace Conjur.Test
         public class MockRequest : WebRequest
         {
             private readonly string content;
+            private string contentType;
             private string method = "GET";
             private ICredentials credentials;
             private Uri uri;
@@ -44,6 +45,18 @@ namespace Conjur.Test
             {
                 get;
                 set;
+            }
+
+            public override string ContentType
+            {
+                get
+                {
+                    return this.contentType;
+                }
+                set
+                {
+                    this.contentType = value;
+                }
             }
 
             public override Uri RequestUri
