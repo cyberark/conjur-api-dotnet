@@ -29,7 +29,7 @@ pipeline {
       steps {
         sh './build.sh'
         step([$class: 'XUnitBuilder',
-          tools: [[$class: NJUnitType', pattern: 'TestResult.xml']]])
+          tools: [[$class: 'NUnitType', pattern: 'TestResult.xml']]])
         archiveArtifacts artifacts: 'bin/*', fingerprint: true
       }
     }
