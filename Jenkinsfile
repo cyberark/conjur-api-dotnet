@@ -33,13 +33,6 @@ pipeline {
         archiveArtifacts artifacts: 'bin/*', fingerprint: true
       }
     }
-    
-    stage('Sign package') {
-      steps {
-        sh './sign.sh'
-        archiveArtifacts artifacts: 'bin/*', fingerprint: true
-      }
-    }
   }
   
   post {
