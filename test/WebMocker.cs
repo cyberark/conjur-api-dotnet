@@ -47,11 +47,14 @@ namespace Conjur.Test
                 set;
             }
 
-            public override string ContentType {
-                get {
+            public override string ContentType 
+            {
+                get 
+                {
                     return this.contentType;
                 }
-                set {
+                set 
+                {
                     this.contentType = value;
                 }
             }

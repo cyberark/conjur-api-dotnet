@@ -43,21 +43,22 @@ namespace Conjur
         /// <summary>
         /// Adds a value to the variable.
         /// </summary>
-        public void AddValue (string value)
+        /// <param name="value">Value to be added to the Variable.</param>
+        public void AddValue(string value)
         {
-            var req = this.Client.AuthenticatedRequest ($"{this.path}/values");
+            var req = this.Client.AuthenticatedRequest($"{this.path}/values");
             req.Method = "POST";
             req.ContentType = "application/json";
 
-            using (var dataStream = req.GetRequestStream ()) {
-                JsonObject jsonObject = new JsonObject ();
-                jsonObject.Add ("value", value);
-                using (var dataStreamWriter = new System.IO.StreamWriter (dataStream)) {
-                    dataStreamWriter.Write (jsonObject.ToString ());
+            using (var dataStream = req.GetRequestStream()) {
+                JsonObject jsonObject = new JsonObject();
+                jsonObject.Add("value", value);
+                using (var dataStreamWriter = new System.IO.StreamWriter(dataStream)) {
+                    dataStreamWriter.Write(jsonObject.ToString());
                 }
             }
 
-            req.GetResponse ().Close ();
+            req.GetResponse().Close();
         }
     }
 }
