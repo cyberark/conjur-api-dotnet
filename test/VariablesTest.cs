@@ -16,6 +16,9 @@ namespace Conjur.Test
         {
             Mocker.Mock(new Uri("test:///variables/foo%2Fbar/value"), "testvalue");
             Assert.AreEqual("testvalue", Client.Variable("foo/bar").GetValue());
+
+            Mocker.Mock (new Uri("test:///variables/foo%20bar/value"), "space test");
+            Assert.AreEqual("space test", Client.Variable("foo bar").GetValue());
         }
 
         [Test]
