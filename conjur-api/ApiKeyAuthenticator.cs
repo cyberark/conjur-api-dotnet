@@ -19,6 +19,7 @@ namespace Conjur
     {
         private readonly Uri uri;
         private readonly NetworkCredential credential;
+        private readonly ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim();
 
         // NOTE: since the timer executes on a different
         // thread we cannot use token == null, but need
@@ -27,12 +28,28 @@ namespace Conjur
         private bool tokenExpired = true;
         private Timer timer;
 
+        private bool TokenExpired 
+        {
+            get
+            {
+                rwLock.EnterReadLock();
+                try
+                {
+                    return tokenExpired;
+                }
+                finally
+                {
+                    rwLock.ExitReadLock();               
+                }
+            }
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Conjur.ApiKeyAuthenticator"/> class.
         /// </summary>
-        /// <param name="authnUri">Authentication base URI, for example 
+        /// <param name="authnUri">Authentication base URI, for example
         /// "https://example.com/api/authn".</param>
-        /// <param name="credential">User name and API key to use, where 
+        /// <param name="credential">User name and API key to use, where
         /// username is for example "bob" or "host/jenkins".</param>
         public ApiKeyAuthenticator(Uri authnUri, NetworkCredential credential)
         {
@@ -40,7 +57,12 @@ namespace Conjur
             this.uri = new Uri(authnUri + "/users/"
                 + WebUtility.UrlEncode(credential.UserName)
                 + "/authenticate");
-            this.timer = new Timer((_) => this.tokenExpired = true);
+            this.timer = new Timer((_) => 
+            {
+                rwLock.EnterWriteLock();
+                this.tokenExpired = true;
+                rwLock.ExitWriteLock();
+            });
         }
 
         #region IAuthenticator implementation
@@ -52,16 +74,18 @@ namespace Conjur
         /// It needs to be base64-encoded to be used in a web request.</returns>
         public string GetToken()
         {
-            if (this.tokenExpired)
+            if (this.TokenExpired)
             {
-                var request = WebRequest.Create(this.uri);
-                request.Method = "POST";
+                rwLock.EnterWriteLock();
 
-                using (var writer = new StreamWriter(request.GetRequestStream()))
-                    writer.Write(this.credential.Password);
-
-                this.token = request.Read();
-                this.StartTokenTimer(new TimeSpan(0, 7, 30));
+                try
+                {
+                    RenewToken();
+                }
+                finally
+                {
+                    rwLock.ExitWriteLock();
+                }
             }
 
             return this.token;
@@ -69,6 +93,18 @@ namespace Conjur
 
         #endregion
 
+        private void RenewToken()
+        {
+            var request = WebRequest.Create(this.uri);
+            request.Method = "POST";
+
+            using (var writer = new StreamWriter(request.GetRequestStream()))
+                writer.Write(this.credential.Password);
+
+            this.token = request.Read();
+            this.StartTokenTimer(new TimeSpan(0, 7, 30));
+        }
+        
         internal void StartTokenTimer(TimeSpan timeout)
         {
             this.tokenExpired = false;
