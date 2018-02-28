@@ -2,6 +2,7 @@
 using System.Net;
 using NUnit.Framework;
 using System.Threading;
+using System.Reflection;
 
 namespace Conjur.Test
 {
@@ -12,7 +13,7 @@ namespace Conjur.Test
         {
             Action<WebRequest> verifier = (WebRequest wr) =>
             {
-                var req = wr as WebMocker.MockRequest;
+                WebMocker.MockRequest req = wr as WebMocker.MockRequest;
                 Assert.AreEqual("POST", wr.Method);
                 Assert.AreEqual("api-key", req.Body);
             };
@@ -20,8 +21,8 @@ namespace Conjur.Test
             Mocker.Mock(new Uri("test:///authn/users/username/authenticate"), "token1")
                 .Verifier = verifier;
             
-            var credential = new NetworkCredential("username", "api-key");
-            var authenticator = new ApiKeyAuthenticator(new Uri("test:///authn"), credential);
+            NetworkCredential credential = new NetworkCredential("username", "api-key");
+            ApiKeyAuthenticator authenticator = new ApiKeyAuthenticator(new Uri("test:///authn"), credential);
 
             Assert.AreEqual("token1", authenticator.GetToken());
 
@@ -30,7 +31,10 @@ namespace Conjur.Test
 
             Assert.AreEqual("token1", authenticator.GetToken());
 
-            authenticator.StartTokenTimer(new TimeSpan(0, 0, 0, 0, 1));
+            FieldInfo tokenField = authenticator.GetType().GetField("token", BindingFlags.NonPublic | BindingFlags.Instance);
+            ApiKeyAuthenticator.Token token = new ApiKeyAuthenticator.Token("token1", new TimeSpan(0, 0, 0, 0, 1));
+            tokenField.SetValue(authenticator, token);
+
             Thread.Sleep(10);
 
             Assert.AreEqual("token2", authenticator.GetToken());

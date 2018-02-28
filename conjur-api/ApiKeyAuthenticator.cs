@@ -10,39 +10,34 @@ namespace Conjur
     using System;
     using System.IO;
     using System.Net;
-    using System.Threading;
 
     /// <summary>
     /// API key authenticator.
     /// </summary>
     public class ApiKeyAuthenticator : IAuthenticator
     {
-        private readonly Uri uri;
-        private readonly NetworkCredential credential;
-        private readonly ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim();
-
-        // NOTE: since the timer executes on a different
-        // thread we cannot use token == null, but need
-        // the extra boolean
-        private string token;
-        private bool tokenExpired = true;
-        private Timer timer;
-
-        private bool TokenExpired 
+        internal class Token
         {
-            get
+            private readonly DateTime expiration;
+            public string Value { get; }
+
+            public Token(string value, TimeSpan validPeriod)
             {
-                rwLock.EnterReadLock();
-                try
-                {
-                    return tokenExpired;
-                }
-                finally
-                {
-                    rwLock.ExitReadLock();               
-                }
+                Value = value;
+                expiration = DateTime.Now.Add(validPeriod);
+            }
+
+            public bool Expired()
+            {
+                return DateTime.Now > expiration;
             }
         }
+
+        private readonly Uri uri;
+        private readonly NetworkCredential credential;
+        private readonly object lockObject = new object();
+
+        private Token token = null;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Conjur.ApiKeyAuthenticator"/> class.
@@ -57,12 +52,6 @@ namespace Conjur
             this.uri = new Uri(authnUri + "/users/"
                 + WebUtility.UrlEncode(credential.UserName)
                 + "/authenticate");
-            this.timer = new Timer((_) => 
-            {
-                rwLock.EnterWriteLock();
-                this.tokenExpired = true;
-                rwLock.ExitWriteLock();
-            });
         }
 
         #region IAuthenticator implementation
@@ -74,41 +63,28 @@ namespace Conjur
         /// It needs to be base64-encoded to be used in a web request.</returns>
         public string GetToken()
         {
-            if (this.TokenExpired)
+            if (this.token == null || this.token.Expired())
             {
-                rwLock.EnterWriteLock();
+                lock (lockObject)
+                {
+                    if (this.token == null || this.token.Expired())
+                    {
+                        WebRequest request = WebRequest.Create(this.uri);
+                        request.Method = "POST";
 
-                try
-                {
-                    RenewToken();
-                }
-                finally
-                {
-                    rwLock.ExitWriteLock();
+                        using (StreamWriter writer = new StreamWriter(request.GetRequestStream()))
+                        {
+                            writer.Write(this.credential.Password);
+                        }
+
+                        this.token = new Token(request.Read(), new TimeSpan(0, 7, 30));
+                    }
                 }
             }
 
-            return this.token;
+            return this.token.Value;
         }
 
         #endregion
-
-        private void RenewToken()
-        {
-            var request = WebRequest.Create(this.uri);
-            request.Method = "POST";
-
-            using (var writer = new StreamWriter(request.GetRequestStream()))
-                writer.Write(this.credential.Password);
-
-            this.token = request.Read();
-            this.StartTokenTimer(new TimeSpan(0, 7, 30));
-        }
-        
-        internal void StartTokenTimer(TimeSpan timeout)
-        {
-            this.tokenExpired = false;
-            this.timer.Change(timeout, Timeout.InfiniteTimeSpan);
-        }
     }
 }
