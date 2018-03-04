@@ -24,7 +24,8 @@ namespace Conjur
         // thread we cannot use token == null, but need
         // the extra boolean
         private string token;
-        private bool tokenExpired = true;
+        // use int istead of bool for thread thread safety with Interloked class
+        private int tokenExpired = 1;
         private Timer timer;
 
         /// <summary>
@@ -40,7 +41,7 @@ namespace Conjur
             this.uri = new Uri(authnUri + "/users/"
                 + WebUtility.UrlEncode(credential.UserName)
                 + "/authenticate");
-            this.timer = new Timer((_) => this.tokenExpired = true);
+            this.timer = new Timer((_) => Interlocked.Exchange(ref this.tokenExpired, 1));
         }
 
         #region IAuthenticator implementation
@@ -52,7 +53,7 @@ namespace Conjur
         /// It needs to be base64-encoded to be used in a web request.</returns>
         public string GetToken()
         {
-            if (this.tokenExpired)
+            if (Interlocked.CompareExchange(ref this.tokenExpired, 0, 1) == 1)
             {
                 var request = WebRequest.Create(this.uri);
                 request.Method = "POST";
@@ -71,7 +72,6 @@ namespace Conjur
 
         internal void StartTokenTimer(TimeSpan timeout)
         {
-            this.tokenExpired = false;
             this.timer.Change(timeout, Timeout.InfiniteTimeSpan);
         }
     }
