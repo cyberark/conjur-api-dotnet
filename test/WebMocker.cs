@@ -21,6 +21,11 @@ namespace Conjur.Test
             return responses[uri] = new MockRequest(uri, content);
         }
 
+        public void Clear()
+        {
+            responses.Clear();
+        }
+
         #region IWebRequestCreate implementation
 
         public WebRequest Create(Uri uri)
