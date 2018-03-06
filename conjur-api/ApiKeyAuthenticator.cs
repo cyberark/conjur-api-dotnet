@@ -20,11 +20,7 @@ namespace Conjur
         private readonly Uri uri;
         private readonly NetworkCredential credential;
 
-        // NOTE: since the timer executes on a different
-        // thread we cannot use token == null, but need
-        // the extra boolean
         private string token;
-        private bool tokenExpired = true;
         private Timer timer;
 
         /// <summary>
@@ -40,7 +36,7 @@ namespace Conjur
             this.uri = new Uri(authnUri + "/users/"
                 + WebUtility.UrlEncode(credential.UserName)
                 + "/authenticate");
-            this.timer = new Timer((_) => this.tokenExpired = true);
+            this.timer = new Timer((_) => Interlocked.Exchange(ref this.token, null));
         }
 
         #region IAuthenticator implementation
@@ -52,15 +48,18 @@ namespace Conjur
         /// It needs to be base64-encoded to be used in a web request.</returns>
         public string GetToken()
         {
-            if (this.tokenExpired)
-            {
+            var token = this.token;
+            if (token != null)
+                return token;
+
+            lock(timer) if (this.token == null) {
                 var request = WebRequest.Create(this.uri);
                 request.Method = "POST";
 
                 using (var writer = new StreamWriter(request.GetRequestStream()))
                     writer.Write(this.credential.Password);
 
-                this.token = request.Read();
+                Interlocked.Exchange(ref this.token, request.Read());
                 this.StartTokenTimer(new TimeSpan(0, 7, 30));
             }
 
@@ -71,7 +70,6 @@ namespace Conjur
 
         internal void StartTokenTimer(TimeSpan timeout)
         {
-            this.tokenExpired = false;
             this.timer.Change(timeout, Timeout.InfiniteTimeSpan);
         }
     }
