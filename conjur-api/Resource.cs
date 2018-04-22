@@ -20,8 +20,10 @@ namespace Conjur
         protected readonly Client Client;
 
         private readonly string kind;
-        private readonly string id;
         private string resourcePath;
+
+        public string Id { get; }
+
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Conjur.Resource"/> class.
@@ -33,7 +35,7 @@ namespace Conjur
         {
             this.Client = client;
             this.kind = kind;
-            this.id = id;
+            this.Id = id;
         }
 
         /// <summary>
@@ -47,7 +49,7 @@ namespace Conjur
                 if (this.resourcePath == null)
                     this.resourcePath = "authz/" +
                     WebUtility.UrlEncode(this.Client.GetAccountName()) + "/resources/" +
-                    WebUtility.UrlEncode(this.kind) + "/" + WebUtility.UrlEncode(this.id);
+                    WebUtility.UrlEncode(this.kind) + "/" + WebUtility.UrlEncode(this.Id);
                 return this.resourcePath;
             }
         }
