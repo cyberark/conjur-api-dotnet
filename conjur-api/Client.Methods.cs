@@ -5,8 +5,6 @@
 //     Conjur Client methods delegating to entity-specific classes.
 // </summary>
 
-using System.Collections.Generic;
-
 namespace Conjur
 {
     /// <summary>
@@ -14,8 +12,6 @@ namespace Conjur
     /// </summary>
     public partial class Client
     {
-        private uint limitSearchVarListsReturned = 1000;
-
         /// <summary>
         /// Creates an object representing the named variable.
         /// </summary>
@@ -26,33 +22,6 @@ namespace Conjur
         public Variable Variable(string name)
         {
             return new Variable(this, name);
-        }
-
-        /// <summary>
-        /// Search for variables
-        /// </summary>
-        /// <param name="query">Query for search.</param>
-        /// <param name="actingAs">Fully-qualified Conjur ID of a role to act as.</param>
-        /// <returns>Returns IEnumerable to VariableInfo.</returns>
-        public IEnumerable<Variable> SearchVariables(string query = null, string actingAs = null)
-        {
-            uint offset = 0;
-            List<SearchVariableResult> searchVarsResult;
-            do
-            {
-                string urlWithParams = $"authz/{GetAccountName()}/resources/variable?offset={offset}"
-                                      + $"&limit={limitSearchVarListsReturned}"
-                                      + ((query != null) ? $"&search={query}" : string.Empty)
-                                      + ((actingAs != null) ? $"&acting_as={actingAs}" : string.Empty);
-
-                searchVarsResult = JsonSerializer<List<SearchVariableResult>>.Read(this.AuthenticatedRequest(urlWithParams));
-                foreach (SearchVariableResult searchVarResult in searchVarsResult)
-                {
-                    yield return new Variable(this, searchVarResult.Id);
-                }
-
-                offset += (uint)searchVarsResult.Count;
-            } while (searchVarsResult.Count > 0);
         }
 
         /// <summary>

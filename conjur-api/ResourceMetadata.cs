@@ -2,7 +2,7 @@
 //     Copyright (c) 2018 Cyberark Inc. All rights reserved.
 // </copyright>
 // <summary>
-//     Variable Info
+//     Resource metadata for deserialization, returned from List\Search Resource
 // </summary>
 
 
@@ -11,53 +11,52 @@ namespace Conjur
     using System.Runtime.Serialization;
 
     [DataContract]
-    public class SearchVariableResult
+    public class ResourceMetadata
     {
         // these data members are assigned by a deserializer
-        #pragma warning disable 169
+#pragma warning disable 169
         [DataMember(Name = "id")]
-        public string Id { get; private set;}
+        public string Id { get; private set; }
         [DataMember(Name = "created_at")]
-        public string CreatedAt { get; private set;}
+        public string CreatedAt { get; private set; }
         [DataMember(Name = "owner")]
         public string Owner { get; private set; }
         [DataMember(Name = "created_by")]
-        public string CreatedBy { get; private set;}
+        public string CreatedBy { get; private set; }
         [DataMember(Name = "permissions")]
-        public Permission[] Permissions { get; private set;}
+        public Permission[] Permissions { get; private set; }
         [DataMember(Name = "annotations")]
-        public Annoatation[] Annoatations { get; private set;}
+        public Annoatation[] Annoatations { get; private set; }
     }
 
     [DataContract]
     public class Permission
     {
         [DataMember(Name = "privilege")]
-        public string Privilege { get; private set;}
+        public string Privilege { get; private set; }
         [DataMember(Name = "grant_option")]
-        public string GrantOption { get; private set;}
+        public string GrantOption { get; private set; }
         [DataMember(Name = "resource")]
-        public string Resource { get; private set;}
+        public string Resource { get; private set; }
         [DataMember(Name = "role")]
-        public string Role { get; private set;}
+        public string Role { get; private set; }
         [DataMember(Name = "grantor")]
-        public string Grantor { get; private set;}
+        public string Grantor { get; private set; }
     }
 
     [DataContract]
     public class Annoatation
     {
-        #pragma warning disable 169
         [DataMember(Name = "resource_id")]
-        public string ResourceId { get; private set;}
+        public string ResourceId { get; private set; }
         [DataMember(Name = "name")]
-        public string Name { get; private set;}
+        public string Name { get; private set; }
         [DataMember(Name = "value")]
-        public string Value { get; private set;}
+        public string Value { get; private set; }
         [DataMember(Name = "created_at")]
-        public string CreatedAt { get; private set;}
+        public string CreatedAt { get; private set; }
         [DataMember(Name = "updated_at")]
-        public string UpdatedAt { get; private set;}
+        public string UpdatedAt { get; private set; }
     }
 
 }

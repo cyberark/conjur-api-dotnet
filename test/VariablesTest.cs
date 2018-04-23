@@ -42,7 +42,7 @@ namespace Conjur.Test
         }
 
         [Test]
-        public void TestSearchVariables()
+        public void TestListVariables()
         {
             String varListUrl = "test:///authz/test-account/resources/variable";
             IEnumerator<Variable> vars;
@@ -53,21 +53,22 @@ namespace Conjur.Test
             Mocker.Mock(new Uri($"{varListUrl}?offset=0&limit=1000"), GenerateVariablesInfo(0, 1000));
             Mocker.Mock(new Uri($"{varListUrl}?offset=1000&limit=1000"), GenerateVariablesInfo(1000, 2000));
             Mocker.Mock(new Uri($"{varListUrl}?offset=2000&limit=1000"), "[]");
-            vars = Client.SearchVariables().GetEnumerator();
+            vars = Variable.ListVariables(Client).GetEnumerator();
             verifyVariablesInfo(vars, 2000);
 
             // Verify parameters of GetListVariables() passed as expected toward conjur server
             ClearMocker();
-            Mocker.Mock(new Uri($"{varListUrl}?offset=0&limit=1000&search=var_0&acting_as=role"), GenerateVariablesInfo(0, 1000));
-            Mocker.Mock(new Uri($"{varListUrl}?offset=1000&limit=1000&search=var_0&acting_as=role"), GenerateVariablesInfo(1000, 1872));
-            Mocker.Mock(new Uri($"{varListUrl}?offset=1872&limit=1000&search=var_0&acting_as=role"), "[]");
-            vars = (Client.SearchVariables("var_0", "role")).GetEnumerator();
+            Client.ActingAs = "user:role";
+            Mocker.Mock(new Uri($"{varListUrl}?offset=0&limit=1000&search=var_0&acting_as=user:role"), GenerateVariablesInfo(0, 1000));
+            Mocker.Mock(new Uri($"{varListUrl}?offset=1000&limit=1000&search=var_0&acting_as=user:role"), GenerateVariablesInfo(1000, 1872));
+            Mocker.Mock(new Uri($"{varListUrl}?offset=1872&limit=1000&search=var_0&acting_as=user:role"), "[]");
+            vars = (Variable.ListVariables(Client, "var_0")).GetEnumerator();
             verifyVariablesInfo(vars, 1872);
 
             // Check handling invalid json response from conjur server
             ClearMocker();
-            Mocker.Mock(new Uri($"{varListUrl}?offset=0&limit=1000"), @"[""id"":""invalidjson""]");
-            vars = (Client.SearchVariables()).GetEnumerator();
+            Mocker.Mock(new Uri($"{varListUrl}?offset=0&limit=1000&acting_as=user:role"), @"[""id"":""ivnalidjson""]");
+            vars = (Variable.ListVariables(Client)).GetEnumerator();
             Assert.Throws<SerializationException>(() => vars.MoveNext());
         }
 

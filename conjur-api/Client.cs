@@ -35,13 +35,19 @@ namespace Conjur
         }
 
         /// <summary>
+        /// Switch the client to ActingAs another role. Set to null by default.
+        /// </summary>
+        /// <value>The ActingAs value. For example MyCompanyName:group:security_admin.</value>
+        public string ActingAs { get; set; }
+
+        /// <summary>
         /// Gets the appliance URI.
         /// </summary>
         /// <value>The appliance URI.</value>
         public Uri ApplianceUri
         {
             get
-            { 
+            {
                 return this.applianceUri;
             }
         }
