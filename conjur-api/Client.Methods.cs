@@ -1,5 +1,5 @@
 ﻿// <copyright file="Client.Methods.cs" company="Conjur Inc.">
-//     Copyright (c) 2016 Conjur Inc. All rights reserved.
+//     Copyright (c) 2016-2018 Conjur Inc. All rights reserved.
 // </copyright>
 // <summary>
 //     Conjur Client methods delegating to entity-specific classes.
@@ -7,6 +7,8 @@
 
 namespace Conjur
 {
+    using System.Collections.Generic;
+
     /// <summary>
     /// Entity-specific methods for the Client facade.
     /// </summary>
@@ -22,6 +24,17 @@ namespace Conjur
         public Variable Variable(string name)
         {
             return new Variable(this, name);
+        }
+
+        /// <summary>
+        /// Search for variables
+        /// </summary>
+        /// <param name="query">Query for search.</param>
+        /// <returns>List of variables matching the query.</returns>
+        /// Note enumerating can incur network requests to fetch more data.
+        public IEnumerable<Variable> ListVariables(string query = null)
+        {
+            return Conjur.Variable.List(this, query);
         }
 
         /// <summary>

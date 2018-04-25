@@ -1,5 +1,5 @@
 ﻿// <copyright file="Variable.cs" company="Conjur Inc.">
-//     Copyright (c) 2016 Conjur Inc. All rights reserved.
+//     Copyright (c) 2016-2018 Conjur Inc. All rights reserved.
 // </copyright>
 // <summary>
 //     Variable manipulation routines.
@@ -68,7 +68,7 @@ namespace Conjur
         /// <param name="client">Conjur client to query.</param>
         /// <param name="query">Query for search.</param>
         /// <returns>Returns IEnumerable to Variable.</returns>
-        internal static IEnumerable<Variable> ListVariables(Client client, string query = null)
+        internal static IEnumerable<Variable> List(Client client, string query = null)
         {
             Func<ResourceMetadata, Variable> newInst = (searchRes) => new Variable(client, searchRes.Id);
             return ListResources<Variable, ResourceMetadata>(client, "variable", newInst, query);
