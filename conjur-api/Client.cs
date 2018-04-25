@@ -1,5 +1,5 @@
 ﻿// <copyright file="Client.cs" company="Conjur Inc.">
-//     Copyright (c) 2016 Conjur Inc. All rights reserved.
+//     Copyright (c) 2016-2018 Conjur Inc. All rights reserved.
 // </copyright>
 // <summary>
 //     Base Conjur client class implementation.
@@ -37,7 +37,8 @@ namespace Conjur
         /// <summary>
         /// Switch the client to ActingAs another role. Set to null by default.
         /// </summary>
-        /// <value>The ActingAs value. For example MyCompanyName:group:security_admin.</value>
+        /// Note support for this value is limited in the current version of this library.
+        /// <value>Fully qualified role name. For example MyCompanyName:group:security_admin.</value>
         public string ActingAs { get; set; }
 
         /// <summary>
