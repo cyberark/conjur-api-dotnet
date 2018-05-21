@@ -38,6 +38,17 @@ namespace Conjur
         }
 
         /// <summary>
+        /// Search for users
+        /// </summary>
+        /// <param name="query">Query for search.</param>
+        /// <returns>List of users matching the query.</returns>
+        /// Note enumerating can incur network requests to fetch more data.
+        public IEnumerable<User> ListUsers(string query = null)
+        {
+            return Conjur.User.List (this, query);
+        }
+
+        /// <summary>
         /// Creates a host using a host factory token.
         /// </summary>
         /// <returns>The created host.</returns>
