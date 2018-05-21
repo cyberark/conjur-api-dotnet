@@ -45,7 +45,7 @@ namespace Conjur
         /// Note enumerating can incur network requests to fetch more data.
         public IEnumerable<User> ListUsers(string query = null)
         {
-            return Conjur.User.List (this, query);
+            return Conjur.User.List(this, query);
         }
 
         /// <summary>

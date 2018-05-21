@@ -40,3 +40,8 @@ Thumbs.db
 *.dotCover
 StyleCop.Cache
 TestResult.xml
+*.lock
+*.ide
+*.ide-shm
+*.ide-wal
+*.xml

@@ -22,7 +22,7 @@ namespace Conjur
         /// <param name="client">Conjur client to use to connect.</param>
         /// <param name="name">The User (or host) name.</param>
         internal User(Client client, string name)
-            : base(client, "user", Uri.EscapeDataString(name))
+            : base(client, "user", name)
         {
         }
 
