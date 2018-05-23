@@ -1,5 +1,5 @@
 ﻿// <copyright file="AssemblyInfo.cs" company="Conjur Inc.">
-//     Copyright (c) 2018 Conjur Inc. All rights reserved.
+//     Copyright (c) 2016 Conjur Inc. All rights reserved.
 // </copyright>
 // <summary>
 // Assembly info.
