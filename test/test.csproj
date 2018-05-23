@@ -37,6 +37,7 @@
     <Compile Include="ClientTest.cs" />
     <Compile Include="WebMocker.cs" />
     <Compile Include="VariablesTest.cs" />
+    <Compile Include="UsersTest.cs" />
     <Compile Include="Base.cs" />
     <Compile Include="MockAuthenticator.cs" />
     <Compile Include="HostFactoryTest.cs" />
