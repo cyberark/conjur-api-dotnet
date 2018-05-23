@@ -1,5 +1,5 @@
 // <copyright file="User.cs" company="Conjur Inc.">
-//     Copyright (c) 2016-2018 Conjur Inc. All rights reserved.
+//     Copyright (c) 2018 Cyberark Ltd. All rights reserved.
 // </copyright>
 // <summary>
 //     User manipulation routines.
@@ -13,14 +13,14 @@ namespace Conjur
     /// <summary>
     /// Conjur User reference.
     /// </summary>
-    /// A user represents an identity for a human. It is a role, in RBAC terms.
+    /// A user represents resource for a human identity.
     public class User : Resource
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Conjur.User"/> class.
         /// </summary>
         /// <param name="client">Conjur client to use to connect.</param>
-        /// <param name="name">The User (or host) name.</param>
+        /// <param name="name">The User name.</param>
         internal User(Client client, string name)
             : base(client, "user", name)
         {
