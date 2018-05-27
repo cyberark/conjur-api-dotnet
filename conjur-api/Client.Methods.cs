@@ -37,6 +37,19 @@ namespace Conjur
             return Conjur.Variable.List(this, query);
         }
 
+
+        /// <summary>
+        /// Creates an object representing the named User.
+        /// </summary>
+        /// Note the existence of the User is not verified.
+        /// <param name="name">The User name.</param>
+        /// <returns>User object.</returns>
+        /// <seealso cref="User()"/>
+        public User User(string name)
+        {
+            return new User(this, name);
+        }
+
         /// <summary>
         /// Search for users
         /// </summary>
