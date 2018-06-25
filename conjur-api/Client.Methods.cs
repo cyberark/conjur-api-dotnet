@@ -5,6 +5,8 @@
 //     Conjur Client methods delegating to entity-specific classes.
 // </summary>
 
+using System.Collections.Generic;
+
 namespace Conjur
 {
     /// <summary>
@@ -22,6 +24,16 @@ namespace Conjur
         public Variable Variable(string name)
         {
             return new Variable(this, name);
+        }
+
+		/// <summary>
+        /// Lists the variables.
+        /// </summary>
+        /// <returns>The variabßles.</returns>
+        /// <param name="query">Query.</param>
+        public IEnumerable<Variable> ListVariables(string query = null)
+        {
+            return Conjur.Variable.List(this, query);
         }
 
         /// <summary>
@@ -42,7 +54,7 @@ namespace Conjur
         /// <param name="kind">Resource kind.</param>
         /// <param name="id">Resource identifier.</param>
         /// <returns>Object representing the specified resource.</returns>
-        public Resource Resource(string kind, string id)
+        public Resource Resource(ResourceKind kind, string id)
         {
             return new Resource(this, kind, id);
         }

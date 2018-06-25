@@ -17,6 +17,13 @@ namespace Conjur.Test
             WebRequest.RegisterPrefix("test", Mocker);
         }
 
+        [SetUp]
+        protected void ClearMocker()
+        {
+            Mocker.Clear();
+            Mocker.Mock(new Uri ("test:///info"), "{ \"account\": \"test-account\"}");
+        }
+
         protected Base()
         {
             Client = new Conjur.Client("test:///", TestAccount);

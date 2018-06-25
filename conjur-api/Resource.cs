@@ -7,7 +7,9 @@
 
 namespace Conjur
 {
+    using System;
     using System.Net;
+    using System.Collections.Generic;
 
     /// <summary>
     /// Base class representing a Conjur resource.
@@ -17,25 +19,37 @@ namespace Conjur
         /// <summary>
         /// The Conjur client used to manipulate this resource.
         /// </summary>
-        protected readonly Client Client;
+        protected readonly Client m_client;
 
-        private readonly string kind;
-        private readonly string id;
-        private string resourcePath;
+        /// <summary>
+        /// Gets resource name.
+        /// </summary>
+        /// <value>The name.</value>
+        public string Name { get; }
+
+        /// <summary>
+        /// Gets the identifier assmbled from account:kind:name.
+        /// </summary>
+        /// <value>The identifier.</value>
+        public string Id { get; }
+
+        private readonly ResourceKind m_kind;
+        private string m_resourcePath;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Conjur.Resource"/> class.
         /// </summary>
         /// <param name="client">Conjur client used to manipulate this resource.</param>
         /// <param name="kind">Resource kind.</param>
-        /// <param name="id">Resource identifier.</param>
-        internal Resource(Client client, string kind, string id)
+        /// <param name="name">Resource name.</param>
+        internal Resource(Client client, ResourceKind kind, string name)
         {
-            this.Client = client;
-            this.kind = kind;
-            this.id = id;
+            m_client = client;
+            m_kind = kind;
+            Name = name;
+            Id = $"{client.GetAccountName()}:{kind}:{Name}";
         }
-
+	
         /// <summary>
         /// Gets the resource path.
         /// </summary>
@@ -44,11 +58,11 @@ namespace Conjur
         {
             get
             {
-                if (this.resourcePath == null)
-                    this.resourcePath = "resources/" +
-                    WebUtility.UrlEncode(this.Client.GetAccountName()) + "/" +
-                    WebUtility.UrlEncode(this.kind) + "/" + WebUtility.UrlEncode(this.id);
-                return this.resourcePath;
+                if (m_resourcePath == null)
+                {
+                    m_resourcePath = $"resources/{WebUtility.UrlEncode(m_client.GetAccountName())}/{m_kind}/{WebUtility.UrlEncode(Name)}";
+                }
+                return m_resourcePath;
             }
         }
 
@@ -61,9 +75,8 @@ namespace Conjur
         /// <param name="privilege">Privilege to check.</param>
         public bool Check(string privilege)
         {
-            var req = this.Client.AuthenticatedRequest(this.ResourcePath
-                          + "/?check=true&privilege=" + WebUtility.UrlEncode(privilege));
-            req.Method = "HEAD";
+            WebRequest req = m_client.AuthenticatedRequest($"{ResourcePath}/?check=true&privilege={WebUtility.UrlEncode(privilege)}");
+            req.Method = WebRequestMethods.Http.Head;
 
             try
             {
@@ -72,11 +85,30 @@ namespace Conjur
             }
             catch (WebException exn)
             {
-                var hr = exn.Response as HttpWebResponse;
+                HttpWebResponse hr = exn.Response as HttpWebResponse;
                 if (hr != null && hr.StatusCode == HttpStatusCode.Forbidden)
+                {
                     return false;
+                }
                 throw;
             }
+        }
+
+        internal static IEnumerable<T> ListResources<T, TResult>(Client client, ResourceKind kind, Func<TResult, T> newT, string query = null, uint limit = 1000, uint offset = 0)
+        {
+            List<TResult> resultList;
+            do
+            {
+                string pathListResourceQuery = $"resources/{client.GetAccountName()}?{kind}&offset={offset}&limit={limit}"
+                    + ((query != null) ? $"&search={query}" : string.Empty);
+
+                resultList = JsonSerializer<List<TResult>>.Read(client.AuthenticatedRequest(pathListResourceQuery));
+                foreach (TResult searchResult in resultList) 
+                {
+                    yield return newT(searchResult);
+                }
+                offset += (uint)resultList.Count;
+            } while (resultList.Count > 0);
         }
     }
 }

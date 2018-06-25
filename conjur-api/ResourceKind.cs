@@ -1,18 +1,17 @@
-﻿using System;
-namespace Conjur
+﻿namespace Conjur
 {
     /// <summary>
-    /// Resource type.
-    /// <see cref="https://www.conjur.org/api.html#header-kinds-of-resources"/>: Conjur API  resource kinds
+    /// Resource kind.
+    /// <see cref="https://www.conjur.org/api.html#header-kinds-of-resources"/>: Conjur API resource kinds
     /// </summary>
-    public enum ResourceType
+    public enum ResourceKind
     {
-        User,
-        Host,
-        Layer,
-        Group,
-        Policy,
-        Variable,
-        Webservice
+        user,
+        host,
+        layer,
+        group,
+        policy,
+        variable,
+        webservice
     }
 }

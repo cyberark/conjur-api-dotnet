@@ -7,6 +7,7 @@
 
 namespace Conjur
 {
+    using System.IO;
     using System.Net;
     using System.Runtime.Serialization.Json;
 
@@ -19,8 +20,10 @@ namespace Conjur
 
         public static T Read(WebRequest request)
         {
-            using (var stream = request.GetResponse().GetResponseStream())
+            using (Stream stream = request.GetResponse().GetResponseStream())
+            {
                 return Instance.ReadObject(stream) as T;
+            }
         }
     }
 }

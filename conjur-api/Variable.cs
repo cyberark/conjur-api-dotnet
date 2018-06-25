@@ -7,7 +7,10 @@
 
 namespace Conjur
 {
+    using System;
+    using System.Collections.Generic;
     using System.Net;
+    using System.Net.Mime;
     using System.Text;
 
     /// <summary>
@@ -17,7 +20,7 @@ namespace Conjur
     /// Conjur server.
     public class Variable : Resource
     {
-        private readonly string path;
+        private readonly string m_path;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Conjur.Variable"/> class.
@@ -26,9 +29,9 @@ namespace Conjur
         /// <param name="name">The variable name.</param>
         /// <seealso cref="Extensions.Variable"/>
         internal Variable(Client client, string name)
-            : base(client, "variable", name)
+            : base(client, ResourceKind.variable, name)
         {
-            this.path = "secrets/" + client.GetAccountName() + "/variable/" + WebUtility.UrlEncode(name);
+            m_path = $"secrets/{WebUtility.UrlEncode(client.GetAccountName())}/{ResourceKind.variable}/{WebUtility.UrlEncode(name)}";
         }
 
         /// <summary>
@@ -37,18 +40,25 @@ namespace Conjur
         /// <returns>The value.</returns>
         public string GetValue()
         {
-            return this.Client.AuthenticatedRequest(this.path).Read();
+            return m_client.AuthenticatedRequest(m_path).Read();
         }
 
         public void AddSecret(string val)
         {
-            WebRequest webRequest = this.Client.AuthenticatedRequest(this.path);
-            webRequest.Method = "POST";
-
-            byte[] data = Encoding.UTF8.GetBytes(val);
+            byte[] value = Encoding.UTF8.GetBytes(val);
+            WebRequest webRequest = m_client.AuthenticatedRequest(m_path);
+            webRequest.Method = WebRequestMethods.Http.Post;
             webRequest.ContentType = "text\\plain";
-            webRequest.ContentLength = data.Length;
-            webRequest.GetRequestStream().Write(data, 0, data.Length);
+            webRequest.ContentLength = value.Length;
+            webRequest.GetRequestStream().Write(value, 0, value.Length);
         }
+
+        internal static IEnumerable<Variable> List(Client client, string query = null)
+        {
+            Func<ResourceMetadata, Variable> newInst = (searchRes) => new Variable(client, IdToName(searchRes.Id, client.GetAccountName(), ResourceKind.variable));
+            return ListResources<Variable, ResourceMetadata> (client, ResourceKind.variable, newInst, query);
+        }
+
+        private static string IdToName(string id, string account, ResourceKind kind) => id.Substring(id.IndexOf($"{account}:{kind}:") + 1);
     }
 }
