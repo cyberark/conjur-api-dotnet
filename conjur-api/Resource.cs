@@ -110,5 +110,7 @@ namespace Conjur
                 offset += (uint)resultList.Count;
             } while (resultList.Count > 0);
         }
+
+        protected static string IdToName (string id, string account, ResourceKind kind) => id.Substring (id.IndexOf ($"{account}:{kind}:") + 1);
     }
 }

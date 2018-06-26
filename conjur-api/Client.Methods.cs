@@ -37,6 +37,28 @@ namespace Conjur
         }
 
         /// <summary>
+        /// Create an onject representing the User with this specified name.
+        /// </summary>
+        /// <returns>The user.</returns>
+        /// <param name="name">Name.</param>
+        /// <returns>User object.</returns>
+        /// <seealso cref="User()"/>
+        public User User(string name)
+        {
+            return new User(this, name);
+        }
+
+        /// <summary>
+        /// Lists the users.
+        /// </summary>
+        /// <returns>The variabßles.</returns>
+        /// <param name="query">Query.</param>
+        public IEnumerable<User> ListUsers(string query = null)
+        {
+            return Conjur.User.List(this, query);
+        }
+
+        /// <summary>
         /// Creates a host using a host factory token.
         /// </summary>
         /// <returns>The created host.</returns>

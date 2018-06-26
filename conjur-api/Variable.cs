@@ -58,7 +58,5 @@ namespace Conjur
             Func<ResourceMetadata, Variable> newInst = (searchRes) => new Variable(client, IdToName(searchRes.Id, client.GetAccountName(), ResourceKind.variable));
             return ListResources<Variable, ResourceMetadata> (client, ResourceKind.variable, newInst, query);
         }
-
-        private static string IdToName(string id, string account, ResourceKind kind) => id.Substring(id.IndexOf($"{account}:{kind}:") + 1);
     }
 }

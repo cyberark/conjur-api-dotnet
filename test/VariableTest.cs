@@ -9,9 +9,9 @@ using static Conjur.Test.WebMocker;
 
 namespace Conjur.Test
 {
-    public class VariablesTest : Base
+    public class VariableTest : Base
     {
-        public VariablesTest()
+        public VariableTest()
         {
             Client.Authenticator = new MockAuthenticator();
         }
