@@ -46,20 +46,20 @@ namespace Conjur.Test
         [Test]
         public void ListVariableTest()
         {
-            string ur = $"test:///resources/{TestAccount}?{ResourceKind.variable}";
+            string variableUri = $"test:///resources/{TestAccount}?{ResourceKind.variable}";
             IEnumerator<Variable> vars;
 
             ClearMocker();
-            Mocker.Mock(new Uri (ur + "&offset=0&limit=1000"), GenerateVariablesInfo (0, 1000));
-            Mocker.Mock(new Uri (ur + "&offset=1000&limit=1000"), GenerateVariablesInfo (1000, 2000));
-            Mocker.Mock(new Uri (ur + "&offset=2000&limit=1000"), "[]");
+            Mocker.Mock(new Uri(variableUri + "&offset=0&limit=1000"), GenerateVariablesInfo(0, 1000));
+            Mocker.Mock(new Uri(variableUri + "&offset=1000&limit=1000"), GenerateVariablesInfo(1000, 2000));
+            Mocker.Mock(new Uri(variableUri + "&offset=2000&limit=1000"), "[]");
             vars = (Client.ListVariables()).GetEnumerator();
             verifyVariablesInfo(vars, 2000);
 
             ClearMocker();
-            Mocker.Mock(new Uri (ur + "&offset=0&limit=1000"), @"[""id"":""invalidjson""]");
+            Mocker.Mock(new Uri (variableUri + "&offset=0&limit=1000"), @"[""id"":""invalidjson""]");
             vars = (Client.ListVariables ()).GetEnumerator ();
-            Assert.Throws<SerializationException> (() => vars.MoveNext ());
+            Assert.Throws<SerializationException> (() => vars.MoveNext());
 
         }
 
@@ -70,7 +70,7 @@ namespace Conjur.Test
                 Assert.AreEqual(true, vars.MoveNext());
                 Assert.AreEqual($"{Client.GetAccountName()}:{ResourceKind.variable}:id{id}", vars.Current.Id);
             }
-            Assert.AreEqual(false, vars.MoveNext ());
+            Assert.AreEqual(false, vars.MoveNext());
         }
 
         private string GenerateVariablesInfo(int firstVarId, int lastVarId)

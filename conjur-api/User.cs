@@ -29,8 +29,8 @@
         /// <returns>Returns IEnumerable to User.</returns>
         internal static IEnumerable<User> List(Client client, string query = null)
         {
-            Func<ResourceMetadata, User> newInst = (searchRes) => new User (client, IdToName(searchRes.Id, client.GetAccountName(), ResourceKind.user));
-            return ListResources<User, ResourceMetadata> (client, ResourceKind.user, newInst, query);
+            Func<ResourceMetadata, User> newInst = (searchRes) => new User(client, IdToName(searchRes.Id, client.GetAccountName(), ResourceKind.user));
+            return ListResources<User, ResourceMetadata>(client, ResourceKind.user, newInst, query);
         }
     }
 }

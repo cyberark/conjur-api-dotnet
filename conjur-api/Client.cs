@@ -21,16 +21,24 @@ namespace Conjur
     {
         private Uri m_applianceUri;
         private string m_account;
+        private string m_acting_as;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Conjur.Client"/> class.
+        /// Initializes a new instance of the <see cref="T:Conjur.Client"/> class.
         /// </summary>
         /// <param name="applianceUri">Appliance URI.</param>
+        /// <param name="account">Account.</param>
         public Client(string applianceUri, string account)
         {
-            m_account = account;
             m_applianceUri = NormalizeBaseUri(applianceUri);
+            m_account = account;
             TrustedCertificates = new X509Certificate2Collection();
+        }
+
+        internal Client(Client other, string role) : this (other.ApplianceUri.AbsoluteUri, other.m_account)
+        {
+            m_acting_as = role;
+            Authenticator = other.Authenticator;
         }
 
         /// <summary>
@@ -59,11 +67,11 @@ namespace Conjur
         /// </summary>
         /// <value>The credential of user name and API key, where user name is
         /// for example "bob" or "host/jenkins".</value>
-        public NetworkCredential Credential 
+        public NetworkCredential Credential
         {
             set
             {
-                Authenticator = new ApiKeyAuthenticator(new Uri (m_applianceUri + "authn"), GetAccountName (), value);
+                Authenticator = new ApiKeyAuthenticator(new Uri(m_applianceUri + "authn"), GetAccountName(), value);
             }
         }
 
@@ -106,16 +114,16 @@ namespace Conjur
         /// <returns>The API key.</returns>
         /// <param name="credential">The credential of user name and password,
         /// where user name is for example "bob" or "host/jenkins".</param>
-        public string LogIn (NetworkCredential credential)
+        public string LogIn(NetworkCredential credential)
         {
-            var wr = Request($"authn/{m_account}/login");
+            WebRequest wr = Request($"authn/{m_account}/login");
 
 
             // there seems to be no sane way to force WebRequest to authenticate
             // properly by itself, so generate the header manually
-            var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(credential.UserName + ":" + credential.Password));
+            string auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(credential.UserName + ":" + credential.Password));
             wr.Headers ["Authorization"] = "Basic " + auth;
-            var apiKey = wr.Read();
+            string apiKey = wr.Read();
 
             Credential = new NetworkCredential(credential.UserName, apiKey);
             return apiKey;
@@ -139,7 +147,7 @@ namespace Conjur
         /// authorization header set using <see cref="Authenticator"/>.</returns>
         public WebRequest AuthenticatedRequest(string path)
         {
-            return ApplyAuthentication(Request(path));
+            return ApplyAuthentication(Request(path + ((m_acting_as != null) ? $"&acting_as={WebUtility.UrlEncode(m_acting_as)}" : String.Empty)));
         }
 
         /// <summary>
@@ -154,7 +162,7 @@ namespace Conjur
             // eg. it returns 401 on https://example.org//api/info
 
             // so normalize to remove double slashes
-            var normalizedUri = Regex.Replace(uri, "(?<!:)/+", "/");
+            string normalizedUri = Regex.Replace(uri, "(?<!:)/+", "/");
 
             // make sure there is a trailing slash
             return new Uri(Regex.Replace(normalizedUri, "(?<!/)\\z", "/"));
@@ -193,7 +201,7 @@ namespace Conjur
                 throw new InvalidOperationException("Authentication required.");
             }
 
-            var token = Convert.ToBase64String(Encoding.UTF8.GetBytes(Authenticator.GetToken()));
+            string token = Convert.ToBase64String(Encoding.UTF8.GetBytes(Authenticator.GetToken()));
             webRequest.Headers["Authorization"] = "Token token=\"" + token + "\"";
             return webRequest;
         }

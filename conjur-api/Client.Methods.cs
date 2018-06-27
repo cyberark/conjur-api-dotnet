@@ -51,7 +51,7 @@ namespace Conjur
         /// <summary>
         /// Lists the users.
         /// </summary>
-        /// <returns>The variabßles.</returns>
+        /// <returns>List of users.</returns>
         /// <param name="query">Query.</param>
         public IEnumerable<User> ListUsers(string query = null)
         {
@@ -79,6 +79,16 @@ namespace Conjur
         public Resource Resource(ResourceKind kind, string id)
         {
             return new Resource(this, kind, id);
+        }
+
+        /// <summary>
+        /// Actings as role is passed to new instanace of client.
+        /// </summary>
+        /// <returns>New instance of impersonated client with requestd role.</returns>
+        /// <param name="role">Role.</param>
+        public Client ActingAs(string role)
+        {
+            return new Client(this, role);
         }
     }
 }

@@ -56,7 +56,7 @@ namespace Conjur
         internal static IEnumerable<Variable> List(Client client, string query = null)
         {
             Func<ResourceMetadata, Variable> newInst = (searchRes) => new Variable(client, IdToName(searchRes.Id, client.GetAccountName(), ResourceKind.variable));
-            return ListResources<Variable, ResourceMetadata> (client, ResourceKind.variable, newInst, query);
+            return ListResources<Variable, ResourceMetadata>(client, ResourceKind.variable, newInst, query);
         }
     }
 }

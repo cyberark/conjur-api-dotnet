@@ -2,6 +2,8 @@
 using System;
 using System.Net;
 using Conjur;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Conjur.Test
 {
@@ -49,6 +51,27 @@ namespace Conjur.Test
             Client.Authenticator = null;
             Assert.Throws<InvalidOperationException>(() =>
                 Client.AuthenticatedRequest("info"));
+        }
+
+
+        [Test]
+        public void ActingAsTest()
+        {
+            string role = $"{Client.GetAccountName()}:{ResourceKind.user}:foo";
+            string resourceVarUri = $"test:///resources/{TestAccount}?{ResourceKind.variable}";
+
+            Mocker.Mock(new Uri($"{resourceVarUri}&offset=0&limit=1000&acting_as={role}"), $"[{{\"id\":\"id\"}}]");
+            Mocker.Mock(new Uri ($"{resourceVarUri}&offset=0&limit=1000"), "[]");
+
+            Client.Authenticator = new MockAuthenticator();
+
+            IEnumerator<Variable> actingAsClientVars = Client.ActingAs(role).ListVariables().GetEnumerator();
+            IEnumerator<Variable> plainClientVars = Client.ListVariables().GetEnumerator();
+
+            Assert.AreEqual(true, actingAsClientVars.MoveNext());
+            Assert.AreEqual($"{Client.GetAccountName()}:{ResourceKind.variable}:id", actingAsClientVars.Current.Id);
+
+            Assert.AreEqual(false, plainClientVars.MoveNext());
         }
     }
 }
