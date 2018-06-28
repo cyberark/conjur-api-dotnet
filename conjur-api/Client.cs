@@ -10,6 +10,7 @@ namespace Conjur
     using System;
     using System.Net;
     using System.Net.Security;
+    using System.Runtime.Serialization;
     using System.Security.Cryptography.X509Certificates;
     using System.Text;
     using System.Text.RegularExpressions;
@@ -19,8 +20,8 @@ namespace Conjur
     /// </summary>
     public partial class Client
     {
-        private Uri m_applianceUri;
-        private string m_account;
+        private Uri applianceUri;
+        private string account;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Conjur.Client"/> class.
@@ -28,9 +29,9 @@ namespace Conjur
         /// <param name="applianceUri">Appliance URI.</param>
         public Client(string applianceUri, string account)
         {
-            m_account = account;
-            m_applianceUri = NormalizeBaseUri(applianceUri);
-            TrustedCertificates = new X509Certificate2Collection();
+            this.account = account;
+            this.applianceUri = NormalizeBaseUri(applianceUri);
+            this.TrustedCertificates = new X509Certificate2Collection();
         }
 
         /// <summary>
@@ -39,9 +40,9 @@ namespace Conjur
         /// <value>The appliance URI.</value>
         public Uri ApplianceUri
         {
-            get 
+            get
             {
-                return m_applianceUri;
+                return this.applianceUri;
             }
         }
 
@@ -50,7 +51,11 @@ namespace Conjur
         /// This gets automatically set by setting <see cref="Client.Credential"/>.
         /// </summary>
         /// <value>The authenticator.</value>
-        public IAuthenticator Authenticator { get; set; }
+        public IAuthenticator Authenticator
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Sets the username and API key to authenticate.
@@ -59,11 +64,13 @@ namespace Conjur
         /// </summary>
         /// <value>The credential of user name and API key, where user name is
         /// for example "bob" or "host/jenkins".</value>
-        public NetworkCredential Credential 
+        public NetworkCredential Credential
         {
             set
             {
-                Authenticator = new ApiKeyAuthenticator(new Uri (m_applianceUri + "authn"), GetAccountName (), value);
+                this.Authenticator = new ApiKeyAuthenticator(
+                    new Uri(this.applianceUri + "authn"), this.GetAccountName(),
+                    value);
             }
         }
 
@@ -83,7 +90,7 @@ namespace Conjur
         /// <returns>The account name.</returns>
         public string GetAccountName()
         {
-            return m_account;
+            return this.account;
         }
 
         /// <summary>
@@ -96,7 +103,7 @@ namespace Conjur
         /// <param name="password">Password of the user.</param>
         public string LogIn(string userName, string password)
         {
-            return LogIn(new NetworkCredential(userName, password));
+            return this.LogIn(new NetworkCredential(userName, password));
         }
 
         /// <summary>
@@ -106,18 +113,19 @@ namespace Conjur
         /// <returns>The API key.</returns>
         /// <param name="credential">The credential of user name and password,
         /// where user name is for example "bob" or "host/jenkins".</param>
-        public string LogIn (NetworkCredential credential)
+        public string LogIn(NetworkCredential credential)
         {
-            var wr = Request($"authn/{m_account}/login");
+            var wr = this.Request("authn/" + this.account + "/login");
 
 
             // there seems to be no sane way to force WebRequest to authenticate
             // properly by itself, so generate the header manually
-            var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(credential.UserName + ":" + credential.Password));
-            wr.Headers ["Authorization"] = "Basic " + auth;
+            var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(
+                               credential.UserName + ":" + credential.Password));
+            wr.Headers["Authorization"] = "Basic " + auth;
             var apiKey = wr.Read();
 
-            Credential = new NetworkCredential(credential.UserName, apiKey);
+            this.Credential = new NetworkCredential(credential.UserName, apiKey);
             return apiKey;
         }
 
@@ -128,7 +136,7 @@ namespace Conjur
         /// <returns>A WebRequest for the specified appliance path.</returns>
         public WebRequest Request(string path)
         {
-            return WebRequest.Create(m_applianceUri + path);
+            return WebRequest.Create(this.applianceUri + path);
         }
 
         /// <summary>
@@ -139,7 +147,7 @@ namespace Conjur
         /// authorization header set using <see cref="Authenticator"/>.</returns>
         public WebRequest AuthenticatedRequest(string path)
         {
-            return ApplyAuthentication(Request(path));
+            return this.ApplyAuthentication(this.Request(path));
         }
 
         /// <summary>
@@ -177,23 +185,22 @@ namespace Conjur
         {
             switch (sslPolicyErrors)
             {
-            case SslPolicyErrors.RemoteCertificateChainErrors:
-                return chain.VerifyWithExtraRoots(certificate, TrustedCertificates);
-            case SslPolicyErrors.None:
-                return true;
-            default:
-                return false;
+                case SslPolicyErrors.RemoteCertificateChainErrors:
+                    return chain.VerifyWithExtraRoots(certificate, this.TrustedCertificates);
+                case SslPolicyErrors.None:
+                    return true;
+                default:
+                    return false;
             }
         }
 
         private WebRequest ApplyAuthentication(WebRequest webRequest)
         {
-            if (Authenticator == null)
-            {
+            if (this.Authenticator == null)
                 throw new InvalidOperationException("Authentication required.");
-            }
 
-            var token = Convert.ToBase64String(Encoding.UTF8.GetBytes(Authenticator.GetToken()));
+            var token = Convert.ToBase64String(
+                            Encoding.UTF8.GetBytes(this.Authenticator.GetToken()));
             webRequest.Headers["Authorization"] = "Token token=\"" + token + "\"";
             return webRequest;
         }
