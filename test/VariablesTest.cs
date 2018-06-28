@@ -21,7 +21,7 @@ namespace Conjur.Test
             Mocker.Mock(new Uri("test:///secrets/" + TestAccount +  "/variable/foo%2Fbar"), "testvalue");
             Assert.AreEqual("testvalue", Client.Variable("foo/bar").GetValue());
 
-            // TODO: not sure if this is secrets to be a plus or %20 or either
+            // TODO: not sure if this is supposed to be a plus or %20 or either
             Mocker.Mock(new Uri("test:///secrets/" + TestAccount +  "/variable/foo+bar"), "space test");
             Assert.AreEqual("space test", Client.Variable("foo bar").GetValue());
         }
