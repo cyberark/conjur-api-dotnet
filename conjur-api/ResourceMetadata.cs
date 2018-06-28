@@ -1,58 +1,65 @@
-﻿namespace Conjur
+﻿// <copyright file="ResourceMetadata.cs" company="Conjur Inc.">
+//     Copyright (c) 2016 Conjur Inc. All rights reserved.
+// </copyright>
+// <summary>
+//     Class representing resource metadata returned from web request.
+// </summary>
+
+namespace Conjur
 {
     using System.Runtime.Serialization;
 
     [DataContract]
-    public class ResourceMetadata
+    public class ResourceMetadataֿ
     {
-        [DataMember (Name = "id")]
+        [DataMember(Name = "id")]
         public string Id { get; set; }
-        [DataMember (Name = "policy")]
+        [DataMember(Name = "policy")]
         public string Policy { get; set; }
-        [DataMember (Name = "created_at")]
+        [DataMember(Name = "created_at")]
         public string CreatedAt { get; set; }
-        [DataMember (Name = "owner")]
+        [DataMember(Name = "owner")]
         public string Owner { get; set; }
-        [DataMember (Name = "permissions")]
+        [DataMember(Name = "permissions")]
         public Permission[] Permissions { get; set; }
-        [DataMember (Name = "annotations")]
+        [DataMember(Name = "annotations")]
         public Annotation[] Annotations { get; set; }
-        [DataMember (Name = "secrets")]
+        [DataMember(Name = "secrets")]
         public Secrets[] Secrets { get; set; }
     }
 
     [DataContract]
     public class Permission
     {
-        [DataMember (Name = "privilege")]
+        [DataMember(Name = "privilege")]
         public string Privilege { get; set; }
-        [DataMember (Name = "grant_option")]
+        [DataMember(Name = "grant_option")]
         public string GrantOption { get; set; }
-        [DataMember (Name = "resource")]
+        [DataMember(Name = "resource")]
         public string Resource { get; set; }
-        [DataMember (Name = "role")]
+        [DataMember(Name = "role")]
         public string Role { get; set; }
-        [DataMember (Name = "grantor")]
+        [DataMember(Name = "grantor")]
         public string Grantor { get; set; }
     }
 
     [DataContract]
     public class Annotation
     {
-        [DataMember (Name = "name")]
+        [DataMember(Name = "name")]
         public string Name { get; set; }
-        [DataMember (Name = "value")]
+        [DataMember(Name = "value")]
         public string Value { get; set; }
-        [DataMember (Name = "policy")]
+        [DataMember(Name = "policy")]
         public string Policy { get; set; }
     }
 
     [DataContract]
     public class Secrets
     {
-        [DataMember (Name = "version")]
+        [DataMember(Name = "version")]
         public string Version { get; set; }
-        [DataMember (Name = "expires_at")]
+        [DataMember(Name = "expires_at")]
         public string ExpiresAt { get; set; }
     }
 }
