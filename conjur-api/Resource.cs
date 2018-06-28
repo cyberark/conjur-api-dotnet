@@ -113,7 +113,7 @@ namespace Conjur
 
         protected static string IdToName(string id, string account, string kind)
         {
-            return id.Substring(id.IndexOf($"{account}:{kind}:", StringComparison.CurrentCulture) + 1);
+            return id.Substring ($"{account}:{kind}:".Length);
         }
     }
 }
