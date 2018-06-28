@@ -115,7 +115,5 @@ namespace Conjur
         {
             return id.Substring(id.IndexOf($"{account}:{kind}:", StringComparison.CurrentCulture) + 1);
         }
-
-        protected static string IdToName (string id, string account, ResourceKind kind) => id.Substring (id.IndexOf ($"{account}:{kind}:") + 1);
     }
 }

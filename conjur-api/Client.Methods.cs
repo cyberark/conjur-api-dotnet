@@ -26,21 +26,20 @@ namespace Conjur
         }
 
         /// <summary>
-        /// Lists Conjur variables.
+        /// Lists Conjur resource of kind variable.
         /// </summary>
-        /// <returns>A list of variables</returns>
-        /// <param name="query">Query.</param>
+        /// <param name="query">Additional Query parameters, not required.</param>
+        /// <returns>A list of variables objects.</returns>
         public IEnumerable<Variable> ListVariables(string query = null)
         {
             return Conjur.Variable.List(this, query);
         }
 
         /// <summary>
-        /// Create an onject representing the User with this specified name.
+        /// Create an object representing a Conjur ressource of kind user corresponding with the specifiy name.
         /// </summary>
-        /// <returns>The user.</returns>
-        /// <param name="name">Name.</param>
-        /// <returns>User object.</returns>
+        /// <param name="name">A Name for the requested user.</param>
+        /// <returns>An Object respresenting a user.</returns>
         /// <seealso cref="User()"/>
         public User User(string name)
         {
@@ -48,10 +47,10 @@ namespace Conjur
         }
 
         /// <summary>
-        /// Lists the users.
+        /// Lists Conjur resources of kind user.
         /// </summary>
-        /// <returns>The variabßles.</returns>
-        /// <param name="query">Query.</param>
+        /// <param name="query">Additional Query parameters, not required.</param>
+        /// <returns>A list of users objects.</returns>
         public IEnumerable<User> ListUsers(string query = null)
         {
             return Conjur.User.List(this, query);
@@ -60,9 +59,9 @@ namespace Conjur
         /// <summary>
         /// Creates a host using a host factory token.
         /// </summary>
-        /// <returns>The created host.</returns>
         /// <param name="name">Name of the host to create.</param>
         /// <param name="hostFactoryToken">Host factory token.</param>
+        /// <returns>The created host.</returns>
         public Host CreateHost(string name, string hostFactoryToken)
         {
             return new HostFactoryToken(this, hostFactoryToken)
@@ -70,7 +69,7 @@ namespace Conjur
         }
 
         /// <summary>
-        /// Creates an object representing a Conjur resource.
+        /// Creates an object representing a Conjur general resource.
         /// </summary>
         /// <param name="kind">Resource kind. @<see cref="ResourceKind"/></param>
         /// <param name="name">Resource Name.</param>
