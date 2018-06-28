@@ -53,7 +53,7 @@ namespace Conjur
         /// <param name="kind">Resource kind. @<see cref="ResourceKind"/></param>
         /// <param name="name">Resource Name.</param>
         /// <returns>Object representing the specified resource.</returns>
-        public Resource Resource(ResourceKind kind, string name)
+        public Resource Resource(string kind, string name)
         {
             return new Resource(this, kind, name);
         }

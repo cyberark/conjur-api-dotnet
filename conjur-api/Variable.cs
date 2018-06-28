@@ -28,9 +28,9 @@ namespace Conjur
         /// <param name="name">The variable name.</param>
         /// <seealso cref="Extensions.Variable"/>
         internal Variable(Client client, string name)
-            : base(client, ResourceKind.variable, name)
+            : base(client, Constants.KIND_VARIABLE, name)
         {
-            this.path = $"secrets/{WebUtility.UrlEncode(client.GetAccountName())}/{ResourceKind.variable}/{WebUtility.UrlEncode(name)}";
+            this.path = $"secrets/{WebUtility.UrlEncode(client.GetAccountName())}/{Constants.KIND_VARIABLE}/{WebUtility.UrlEncode(name)}";
         }
 
         /// <summary>
@@ -59,8 +59,8 @@ namespace Conjur
 
         internal static IEnumerable<Variable> List(Client client, string query = null)
         {
-            Func<ResourceMetadataֿ, Variable> newInst = (searchRes) => new Variable(client, IdToName(searchRes.Id, client.GetAccountName(), ResourceKind.variable));
-            return ListResources(client, ResourceKind.variable, newInst, query);
+            Func<ResourceMetadataֿ, Variable> newInst = (searchRes) => new Variable(client, IdToName(searchRes.Id, client.GetAccountName(), Constants.KIND_VARIABLE));
+            return ListResources(client, Constants.KIND_VARIABLE, newInst, query);
         }
     }
 }

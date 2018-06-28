@@ -21,7 +21,7 @@ namespace Conjur
         /// </summary>
         protected readonly Client Client;
 
-        private readonly ResourceKind kind;
+        private readonly string kind;
         private string resourcePath;
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace Conjur
         /// <param name="client">Conjur client used to manipulate this resource.</param>
         /// <param name="kind">Resource kind.</param>
         /// <param name="name">Resource name.</param>
-        internal Resource(Client client, ResourceKind kind, string name)
+        internal Resource(Client client, string kind, string name)
         {
             this.Client = client;
             this.kind = kind;
@@ -61,7 +61,7 @@ namespace Conjur
                 if (this.resourcePath == null)
                     this.resourcePath = "resources/" +
                     WebUtility.UrlEncode(this.Client.GetAccountName()) + "/" +
-                    WebUtility.UrlEncode(this.kind.ToString()) + "/" + WebUtility.UrlEncode(this.Name);
+                    WebUtility.UrlEncode(this.kind) + "/" + WebUtility.UrlEncode(this.Name);
                 return this.resourcePath;
             }
         }
@@ -93,7 +93,7 @@ namespace Conjur
             }
         }
 
-        internal static IEnumerable<T> ListResources<T, TResult>(Client client, ResourceKind kind, Func<TResult, T> newT, string query = null, uint limit = 1000, uint offset = 0)
+        internal static IEnumerable<T> ListResources<T, TResult>(Client client, string kind, Func<TResult, T> newT, string query = null, uint limit = 1000, uint offset = 0)
         {
             List<TResult> resultList;
             do
@@ -111,7 +111,7 @@ namespace Conjur
             } while(resultList.Count > 0);
         }
 
-        protected static string IdToName(string id, string account, ResourceKind kind)
+        protected static string IdToName(string id, string account, string kind)
         {
             return id.Substring(id.IndexOf($"{account}:{kind}:", StringComparison.CurrentCulture) + 1);
         }
