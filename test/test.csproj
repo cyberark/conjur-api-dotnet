@@ -45,6 +45,7 @@
     <Compile Include="CertificateVerificationTest.cs" />
     <Compile Include="Certificates.cs" />
     <Compile Include="AuthenticatorTest.cs" />
+    <Compile Include="RoleTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

@@ -59,4 +59,16 @@ namespace Conjur
         public string UpdatedAt { get; private set; }
     }
 
+    [DataContract]
+    public class RoleMember
+    {
+        [DataMember(Name = "admin_option")]
+        public bool Admin { get; set; }
+        [DataMember(Name = "grantor")]
+        public string Grantor { get; set; }
+        [DataMember(Name = "member")]
+        public string Member { get; set; }
+        [DataMember(Name = "role")]
+        public string Role { get; set; }
+    }
 }

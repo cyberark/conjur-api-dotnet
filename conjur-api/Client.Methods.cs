@@ -51,6 +51,19 @@ namespace Conjur
         }
 
         /// <summary>
+        /// Creates an object representing the Role
+        /// </summary>
+        /// Note the existence of the Role is not verified.
+        /// <returns>The role object.</returns>
+        /// <param name="kind">Kind: 'group', 'layer' etc.</param>
+        /// <param name="name">The role Name.</param>
+        /// <seealso cref="Role()"/>
+        public Role Role(string kind, string name)
+        {
+            return new Role(this, kind, name);
+        }
+
+        /// <summary>
         /// Search for users
         /// </summary>
         /// <param name="query">Query for search.</param>
