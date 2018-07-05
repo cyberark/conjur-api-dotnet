@@ -22,7 +22,7 @@ namespace Conjur.Test
         public void TestRoleDoesExist()
         {
             ClearMocker();
-            Mocker.Mock(new Uri($"{baseUrl}/groupName"), "");
+            Mocker.Mock(new Uri($"{baseUrl}/groupName"), string.Empty);
             Assert.IsTrue(Client.Role("group", "groupName").Exists(), "Group 'groupName' expected to be exist");
         }
 
@@ -30,7 +30,7 @@ namespace Conjur.Test
         public void TestRoleDoesNotExist()
         {
             ClearMocker();
-            MockRequest mock = Mocker.Mock(new Uri($"{baseUrl}/groupName"), "");
+            MockRequest mock = Mocker.Mock(new Uri($"{baseUrl}/groupName"), string.Empty);
             mock.Verifier = (wr) => 
             {
                 throw new WebMocker.MockResponseException(HttpStatusCode.NotFound, "NotFound");
@@ -53,6 +53,7 @@ namespace Conjur.Test
             ClearMocker();
             Mocker.Mock(new Uri($"{baseUrl}/groupName?all"), "[ \"role0\", \"role1\" ]");
             string[] roles = Client.Role("group", "groupName").ListMemberships().ToArray();
+            Assert.AreEqual (2, roles.Length);
             Assert.AreEqual("role0", roles[0]);
             Assert.AreEqual("role1", roles[1]);
         }

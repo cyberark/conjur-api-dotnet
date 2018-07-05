@@ -14,7 +14,7 @@ namespace Conjur
     /// <summary>
     /// Conjur Role reference.
     /// </summary>
-    /// A role is an actor in the system, in the classical sense of role-based access control. Roles are the entities which receive permission grants.
+    /// <remarks>A role is an actor in the system, in the classical sense of role-based access control. Roles are the entities which receive permission grants.</remarks>
     public class Role : Resource
     {
         private readonly string path;
@@ -35,7 +35,7 @@ namespace Conjur
         /// Check for the existence of a role.
         /// </summary>
         /// <returns>True if role exists otherwice false.</returns>
-        /// Only roles that you have read permission on will be searched.
+        /// <remarks>Only roles that you have read permission on will be searched.</remarks>
         public bool Exists()
         {
             WebRequest webRequest = this.Client.AuthenticatedRequest(this.path);
@@ -46,8 +46,8 @@ namespace Conjur
             }
             catch (WebException ex)
             {
-                HttpWebResponse responce = ex.Response as HttpWebResponse;
-                if (responce != null && responce.StatusCode == HttpStatusCode.NotFound)
+                HttpWebResponse response = ex.Response as HttpWebResponse;
+                if (response != null && response.StatusCode == HttpStatusCode.NotFound)
                 {
                     return false;
                 }
@@ -62,7 +62,7 @@ namespace Conjur
         /// Lists the roles that have been the recipient of a role grant.
         /// </summary>
         /// <returns>Returns IEnumerable RoleMember.</returns>
-        /// The creator of the role is always a role member and role administrator.
+        /// <remarks>The creator of the role is always a role member and role administrator.</remarks>
         public IEnumerable<RoleMember> ListMembers()
         {
             return JsonSerializer<List<RoleMember>>.Read(this.Client.AuthenticatedRequest($"{this.path}?members"));
