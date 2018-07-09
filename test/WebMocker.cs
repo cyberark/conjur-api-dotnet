@@ -21,6 +21,11 @@ namespace Conjur.Test
             return responses[uri] = new MockRequest(uri, content);
         }
 
+        public void Clear()
+        {
+            responses.Clear();
+        }
+
         #region IWebRequestCreate implementation
 
         public WebRequest Create(Uri uri)
@@ -40,11 +45,11 @@ namespace Conjur.Test
             private Uri uri;
             MemoryStream requestStream;
 
-            public override WebHeaderCollection Headers
-            {
-                get;
-                set;
-            }
+            public override WebHeaderCollection Headers { get; set; }
+
+            public override string ContentType { get; set; }
+
+            public override long ContentLength { get; set; }
 
             public override Uri RequestUri
             {
@@ -74,6 +79,7 @@ namespace Conjur.Test
                 }
                 set
                 {
+                    base.PreAuthenticate = value;
                 }
             }
 

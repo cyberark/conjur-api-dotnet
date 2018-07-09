@@ -7,6 +7,8 @@
 
 namespace Conjur
 {
+    using System;
+    using System.Collections.Generic;
     using System.Net;
     using System.Text;
 
@@ -26,9 +28,9 @@ namespace Conjur
         /// <param name="name">The variable name.</param>
         /// <seealso cref="Extensions.Variable"/>
         internal Variable(Client client, string name)
-            : base(client, "variable", name)
+            : base(client, Constants.KIND_VARIABLE, name)
         {
-            this.path = "secrets/" + client.GetAccountName() + "/variable/" + WebUtility.UrlEncode(name);
+            this.path = $"secrets/{WebUtility.UrlEncode(client.GetAccountName())}/{Constants.KIND_VARIABLE}/{WebUtility.UrlEncode(name)}";
         }
 
         /// <summary>
@@ -40,6 +42,10 @@ namespace Conjur
             return this.Client.AuthenticatedRequest(this.path).Read();
         }
 
+        /// <summary>
+        /// Set a secret (value) to this variable.
+        /// </summary>
+        /// <param name="val">Secret value.</param>
         public void AddSecret(string val)
         {
             WebRequest webRequest = this.Client.AuthenticatedRequest(this.path);
@@ -49,6 +55,12 @@ namespace Conjur
             webRequest.ContentType = "text\\plain";
             webRequest.ContentLength = data.Length;
             webRequest.GetRequestStream().Write(data, 0, data.Length);
+        }
+
+        internal static IEnumerable<Variable> List(Client client, string query = null)
+        {
+            Func<ResourceMetadata, Variable> newInst = (searchRes) => new Variable(client, IdToName(searchRes.Id, client.GetAccountName(), Constants.KIND_VARIABLE));
+            return ListResources<Variable, ResourceMetadata>(client, Constants.KIND_VARIABLE, newInst, query);
         }
     }
 }

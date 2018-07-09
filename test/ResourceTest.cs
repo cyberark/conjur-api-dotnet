@@ -6,7 +6,7 @@ namespace Conjur.Test
 {
     public class ResourceTest : Base
     {
-        protected readonly string Kind = "chunky";
+        protected readonly string Kind = Constants.KIND_USER;
         protected readonly string Id = "bacon";
 
         public ResourceTest()

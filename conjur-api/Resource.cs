@@ -7,6 +7,8 @@
 
 namespace Conjur
 {
+    using System;
+    using System.Collections.Generic;
     using System.Net;
 
     /// <summary>
@@ -20,20 +22,32 @@ namespace Conjur
         protected readonly Client Client;
 
         private readonly string kind;
-        private readonly string id;
         private string resourcePath;
+
+        /// <summary>
+        /// Gets resource name.
+        /// </summary>
+        /// <value>The name of the resource.</value>
+        public string Name { get; }
+
+        /// <summary>
+        /// Gets the resource identifier, in format of account:kind:name.
+        /// </summary>
+        /// <value>The identifier.</value>
+        public string Id { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Conjur.Resource"/> class.
         /// </summary>
         /// <param name="client">Conjur client used to manipulate this resource.</param>
         /// <param name="kind">Resource kind.</param>
-        /// <param name="id">Resource identifier.</param>
-        internal Resource(Client client, string kind, string id)
+        /// <param name="name">Resource name.</param>
+        internal Resource(Client client, string kind, string name)
         {
             this.Client = client;
             this.kind = kind;
-            this.id = id;
+            this.Name = name;
+            this.Id = $"{client.GetAccountName()}:{kind}:{Name}";
         }
 
         /// <summary>
@@ -47,7 +61,7 @@ namespace Conjur
                 if (this.resourcePath == null)
                     this.resourcePath = "resources/" +
                     WebUtility.UrlEncode(this.Client.GetAccountName()) + "/" +
-                    WebUtility.UrlEncode(this.kind) + "/" + WebUtility.UrlEncode(this.id);
+                    WebUtility.UrlEncode(this.kind) + "/" + WebUtility.UrlEncode(this.Name);
                 return this.resourcePath;
             }
         }
@@ -77,6 +91,29 @@ namespace Conjur
                     return false;
                 throw;
             }
+        }
+
+        internal static IEnumerable<T> ListResources<T, TResult>(Client client, string kind, Func<TResult, T> newT, string query = null, uint limit = 1000, uint offset = 0)
+        {
+            List<TResult> resultList;
+            do
+            {
+                string pathListResourceQuery = $"resources/{client.GetAccountName()}?{kind}&offset={offset}&limit={limit}"
+                    + ((query != null) ? $"&search={query}" : string.Empty);
+
+                resultList = JsonSerializer<List<TResult>>.Read(client.AuthenticatedRequest(pathListResourceQuery));
+                foreach (TResult searchResult in resultList) 
+                {
+                    yield return newT(searchResult);
+                }
+
+                offset += (uint)resultList.Count;
+            } while(resultList.Count > 0);
+        }
+
+        protected static string IdToName(string id, string account, string kind)
+        {
+            return id.Substring ($"{account}:{kind}:".Length);
         }
     }
 }
