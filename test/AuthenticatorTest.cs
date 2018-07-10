@@ -12,13 +12,13 @@ namespace Conjur.Test
         protected ApiKeyAuthenticator Authenticator;
         
         [SetUp]
-        public void CreateAuthenticator ()
+        public void CreateAuthenticator()
         {
             Authenticator = new ApiKeyAuthenticator(new Uri("test:///authn"), TestAccount, credential);
         }
 
         [Test]
-        public void TestTokenCaching ()
+        public void TestTokenCaching()
         {
             MockToken("token1");
             Assert.AreEqual("token1", Authenticator.GetToken());
@@ -30,7 +30,7 @@ namespace Conjur.Test
         }
 
         [Test]
-        public void TestTokenThreadSafe ()
+        public void TestTokenThreadSafe()
         {
             int authenticationCount = 0;
             Action<WebRequest> verifier = (WebRequest wr) =>
@@ -82,19 +82,17 @@ namespace Conjur.Test
         };
 
 
-        protected WebMocker.MockRequest MockToken (string token)
+        protected WebMocker.MockRequest MockToken(string token)
         {
             var mock = Mocker.Mock(new Uri($"test:///authn/{TestAccount}/username/authenticate"), token);
             mock.Verifier = ApiKeyVerifier;
             return mock;
         }
 
-        protected void MockTokenExpiration ()
+        protected void MockTokenExpiration()
         {
             Authenticator.StartTokenTimer (new TimeSpan (0, 0, 0, 0, 1));
             Thread.Sleep (10);
         }
-
-
     }
 }
