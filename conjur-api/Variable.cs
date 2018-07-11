@@ -10,7 +10,6 @@ namespace Conjur
     using System;
     using System.Collections.Generic;
     using System.Net;
-    using System.Net.Mime;
     using System.Text;
 
     /// <summary>
@@ -20,7 +19,7 @@ namespace Conjur
     /// Conjur server.
     public class Variable : Resource
     {
-        private readonly string m_path;
+        private readonly string path;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Conjur.Variable"/> class.
@@ -31,7 +30,7 @@ namespace Conjur
         internal Variable(Client client, string name)
             : base(client, Constants.KIND_VARIABLE, name)
         {
-            m_path = $"secrets/{WebUtility.UrlEncode(client.GetAccountName())}/{Constants.KIND_VARIABLE}/{WebUtility.UrlEncode(name)}";
+            this.path = $"secrets/{WebUtility.UrlEncode(client.GetAccountName())}/{Constants.KIND_VARIABLE}/{WebUtility.UrlEncode(name)}";
         }
 
         /// <summary>
@@ -40,17 +39,22 @@ namespace Conjur
         /// <returns>The value.</returns>
         public string GetValue()
         {
-            return m_client.AuthenticatedRequest(m_path).Read();
+            return this.Client.AuthenticatedRequest(this.path).Read();
         }
 
+        /// <summary>
+        /// Set a secret (value) to this variable.
+        /// </summary>
+        /// <param name="val">Secret value.</param>
         public void AddSecret(string val)
         {
-            byte[] value = Encoding.UTF8.GetBytes(val);
-            WebRequest webRequest = m_client.AuthenticatedRequest(m_path);
-            webRequest.Method = WebRequestMethods.Http.Post;
+            WebRequest webRequest = this.Client.AuthenticatedRequest(this.path);
+            webRequest.Method = "POST";
+
+            byte[] data = Encoding.UTF8.GetBytes(val);
             webRequest.ContentType = "text\\plain";
-            webRequest.ContentLength = value.Length;
-            webRequest.GetRequestStream().Write(value, 0, value.Length);
+            webRequest.ContentLength = data.Length;
+            webRequest.GetRequestStream().Write(data, 0, data.Length);
         }
 
         internal static IEnumerable<Variable> List(Client client, string query = null)

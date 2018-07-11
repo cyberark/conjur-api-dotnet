@@ -1,9 +1,7 @@
 ﻿using NUnit.Framework;
 using System;
-using System.Net;
-using Conjur;
 using System.Collections.Generic;
-using System.Text;
+using System.Net;
 
 namespace Conjur.Test
 {
@@ -31,11 +29,11 @@ namespace Conjur.Test
         {
             Mocker.Mock(new Uri("test:///authn/" + TestAccount + "/" + LoginName + "/authenticate"), "token")
                 .Verifier = (WebRequest wr) =>
-            {
-                var req = wr as WebMocker.MockRequest;
-                Assert.AreEqual("POST", wr.Method);
-                Assert.AreEqual("api-key", req.Body);
-            };
+                {
+                    var req = wr as WebMocker.MockRequest;
+                    Assert.AreEqual("POST", wr.Method);
+                    Assert.AreEqual("api-key", req.Body);
+                };
             Assert.AreEqual("token", authenticator.GetToken());
         }
 
@@ -53,14 +51,13 @@ namespace Conjur.Test
                 Client.AuthenticatedRequest("info"));
         }
 
-
         [Test]
         public void ActingAsTest()
         {
             string role = $"{Client.GetAccountName()}:{Constants.KIND_USER}:foo";
             string resourceVarUri = $"test:///resources/{TestAccount}?{Constants.KIND_VARIABLE}";
 
-            Mocker.Mock(new Uri($"{resourceVarUri}&offset=0&limit=1000&acting_as={role}"), $"[{{\"id\":\"id\"}}]");
+            Mocker.Mock(new Uri($"{resourceVarUri}&offset=0&limit=1000&acting_as={role}"), $"[{{\"id\":\"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id\"}}]");
             Mocker.Mock(new Uri ($"{resourceVarUri}&offset=0&limit=1000"), "[]");
 
             Client.Authenticator = new MockAuthenticator();

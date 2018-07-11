@@ -8,8 +8,8 @@
 namespace Conjur
 {
     using System;
-    using System.Net;
     using System.Collections.Generic;
+    using System.Net;
 
     /// <summary>
     /// Base class representing a Conjur resource.
@@ -19,22 +19,22 @@ namespace Conjur
         /// <summary>
         /// The Conjur client used to manipulate this resource.
         /// </summary>
-        protected readonly Client m_client;
+        protected readonly Client Client;
+
+        private readonly string kind;
+        private string resourcePath;
 
         /// <summary>
         /// Gets resource name.
         /// </summary>
-        /// <value>The name.</value>
+        /// <value>The name of the resource.</value>
         public string Name { get; }
 
         /// <summary>
-        /// Gets the identifier assmbled from account:kind:name.
+        /// Gets the resource identifier, in format of account:kind:name.
         /// </summary>
         /// <value>The identifier.</value>
         public string Id { get; }
-
-        private readonly string Kind;
-        private string m_resourcePath;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Conjur.Resource"/> class.
@@ -44,12 +44,12 @@ namespace Conjur
         /// <param name="name">Resource name.</param>
         internal Resource(Client client, string kind, string name)
         {
-            m_client = client;
-            Kind = kind;
-            Name = name;
-            Id = $"{client.GetAccountName()}:{kind}:{Name}";
+            this.Client = client;
+            this.kind = kind;
+            this.Name = name;
+            this.Id = $"{client.GetAccountName()}:{kind}:{Name}";
         }
-	
+
         /// <summary>
         /// Gets the resource path.
         /// </summary>
@@ -58,11 +58,11 @@ namespace Conjur
         {
             get
             {
-                if (m_resourcePath == null)
-                {
-                    m_resourcePath = $"resources/{WebUtility.UrlEncode(m_client.GetAccountName())}/{Kind}/{WebUtility.UrlEncode(Name)}";
-                }
-                return m_resourcePath;
+                if (this.resourcePath == null)
+                    this.resourcePath = "resources/" +
+                    WebUtility.UrlEncode(this.Client.GetAccountName()) + "/" +
+                    WebUtility.UrlEncode(this.kind) + "/" + WebUtility.UrlEncode(this.Name);
+                return this.resourcePath;
             }
         }
 
@@ -75,8 +75,9 @@ namespace Conjur
         /// <param name="privilege">Privilege to check.</param>
         public bool Check(string privilege)
         {
-            WebRequest req = m_client.AuthenticatedRequest($"{ResourcePath}/?check=true&privilege={WebUtility.UrlEncode(privilege)}");
-            req.Method = WebRequestMethods.Http.Head;
+            var req = this.Client.AuthenticatedRequest(this.ResourcePath
+                          + "/?check=true&privilege=" + WebUtility.UrlEncode(privilege));
+            req.Method = "HEAD";
 
             try
             {
@@ -85,11 +86,9 @@ namespace Conjur
             }
             catch (WebException exn)
             {
-                HttpWebResponse hr = exn.Response as HttpWebResponse;
+                var hr = exn.Response as HttpWebResponse;
                 if (hr != null && hr.StatusCode == HttpStatusCode.Forbidden)
-                {
                     return false;
-                }
                 throw;
             }
         }
@@ -103,17 +102,18 @@ namespace Conjur
                     + ((query != null) ? $"&search={query}" : string.Empty);
 
                 resultList = JsonSerializer<List<TResult>>.Read(client.AuthenticatedRequest(pathListResourceQuery));
-                foreach (TResult searchResult in resultList) 
+                foreach (TResult searchResult in resultList)
                 {
                     yield return newT(searchResult);
                 }
+
                 offset += (uint)resultList.Count;
             } while (resultList.Count > 0);
         }
 
-        protected static string IdToName (string id, string account, string kind)
+        protected static string IdToName(string id, string account, string kind)
         {
-            return id.Substring(id.IndexOf($"{account}:{kind}:", StringComparison.CurrentCulture) + 1);
+            return id.Substring($"{account}:{kind}:".Length);
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.Mime;
 using System.Runtime.Serialization;
 using System.Text;
 using NUnit.Framework;
@@ -9,9 +8,9 @@ using static Conjur.Test.WebMocker;
 
 namespace Conjur.Test
 {
-    public class VariableTest : Base
+    public class VariablesTest : Base
     {
-        public VariableTest()
+        public VariablesTest()
         {
             Client.Authenticator = new MockAuthenticator();
         }
@@ -19,11 +18,11 @@ namespace Conjur.Test
         [Test]
         public void GetVariableTest()
         {
-            Mocker.Mock(new Uri("test:///secrets/" + TestAccount +  "/variable/foo%2Fbar"), "testvalue");
+            Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foo%2Fbar"), "testvalue");
             Assert.AreEqual("testvalue", Client.Variable("foo/bar").GetValue());
 
-            // TODO: not sure if this is secrets to be a plus or %20 or either
-            Mocker.Mock(new Uri("test:///secrets/" + TestAccount +  "/variable/foo+bar"), "space test");
+            // TODO: not sure if this is supposed to be a plus or %20 or either
+            Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foo+bar"), "space test");
             Assert.AreEqual("space test", Client.Variable("foo bar").GetValue());
         }
 
@@ -32,14 +31,14 @@ namespace Conjur.Test
         {
             string testValue = "testvalue";
 
-            var v = Mocker.Mock (new Uri ("test:///secrets/" + TestAccount + "/variable/foobar"), "");
-              v.Verifier = (WebRequest wr) =>
-              {
-                      MockRequest req = wr as WebMocker.MockRequest;
-                      Assert.AreEqual(WebRequestMethods.Http.Post, wr.Method);
-                      Assert.AreEqual("text\\plain", wr.ContentType);
-                      Assert.AreEqual($"{{\"value\": \"{testValue}\"}}", req.Body);
-              };
+            var v = Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foobar"), "");
+            v.Verifier = (WebRequest wr) =>
+            {
+                MockRequest req = wr as WebMocker.MockRequest;
+                Assert.AreEqual(WebRequestMethods.Http.Post, wr.Method);
+                Assert.AreEqual("text\\plain", wr.ContentType);
+                Assert.AreEqual($"{{\"value\": \"{testValue}\"}}", req.Body);
+            };
             Client.Variable("foobar").AddSecret(testValue);
         }
 
@@ -57,15 +56,15 @@ namespace Conjur.Test
             verifyVariablesInfo(vars, 2000);
 
             ClearMocker();
-            Mocker.Mock(new Uri (variableUri + "&offset=0&limit=1000"), @"[""id"":""invalidjson""]");
-            vars = (Client.ListVariables ()).GetEnumerator ();
-            Assert.Throws<SerializationException> (() => vars.MoveNext());
+            Mocker.Mock(new Uri(variableUri + "&offset=0&limit=1000"), @"[""id"":""invalidjson""]");
+            vars = (Client.ListVariables()).GetEnumerator();
+            Assert.Throws<SerializationException>(() => vars.MoveNext());
 
         }
 
         private void verifyVariablesInfo(IEnumerator<Variable> vars, int excpectedNumVars)
         {
-            for (int id = 0; id < excpectedNumVars; ++id) 
+            for (int id = 0; id < excpectedNumVars; ++id)
             {
                 Assert.AreEqual(true, vars.MoveNext());
                 Assert.AreEqual($"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id{id}", vars.Current.Id);
@@ -79,11 +78,11 @@ namespace Conjur.Test
 
             for (int varId = firstVarId; varId < lastVarId; varId++)
             {
-                stringBuilder.Append ($"{{\"id\":\"id{varId}\"}},");
+                stringBuilder.Append($"{{\"id\":\"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id{varId}\"}},");
             }
             if (stringBuilder.Length != 0)
             {
-                stringBuilder.Remove (stringBuilder.Length - 1, 1);
+                stringBuilder.Remove(stringBuilder.Length - 1, 1);
             }
             return $"[{stringBuilder}]";
         }
