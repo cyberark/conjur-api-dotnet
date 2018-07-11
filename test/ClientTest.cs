@@ -57,8 +57,8 @@ namespace Conjur.Test
         [Test]
         public void ActingAsTest()
         {
-            string role = $"{Client.GetAccountName()}:{ResourceKind.user}:foo";
-            string resourceVarUri = $"test:///resources/{TestAccount}?{ResourceKind.variable}";
+            string role = $"{Client.GetAccountName()}:{Constants.KIND_USER}:foo";
+            string resourceVarUri = $"test:///resources/{TestAccount}?{Constants.KIND_VARIABLE}";
 
             Mocker.Mock(new Uri($"{resourceVarUri}&offset=0&limit=1000&acting_as={role}"), $"[{{\"id\":\"id\"}}]");
             Mocker.Mock(new Uri ($"{resourceVarUri}&offset=0&limit=1000"), "[]");
@@ -69,7 +69,7 @@ namespace Conjur.Test
             IEnumerator<Variable> plainClientVars = Client.ListVariables().GetEnumerator();
 
             Assert.AreEqual(true, actingAsClientVars.MoveNext());
-            Assert.AreEqual($"{Client.GetAccountName()}:{ResourceKind.variable}:id", actingAsClientVars.Current.Id);
+            Assert.AreEqual($"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id", actingAsClientVars.Current.Id);
 
             Assert.AreEqual(false, plainClientVars.MoveNext());
         }

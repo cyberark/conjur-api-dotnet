@@ -76,7 +76,7 @@ namespace Conjur
         /// <param name="kind">Resource kind.</param>
         /// <param name="id">Resource identifier.</param>
         /// <returns>Object representing the specified resource.</returns>
-        public Resource Resource(ResourceKind kind, string id)
+        public Resource Resource(string kind, string id)
         {
             return new Resource(this, kind, id);
         }

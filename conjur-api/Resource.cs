@@ -33,7 +33,7 @@ namespace Conjur
         /// <value>The identifier.</value>
         public string Id { get; }
 
-        private readonly ResourceKind m_kind;
+        private readonly string Kind;
         private string m_resourcePath;
 
         /// <summary>
@@ -42,10 +42,10 @@ namespace Conjur
         /// <param name="client">Conjur client used to manipulate this resource.</param>
         /// <param name="kind">Resource kind.</param>
         /// <param name="name">Resource name.</param>
-        internal Resource(Client client, ResourceKind kind, string name)
+        internal Resource(Client client, string kind, string name)
         {
             m_client = client;
-            m_kind = kind;
+            Kind = kind;
             Name = name;
             Id = $"{client.GetAccountName()}:{kind}:{Name}";
         }
@@ -60,7 +60,7 @@ namespace Conjur
             {
                 if (m_resourcePath == null)
                 {
-                    m_resourcePath = $"resources/{WebUtility.UrlEncode(m_client.GetAccountName())}/{m_kind}/{WebUtility.UrlEncode(Name)}";
+                    m_resourcePath = $"resources/{WebUtility.UrlEncode(m_client.GetAccountName())}/{Kind}/{WebUtility.UrlEncode(Name)}";
                 }
                 return m_resourcePath;
             }
@@ -94,7 +94,7 @@ namespace Conjur
             }
         }
 
-        internal static IEnumerable<T> ListResources<T, TResult>(Client client, ResourceKind kind, Func<TResult, T> newT, string query = null, uint limit = 1000, uint offset = 0)
+        internal static IEnumerable<T> ListResources<T, TResult>(Client client, string kind, Func<TResult, T> newT, string query = null, uint limit = 1000, uint offset = 0)
         {
             List<TResult> resultList;
             do
@@ -111,6 +111,9 @@ namespace Conjur
             } while (resultList.Count > 0);
         }
 
-        protected static string IdToName (string id, string account, ResourceKind kind) => id.Substring (id.IndexOf ($"{account}:{kind}:") + 1);
+        protected static string IdToName (string id, string account, string kind)
+        {
+            return id.Substring(id.IndexOf($"{account}:{kind}:", StringComparison.CurrentCulture) + 1);
+        }
     }
 }

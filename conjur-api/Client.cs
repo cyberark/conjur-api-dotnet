@@ -116,14 +116,14 @@ namespace Conjur
         /// where user name is for example "bob" or "host/jenkins".</param>
         public string LogIn(NetworkCredential credential)
         {
-            WebRequest wr = Request($"authn/{m_account}/login");
+            WebRequest webRequest = Request($"authn/{m_account}/login");
 
 
             // there seems to be no sane way to force WebRequest to authenticate
             // properly by itself, so generate the header manually
             string auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(credential.UserName + ":" + credential.Password));
-            wr.Headers ["Authorization"] = "Basic " + auth;
-            string apiKey = wr.Read();
+            webRequest.Headers ["Authorization"] = "Basic " + auth;
+            string apiKey = webRequest.Read();
 
             Credential = new NetworkCredential(credential.UserName, apiKey);
             return apiKey;
@@ -147,7 +147,10 @@ namespace Conjur
         /// authorization header set using <see cref="Authenticator"/>.</returns>
         public WebRequest AuthenticatedRequest(string path)
         {
-            return ApplyAuthentication(Request(path + ((m_acting_as != null) ? $"&acting_as={WebUtility.UrlEncode(m_acting_as)}" : String.Empty)));
+            if (m_acting_as != null) {
+                path += ((path.Contains("?"))? "&" : "?") + $"acting_as={WebUtility.UrlEncode(m_acting_as)}";
+            }
+            return ApplyAuthentication(Request(path));
         }
 
         /// <summary>
