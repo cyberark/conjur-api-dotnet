@@ -20,7 +20,7 @@ namespace Conjur
         /// <param name="client">Active API client.</param>
         /// <param name="name">A name of requested user.</param>
         internal User(Client client, string name)
-            : base(client, ResourceKind.user, name)
+            : base(client, Constants.KIND_USER, name)
         {
             // Empty Implementation.
         }
@@ -33,8 +33,8 @@ namespace Conjur
         /// <returns>Returns IEnumerable to User.</returns>
         internal static IEnumerable<User> List(Client client, string query = null)
         {
-            Func<ResourceMetadataֿ, User> newInst = (searchRes) => new User(client, IdToName(searchRes.Id, client.GetAccountName(), ResourceKind.user));
-            return ListResources<User, ResourceMetadataֿ>(client, ResourceKind.user, newInst, query);
+            Func<ResourceMetadata, User> newInst = (searchRes) => new User(client, IdToName(searchRes.Id, client.GetAccountName(), Constants.KIND_USER));
+            return ListResources<User, ResourceMetadata>(client, Constants.KIND_USER, newInst, query);
         }
     }
 }

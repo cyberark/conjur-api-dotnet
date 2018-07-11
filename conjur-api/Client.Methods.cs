@@ -26,24 +26,16 @@ namespace Conjur
         }
 
         /// <summary>
-<<<<<<< HEAD
         /// Lists Conjur resource of kind variable.
         /// </summary>
         /// <param name="query">Additional Query parameters, not required.</param>
         /// <returns>A list of variables objects.</returns>
-=======
-        /// Lists Conjur variables.
-        /// </summary>
-        /// <returns>A list of variables</returns>
-        /// <param name="query">Query.</param>
->>>>>>> 9b1fc3a577d209f9dc2470af980fdd7e44a95d22
         public IEnumerable<Variable> ListVariables(string query = null)
         {
             return Conjur.Variable.List(this, query);
         }
 
         /// <summary>
-<<<<<<< HEAD
         /// Create an object representing a Conjur ressource of kind user corresponding with the specifiy name.
         /// </summary>
         /// <param name="name">A Name for the requested user.</param>
@@ -65,8 +57,6 @@ namespace Conjur
         }
 
         /// <summary>
-=======
->>>>>>> 9b1fc3a577d209f9dc2470af980fdd7e44a95d22
         /// Creates a host using a host factory token.
         /// </summary>
         /// <param name="name">Name of the host to create.</param>
@@ -81,14 +71,10 @@ namespace Conjur
         /// <summary>
         /// Creates an object representing a Conjur general resource.
         /// </summary>
-        /// <param name="kind">Resource kind. @<see cref="ResourceKind"/></param>
+        /// <param name="kind">Resource kind.</param>
         /// <param name="name">Resource Name.</param>
         /// <returns>Object representing the specified resource.</returns>
-<<<<<<< HEAD
-        public Resource Resource(ResourceKind kind, string name)
-=======
         public Resource Resource(string kind, string name)
->>>>>>> 9b1fc3a577d209f9dc2470af980fdd7e44a95d22
         {
             return new Resource(this, kind, name);
         }

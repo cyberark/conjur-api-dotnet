@@ -10,11 +10,7 @@ namespace Conjur
     using System.Runtime.Serialization;
 
     [DataContract]
-<<<<<<< HEAD
-    public class ResourceMetadataֿ
-=======
     public class ResourceMetadata
->>>>>>> 9b1fc3a577d209f9dc2470af980fdd7e44a95d22
     {
         [DataMember(Name = "id")]
         public string Id { get; set; }

@@ -46,7 +46,7 @@ namespace Conjur.Test
         [Test]
         public void ListVariableTest()
         {
-            string ur = $"test:///resources/{TestAccount}?{ResourceKind.variable}";
+            string ur = $"test:///resources/{TestAccount}?{Constants.KIND_VARIABLE}";
             IEnumerator<Variable> vars;
 
             ClearMocker();
@@ -68,7 +68,7 @@ namespace Conjur.Test
             for (int id = 0; id < excpectedNumVars; ++id) 
             {
                 Assert.AreEqual(true, vars.MoveNext());
-                Assert.AreEqual($"{Client.GetAccountName()}:{ResourceKind.variable}:id{id}", vars.Current.Id);
+                Assert.AreEqual($"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id{id}", vars.Current.Id);
             }
             Assert.AreEqual(false, vars.MoveNext ());
         }

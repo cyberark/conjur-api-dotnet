@@ -21,11 +21,7 @@ namespace Conjur
         /// </summary>
         protected readonly Client Client;
 
-<<<<<<< HEAD
-        private readonly ResourceKind kind;
-=======
         private readonly string kind;
->>>>>>> 9b1fc3a577d209f9dc2470af980fdd7e44a95d22
         private string resourcePath;
 
         /// <summary>
@@ -46,11 +42,7 @@ namespace Conjur
         /// <param name="client">Conjur client used to manipulate this resource.</param>
         /// <param name="kind">Resource kind.</param>
         /// <param name="name">Resource name.</param>
-<<<<<<< HEAD
-        internal Resource(Client client, ResourceKind kind, string name)
-=======
         internal Resource(Client client, string kind, string name)
->>>>>>> 9b1fc3a577d209f9dc2470af980fdd7e44a95d22
         {
             this.Client = client;
             this.kind = kind;
@@ -69,11 +61,7 @@ namespace Conjur
                 if (this.resourcePath == null)
                     this.resourcePath = "resources/" +
                     WebUtility.UrlEncode(this.Client.GetAccountName()) + "/" +
-<<<<<<< HEAD
-                    WebUtility.UrlEncode(this.kind.ToString()) + "/" + WebUtility.UrlEncode(this.Name);
-=======
                     WebUtility.UrlEncode(this.kind) + "/" + WebUtility.UrlEncode(this.Name);
->>>>>>> 9b1fc3a577d209f9dc2470af980fdd7e44a95d22
                 return this.resourcePath;
             }
         }
@@ -105,11 +93,8 @@ namespace Conjur
             }
         }
 
-<<<<<<< HEAD
-        internal static IEnumerable<T> ListResources<T, TResult>(Client client, ResourceKind kind, Func<TResult, T> newT, string query = null, uint limit = 1000, uint offset = 0)
-=======
+
         internal static IEnumerable<T> ListResources<T, TResult>(Client client, string kind, Func<TResult, T> newT, string query = null, uint limit = 1000, uint offset = 0)
->>>>>>> 9b1fc3a577d209f9dc2470af980fdd7e44a95d22
         {
             List<TResult> resultList;
             do
@@ -127,15 +112,9 @@ namespace Conjur
             } while(resultList.Count > 0);
         }
 
-<<<<<<< HEAD
-        protected static string IdToName(string id, string account, ResourceKind kind)
-        {
-            return id.Substring(id.IndexOf($"{account}:{kind}:", StringComparison.CurrentCulture) + 1);
-=======
         protected static string IdToName(string id, string account, string kind)
         {
-            return id.Substring ($"{account}:{kind}:".Length);
->>>>>>> 9b1fc3a577d209f9dc2470af980fdd7e44a95d22
+            return id.Substring(id.IndexOf($"{account}:{kind}:", StringComparison.CurrentCulture) + 1);
         }
     }
 }

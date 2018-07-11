@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "conjur-api", "conjur-api\conjur-api.csproj", "{17D848FC-457D-49F0-B9A3-D87920AA8A8A}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test", "test\test.csproj", "{334DEF97-4AA5-4B7B-B388-03362E0356CE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "example", "example\example.csproj", "{0F8B5E2E-2270-47BE-8B31-3F2AA012AFB9}"
+EndProject
+Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "conjur-api", "conjur-api\conjur-api.csproj", "{6D05AD9F-E4E7-47AD-8888-522D5997AE45}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,24 +17,23 @@ Global
 		{0F8B5E2E-2270-47BE-8B31-3F2AA012AFB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0F8B5E2E-2270-47BE-8B31-3F2AA012AFB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0F8B5E2E-2270-47BE-8B31-3F2AA012AFB9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{17D848FC-457D-49F0-B9A3-D87920AA8A8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{17D848FC-457D-49F0-B9A3-D87920AA8A8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{17D848FC-457D-49F0-B9A3-D87920AA8A8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{17D848FC-457D-49F0-B9A3-D87920AA8A8A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{334DEF97-4AA5-4B7B-B388-03362E0356CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{334DEF97-4AA5-4B7B-B388-03362E0356CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{334DEF97-4AA5-4B7B-B388-03362E0356CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{334DEF97-4AA5-4B7B-B388-03362E0356CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D05AD9F-E4E7-47AD-8888-522D5997AE45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D05AD9F-E4E7-47AD-8888-522D5997AE45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D05AD9F-E4E7-47AD-8888-522D5997AE45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D05AD9F-E4E7-47AD-8888-522D5997AE45}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0
 		$0.DotNetNamingPolicy = $1
 		$1.DirectoryNamespaceAssociation = PrefixedHierarchical
-		$1.ResourceNamePolicy = FileFormatDefault
 		$0.TextStylePolicy = $2
-		$2.inheritsSet = VisualStudio
-		$2.inheritsScope = text/plain
 		$2.scope = text/x-csharp
+		$2.FileWidth = 80
+		$2.TabsToSpaces = True
 		$0.CSharpFormattingPolicy = $3
 		$3.IndentSwitchBody = True
 		$3.IndentBlocksInsideExpressions = True
@@ -60,16 +59,29 @@ Global
 		$3.BeforeDelegateDeclarationParentheses = False
 		$3.NewParentheses = False
 		$3.SpacesBeforeBrackets = False
-		$3.inheritsSet = Mono
-		$3.inheritsScope = text/x-csharp
 		$3.scope = text/x-csharp
+		$3.IndentSwitchSection = False
+		$3.NewLinesForBracesInProperties = False
+		$3.NewLinesForBracesInAccessors = False
+		$3.NewLinesForBracesInAnonymousMethods = False
+		$3.NewLinesForBracesInControlBlocks = False
+		$3.NewLinesForBracesInAnonymousTypes = False
+		$3.NewLinesForBracesInObjectCollectionArrayInitializers = False
+		$3.NewLinesForBracesInLambdaExpressionBody = False
+		$3.NewLineForElse = False
+		$3.NewLineForCatch = False
+		$3.NewLineForFinally = False
+		$3.NewLineForMembersInObjectInit = False
+		$3.NewLineForMembersInAnonymousTypes = False
+		$3.NewLineForClausesInQuery = False
+		$3.SpacingAfterMethodDeclarationName = True
+		$3.SpaceAfterMethodCallName = True
+		$3.SpaceBeforeOpenSquareBracket = True
 		$0.TextStylePolicy = $4
-		$4.inheritsSet = VisualStudio
-		$4.inheritsScope = text/plain
 		$4.scope = text/plain
+		$4.FileWidth = 80
+		$4.TabsToSpaces = True
 		$0.StandardHeader = $5
-		$5.Text = 
-		$5.IncludeInNewFiles = True
 		$0.NameConventionPolicy = $6
 		$6.Rules = $7
 		$7.NamingRule = $8
@@ -195,6 +207,5 @@ Global
 		$27.IncludeInstanceMembers = True
 		$27.IncludeStaticEntities = True
 		$0.VersionControlPolicy = $29
-		$29.inheritsSet = Mono
 	EndGlobalSection
 EndGlobal

@@ -16,7 +16,7 @@ namespace Conjur.Test
         [Test]
         public void ListUserTest()
         {
-            string resourceUrl = $"test:///resources/{TestAccount}?{ResourceKind.user}";
+            string resourceUrl = $"test:///resources/{TestAccount}?{Constants.KIND_USER}";
             IEnumerator<User> users;
 
             ClearMocker();
@@ -38,7 +38,7 @@ namespace Conjur.Test
             for (int id = 0; id < excpectedNumUsers; ++id) 
             {
                 Assert.AreEqual(true, users.MoveNext());
-                Assert.AreEqual($"{Client.GetAccountName()}:{ResourceKind.user}:id{id}", users.Current.Id);
+                Assert.AreEqual($"{Client.GetAccountName()}:{Constants.KIND_USER}:id{id}", users.Current.Id);
             }
             Assert.AreEqual(false, users.MoveNext());
         }
