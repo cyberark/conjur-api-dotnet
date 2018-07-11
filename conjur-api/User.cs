@@ -1,29 +1,33 @@
-﻿namespace Conjur
+﻿// <copyright file="User.cs" company="Conjur Inc.">
+//     Copyright (c) 2016 Conjur Inc. All rights reserved.
+// </copyright>
+// <summary>
+//     User manipulation routines.
+// </summary>
+namespace Conjur
 {
     using System;
     using System.Collections.Generic;
 
     /// <summary>
-    /// Conjur user reference
+    /// A user represents resource for a human identity.
     /// </summary>
-    /// a user represents resource for a human identity
     public class User : Resource
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="T:Conjur.User"/> class.
         /// </summary>
-        /// <param name="client">Client.</param>
-        /// <param name="name">Name.</param>
+        /// <param name="client">Active API client.</param>
+        /// <param name="name">A name of requested user.</param>
         internal User(Client client, string name)
             : base(client, Constants.KIND_USER, name)
         {
-            // Empty Implementation
+            // Empty Implementation.
         }
 
         /// <summary>
         /// List of Users.
         /// </summary>
-        /// <returns>The list.</returns>
         /// <param name="client">Conjur Client to query.</param>
         /// <param name="query">Query to search.</param>
         /// <returns>Returns IEnumerable to User.</returns>

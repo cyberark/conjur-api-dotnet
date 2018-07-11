@@ -19,9 +19,9 @@ namespace Conjur
     /// </summary>
     public partial class Client
     {
-        private Uri m_applianceUri;
-        private string m_account;
-        private string m_acting_as;
+        private Uri applianceUri;
+        private string account;
+        private string actingAs;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="T:Conjur.Client"/> class.
@@ -30,15 +30,15 @@ namespace Conjur
         /// <param name="account">Account.</param>
         public Client(string applianceUri, string account)
         {
-            m_applianceUri = NormalizeBaseUri(applianceUri);
-            m_account = account;
-            TrustedCertificates = new X509Certificate2Collection();
+            this.account = account;
+            this.applianceUri = NormalizeBaseUri(applianceUri);
+            this.TrustedCertificates = new X509Certificate2Collection();
         }
 
-        internal Client(Client other, string role) : this (other.ApplianceUri.AbsoluteUri, other.m_account)
+        internal Client(Client other, string role) : this(other.ApplianceUri.AbsoluteUri, other.account)
         {
-            m_acting_as = role;
-            Authenticator = other.Authenticator;
+            this.actingAs = role;
+            this.Authenticator = other.Authenticator;
         }
 
         /// <summary>
@@ -47,9 +47,9 @@ namespace Conjur
         /// <value>The appliance URI.</value>
         public Uri ApplianceUri
         {
-            get 
+            get
             {
-                return m_applianceUri;
+                return this.applianceUri;
             }
         }
 
@@ -71,7 +71,10 @@ namespace Conjur
         {
             set
             {
-                Authenticator = new ApiKeyAuthenticator(new Uri(m_applianceUri + "authn"), GetAccountName(), value);
+                this.Authenticator = new ApiKeyAuthenticator(
+                    new Uri(this.applianceUri + "authn"), 
+                    this.GetAccountName(),
+                    value);
             }
         }
 
@@ -91,7 +94,7 @@ namespace Conjur
         /// <returns>The account name.</returns>
         public string GetAccountName()
         {
-            return m_account;
+            return this.account;
         }
 
         /// <summary>
@@ -104,7 +107,7 @@ namespace Conjur
         /// <param name="password">Password of the user.</param>
         public string LogIn(string userName, string password)
         {
-            return LogIn(new NetworkCredential(userName, password));
+            return this.LogIn(new NetworkCredential(userName, password));
         }
 
         /// <summary>
@@ -116,16 +119,15 @@ namespace Conjur
         /// where user name is for example "bob" or "host/jenkins".</param>
         public string LogIn(NetworkCredential credential)
         {
-            WebRequest webRequest = Request($"authn/{m_account}/login");
-
+            WebRequest webRequest = this.Request($"authn/{this.account}/login");
 
             // there seems to be no sane way to force WebRequest to authenticate
             // properly by itself, so generate the header manually
             string auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(credential.UserName + ":" + credential.Password));
-            webRequest.Headers ["Authorization"] = "Basic " + auth;
+            webRequest.Headers["Authorization"] = "Basic " + auth;
             string apiKey = webRequest.Read();
 
-            Credential = new NetworkCredential(credential.UserName, apiKey);
+            this.Credential = new NetworkCredential(credential.UserName, apiKey);
             return apiKey;
         }
 
@@ -136,7 +138,7 @@ namespace Conjur
         /// <returns>A WebRequest for the specified appliance path.</returns>
         public WebRequest Request(string path)
         {
-            return WebRequest.Create(m_applianceUri + path);
+            return WebRequest.Create(this.applianceUri + path);
         }
 
         /// <summary>
@@ -147,10 +149,12 @@ namespace Conjur
         /// authorization header set using <see cref="Authenticator"/>.</returns>
         public WebRequest AuthenticatedRequest(string path)
         {
-            if (m_acting_as != null) {
-                path += ((path.Contains("?"))? "&" : "?") + $"acting_as={WebUtility.UrlEncode(m_acting_as)}";
+            if (this.actingAs != null)
+            {
+                path += (path.Contains("?") ? "&" : "?") + $"acting_as={WebUtility.UrlEncode(this.actingAs)}";
             }
-            return ApplyAuthentication(Request(path));
+
+            return this.ApplyAuthentication(this.Request(path));
         }
 
         /// <summary>
@@ -189,7 +193,7 @@ namespace Conjur
             switch (sslPolicyErrors)
             {
             case SslPolicyErrors.RemoteCertificateChainErrors:
-                return chain.VerifyWithExtraRoots(certificate, TrustedCertificates);
+                return chain.VerifyWithExtraRoots(certificate, this.TrustedCertificates);
             case SslPolicyErrors.None:
                 return true;
             default:
@@ -199,12 +203,13 @@ namespace Conjur
 
         private WebRequest ApplyAuthentication(WebRequest webRequest)
         {
-            if (Authenticator == null)
+            if (this.Authenticator == null)
             {
                 throw new InvalidOperationException("Authentication required.");
             }
 
-            string token = Convert.ToBase64String(Encoding.UTF8.GetBytes(Authenticator.GetToken()));
+            string token = Convert.ToBase64String(Encoding.UTF8.GetBytes(this.Authenticator.GetToken()));
+            
             webRequest.Headers["Authorization"] = "Token token=\"" + token + "\"";
             return webRequest;
         }
