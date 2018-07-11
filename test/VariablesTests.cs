@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.Mime;
 using System.Runtime.Serialization;
 using System.Text;
 using NUnit.Framework;
@@ -32,7 +31,7 @@ namespace Conjur.Test
         {
             string testValue = "testvalue";
 
-            var v = Mocker.Mock (new Uri ("test:///secrets/" + TestAccount + "/variable/foobar"), "");
+            var v = Mocker.Mock(new Uri ("test:///secrets/" + TestAccount + "/variable/foobar"), "");
               v.Verifier = (WebRequest wr) =>
               {
                       MockRequest req = wr as WebMocker.MockRequest;
@@ -50,16 +49,16 @@ namespace Conjur.Test
             IEnumerator<Variable> vars;
 
             ClearMocker();
-            Mocker.Mock(new Uri (ur + "&offset=0&limit=1000"), GenerateVariablesInfo (0, 1000));
-            Mocker.Mock(new Uri (ur + "&offset=1000&limit=1000"), GenerateVariablesInfo (1000, 2000));
-            Mocker.Mock(new Uri (ur + "&offset=2000&limit=1000"), "[]");
+            Mocker.Mock(new Uri(ur + "&offset=0&limit=1000"), GenerateVariablesInfo (0, 1000));
+            Mocker.Mock(new Uri(ur + "&offset=1000&limit=1000"), GenerateVariablesInfo (1000, 2000));
+            Mocker.Mock(new Uri(ur + "&offset=2000&limit=1000"), "[]");
             vars = (Client.ListVariables()).GetEnumerator();
             verifyVariablesInfo(vars, 2000);
 
             ClearMocker();
-            Mocker.Mock(new Uri (ur + "&offset=0&limit=1000"), @"[""id"":""invalidjson""]");
-            vars = (Client.ListVariables ()).GetEnumerator ();
-            Assert.Throws<SerializationException> (() => vars.MoveNext ());
+            Mocker.Mock(new Uri(ur + "&offset=0&limit=1000"), @"[""id"":""invalidjson""]");
+            vars = (Client.ListVariables()).GetEnumerator();
+            Assert.Throws<SerializationException>(() => vars.MoveNext());
 
         }
 
@@ -70,7 +69,7 @@ namespace Conjur.Test
                 Assert.AreEqual(true, vars.MoveNext());
                 Assert.AreEqual($"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id{id}", vars.Current.Id);
             }
-            Assert.AreEqual(false, vars.MoveNext ());
+            Assert.AreEqual(false, vars.MoveNext());
         }
 
         private string GenerateVariablesInfo(int firstVarId, int lastVarId)
@@ -79,11 +78,11 @@ namespace Conjur.Test
 
             for (int varId = firstVarId; varId < lastVarId; varId++)
             {
-                stringBuilder.Append ($"{{\"id\":\"id{varId}\"}},");
+                stringBuilder.Append($"{{\"id\":\"id{varId}\"}},");
             }
             if (stringBuilder.Length != 0)
             {
-                stringBuilder.Remove (stringBuilder.Length - 1, 1);
+                stringBuilder.Remove(stringBuilder.Length - 1, 1);
             }
             return $"[{stringBuilder}]";
         }
