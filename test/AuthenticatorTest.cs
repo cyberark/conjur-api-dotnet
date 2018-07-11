@@ -91,8 +91,8 @@ namespace Conjur.Test
 
         protected void MockTokenExpiration()
         {
-            Authenticator.StartTokenTimer (new TimeSpan (0, 0, 0, 0, 1));
-            Thread.Sleep (10);
+            Authenticator.StartTokenTimer(new TimeSpan(0, 0, 0, 0, 1));
+            Thread.Sleep(10);
         }
     }
 }
