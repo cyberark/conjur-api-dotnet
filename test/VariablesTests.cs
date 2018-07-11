@@ -49,8 +49,8 @@ namespace Conjur.Test
             IEnumerator<Variable> vars;
 
             ClearMocker();
-            Mocker.Mock(new Uri(variableUri + "&offset=0&limit=1000"), GenerateVariablesInfo (0, 1000));
-            Mocker.Mock(new Uri(variableUri + "&offset=1000&limit=1000"), GenerateVariablesInfo (1000, 2000));
+            Mocker.Mock(new Uri(variableUri + "&offset=0&limit=1000"), GenerateVariablesInfo(0, 1000));
+            Mocker.Mock(new Uri(variableUri + "&offset=1000&limit=1000"), GenerateVariablesInfo(1000, 2000));
             Mocker.Mock(new Uri(variableUri + "&offset=2000&limit=1000"), "[]");
             vars = (Client.ListVariables()).GetEnumerator();
             verifyVariablesInfo(vars, 2000);
