@@ -45,20 +45,20 @@ namespace Conjur.Test
         [Test]
         public void ListVariableTest()
         {
-            string ur = $"test:///resources/{TestAccount}?{Constants.KIND_VARIABLE}";
+            string variableUri = $"test:///resources/{TestAccount}?{Constants.KIND_VARIABLE}";
             IEnumerator<Variable> vars;
 
             ClearMocker();
-            Mocker.Mock(new Uri(ur + "&offset=0&limit=1000"), GenerateVariablesInfo (0, 1000));
-            Mocker.Mock(new Uri(ur + "&offset=1000&limit=1000"), GenerateVariablesInfo (1000, 2000));
-            Mocker.Mock(new Uri(ur + "&offset=2000&limit=1000"), "[]");
+            Mocker.Mock(new Uri(variableUri + "&offset=0&limit=1000"), GenerateVariablesInfo (0, 1000));
+            Mocker.Mock(new Uri(variableUri + "&offset=1000&limit=1000"), GenerateVariablesInfo (1000, 2000));
+            Mocker.Mock(new Uri(variableUri + "&offset=2000&limit=1000"), "[]");
             vars = (Client.ListVariables()).GetEnumerator();
             verifyVariablesInfo(vars, 2000);
 
             ClearMocker();
-            Mocker.Mock(new Uri(ur + "&offset=0&limit=1000"), @"[""id"":""invalidjson""]");
+            Mocker.Mock(new Uri(variableUri + "&offset=0&limit=1000"), @"[""id"":""invalidjson""]");
             vars = (Client.ListVariables()).GetEnumerator();
-            Assert.Throws<SerializationException>(() => vars.MoveNext());
+            Assert.Throws<SerializationException> (() => vars.MoveNext());
 
         }
 
