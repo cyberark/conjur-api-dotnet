@@ -47,9 +47,14 @@
     <Compile Include="UnauthorizedException.cs" />
     <Compile Include="Resource.cs" />
     <Compile Include="Client.Methods.cs" />
+<<<<<<< HEAD
     <Compile Include="ResourceKind.cs" />
     <Compile Include="ResourceMetadata.cs" />
     <Compile Include="User.cs" />
+=======
+    <Compile Include="Constants.cs" />
+    <Compile Include="ResourceMetadata.cs" />
+>>>>>>> 9b1fc3a577d209f9dc2470af980fdd7e44a95d22
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
