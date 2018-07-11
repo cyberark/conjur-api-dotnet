@@ -49,7 +49,7 @@ namespace Conjur.Test
 
             for (int userId = firstUserId; userId < lastUserId; userId++)
             {
-                stringBuilder.Append($"{{\"id\":\"{Client.GetAccountName ()}:{Constants.KIND_USER}:id{userId}\"}},");
+                stringBuilder.Append($"{{\"id\":\"{Client.GetAccountName()}:{Constants.KIND_USER}:id{userId}\"}},");
             }
             if (stringBuilder.Length != 0)
             {
