@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Mime;
 using System.Runtime.Serialization;
 using System.Text;
 using NUnit.Framework;
@@ -21,7 +22,7 @@ namespace Conjur.Test
             Mocker.Mock(new Uri("test:///secrets/" + TestAccount +  "/variable/foo%2Fbar"), "testvalue");
             Assert.AreEqual("testvalue", Client.Variable("foo/bar").GetValue());
 
-            // TODO: not sure if this is supposed to be a plus or %20 or either
+            // TODO: not sure if this is secrets to be a plus or %20 or either
             Mocker.Mock(new Uri("test:///secrets/" + TestAccount +  "/variable/foo+bar"), "space test");
             Assert.AreEqual("space test", Client.Variable("foo bar").GetValue());
         }
@@ -45,20 +46,20 @@ namespace Conjur.Test
         [Test]
         public void ListVariableTest()
         {
-            string variableUri = $"test:///resources/{TestAccount}?{Constants.KIND_VARIABLE}";
+            string ur = $"test:///resources/{TestAccount}?{Constants.KIND_VARIABLE}";
             IEnumerator<Variable> vars;
 
             ClearMocker();
-            Mocker.Mock(new Uri(variableUri + "&offset=0&limit=1000"), GenerateVariablesInfo(0, 1000));
-            Mocker.Mock(new Uri(variableUri + "&offset=1000&limit=1000"), GenerateVariablesInfo(1000, 2000));
-            Mocker.Mock(new Uri(variableUri + "&offset=2000&limit=1000"), "[]");
+            Mocker.Mock(new Uri (ur + "&offset=0&limit=1000"), GenerateVariablesInfo (0, 1000));
+            Mocker.Mock(new Uri (ur + "&offset=1000&limit=1000"), GenerateVariablesInfo (1000, 2000));
+            Mocker.Mock(new Uri (ur + "&offset=2000&limit=1000"), "[]");
             vars = (Client.ListVariables()).GetEnumerator();
             verifyVariablesInfo(vars, 2000);
 
             ClearMocker();
-            Mocker.Mock(new Uri(variableUri + "&offset=0&limit=1000"), @"[""id"":""invalidjson""]");
-            vars = (Client.ListVariables()).GetEnumerator();
-            Assert.Throws<SerializationException> (() => vars.MoveNext());
+            Mocker.Mock(new Uri (ur + "&offset=0&limit=1000"), @"[""id"":""invalidjson""]");
+            vars = (Client.ListVariables ()).GetEnumerator ();
+            Assert.Throws<SerializationException> (() => vars.MoveNext ());
 
         }
 
@@ -69,7 +70,7 @@ namespace Conjur.Test
                 Assert.AreEqual(true, vars.MoveNext());
                 Assert.AreEqual($"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id{id}", vars.Current.Id);
             }
-            Assert.AreEqual(false, vars.MoveNext());
+            Assert.AreEqual(false, vars.MoveNext ());
         }
 
         private string GenerateVariablesInfo(int firstVarId, int lastVarId)
@@ -78,11 +79,11 @@ namespace Conjur.Test
 
             for (int varId = firstVarId; varId < lastVarId; varId++)
             {
-                stringBuilder.Append($"{{\"id\":\"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id{varId}\"}},");
+                stringBuilder.Append ($"{{\"id\":\"id{varId}\"}},");
             }
             if (stringBuilder.Length != 0)
             {
-                stringBuilder.Remove(stringBuilder.Length - 1, 1);
+                stringBuilder.Remove (stringBuilder.Length - 1, 1);
             }
             return $"[{stringBuilder}]";
         }
