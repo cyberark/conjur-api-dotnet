@@ -78,7 +78,7 @@ namespace Conjur.Test
 
             for (int varId = firstVarId; varId < lastVarId; varId++)
             {
-                stringBuilder.Append($"{{\"id\":\"id{varId}\"}},");
+                stringBuilder.Append($"{{\"id\":\"{Client.GetAccountName ()}:{Constants.KIND_VARIABLE}:id{varId}\"}},");
             }
             if (stringBuilder.Length != 0)
             {
