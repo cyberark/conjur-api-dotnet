@@ -26,21 +26,42 @@ namespace Conjur
         }
 
         /// <summary>
-        /// Lists Conjur variables.
+        /// Lists Conjur resource of kind variable.
         /// </summary>
-        /// <returns>A list of variables</returns>
-        /// <param name="query">Query.</param>
+        /// <param name="query">Additional Query parameters, not required.</param>
+        /// <returns>A list of variables objects.</returns>
         public IEnumerable<Variable> ListVariables(string query = null)
         {
             return Conjur.Variable.List(this, query);
         }
 
         /// <summary>
+        /// Create an object representing a Conjur ressource of kind user corresponding with the specifiy name.
+        /// </summary>
+        /// <param name="name">A Name for the requested user.</param>
+        /// <returns>An Object respresenting a user.</returns>
+        /// <seealso cref="User()"/>
+        public User User(string name)
+        {
+            return new User(this, name);
+        }
+
+        /// <summary>
+        /// Lists Conjur resources of kind user.
+        /// </summary>
+        /// <param name="query">Additional Query parameters, not required.</param>
+        /// <returns>A list of users objects.</returns>
+        public IEnumerable<User> ListUsers(string query = null)
+        {
+            return Conjur.User.List(this, query);
+        }
+
+        /// <summary>
         /// Creates a host using a host factory token.
         /// </summary>
-        /// <returns>The created host.</returns>
         /// <param name="name">Name of the host to create.</param>
         /// <param name="hostFactoryToken">Host factory token.</param>
+        /// <returns>The created host.</returns>
         public Host CreateHost(string name, string hostFactoryToken)
         {
             return new HostFactoryToken(this, hostFactoryToken)
@@ -48,9 +69,9 @@ namespace Conjur
         }
 
         /// <summary>
-        /// Creates an object representing a Conjur resource.
+        /// Creates an object representing a Conjur general resource.
         /// </summary>
-        /// <param name="kind">Resource kind. @<see cref="ResourceKind"/></param>
+        /// <param name="kind">Resource kind.</param>
         /// <param name="name">Resource Name.</param>
         /// <returns>Object representing the specified resource.</returns>
         public Resource Resource(string kind, string name)

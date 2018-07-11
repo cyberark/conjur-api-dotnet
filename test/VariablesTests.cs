@@ -31,7 +31,7 @@ namespace Conjur.Test
         {
             string testValue = "testvalue";
 
-            var v = Mocker.Mock (new Uri ("test:///secrets/" + TestAccount + "/variable/foobar"), "");
+            var v = Mocker.Mock(new Uri ("test:///secrets/" + TestAccount + "/variable/foobar"), "");
               v.Verifier = (WebRequest wr) =>
               {
                       MockRequest req = wr as WebMocker.MockRequest;
