@@ -19,28 +19,23 @@ namespace Conjur
     {
         private readonly Uri uri;
         private readonly NetworkCredential credential;
+        private readonly object locker = new object();
 
-        // NOTE: since the timer executes on a different
-        // thread we cannot use token == null, but need
-        // the extra boolean
-        private string token;
-        private bool tokenExpired = true;
-        private Timer timer;
+        private string token = null;
+        private Timer timer = null;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Conjur.ApiKeyAuthenticator"/> class.
         /// </summary>
         /// <param name="authnUri">Authentication base URI, for example
         /// "https://example.com/api/authn".</param>
+        /// <param name="account">The name of the Conjur organization account.</param>
         /// <param name="credential">User name and API key to use, where
         /// username is for example "bob" or "host/jenkins".</param>
         public ApiKeyAuthenticator(Uri authnUri, string account, NetworkCredential credential)
         {
             this.credential = credential;
-            this.uri = new Uri(authnUri + "/" + account + "/"
-                + WebUtility.UrlEncode(credential.UserName)
-                + "/authenticate");
-            this.timer = new Timer((_) => this.tokenExpired = true);
+            this.uri = new Uri($"{authnUri}/{WebUtility.UrlEncode(account)}/{WebUtility.UrlEncode(credential.UserName)}/authenticate");
         }
 
         #region IAuthenticator implementation
@@ -52,16 +47,27 @@ namespace Conjur
         /// It needs to be base64-encoded to be used in a web request.</returns>
         public string GetToken()
         {
-            if (this.tokenExpired)
+            string token = this.token;
+            if (token != null)
             {
-                var request = WebRequest.Create(this.uri);
-                request.Method = "POST";
+                return token;
+            }
 
-                using (var writer = new StreamWriter(request.GetRequestStream()))
-                    writer.Write(this.credential.Password);
+            lock (this.locker)
+            {
+                if (this.token == null)
+                {
+                    WebRequest request = WebRequest.Create(this.uri);
+                    request.Method = WebRequestMethods.Http.Post;
 
-                this.token = request.Read();
-                this.StartTokenTimer(new TimeSpan(0, 7, 30));
+                    using (StreamWriter writer = new StreamWriter(request.GetRequestStream()))
+                    {
+                        writer.Write(this.credential.Password);
+                    }
+
+                    Interlocked.Exchange(ref this.token, request.Read());
+                    this.StartTokenTimer(new TimeSpan(0, 7, 30));
+                }
             }
 
             return this.token;
@@ -71,8 +77,17 @@ namespace Conjur
 
         internal void StartTokenTimer(TimeSpan timeout)
         {
-            this.tokenExpired = false;
-            this.timer.Change(timeout, Timeout.InfiniteTimeSpan);
+            this.timer = new Timer(this.TimerCallback, null, timeout, Timeout.InfiniteTimeSpan);
+        }
+
+        private void TimerCallback(object state)
+        {
+            // timer is disposable resource but there is no way to dispose it from outside
+            // so each time when token expires we dispose it
+            // it will allow garbage collection of unecessary client and authentificator classes
+            this.timer.Dispose();
+            this.timer = null;
+            Interlocked.Exchange(ref this.token, null);
         }
     }
 }
