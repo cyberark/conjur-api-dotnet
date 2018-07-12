@@ -102,7 +102,7 @@ namespace Conjur
                     + ((query != null) ? $"&search={query}" : string.Empty);
 
                 resultList = JsonSerializer<List<TResult>>.Read(client.AuthenticatedRequest(pathListResourceQuery));
-                foreach (TResult searchResult in resultList) 
+                foreach (TResult searchResult in resultList)
                 {
                     yield return newT(searchResult);
                 }

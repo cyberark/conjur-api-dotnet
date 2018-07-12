@@ -78,5 +78,15 @@ namespace Conjur
         {
             return new Resource(this, kind, name);
         }
+
+        /// <summary>
+        /// Actings as role is passed to new instanace of client.
+        /// </summary>
+        /// <returns>New instance of impersonated client with requested role.</returns>
+        /// <param name="role">Conjur Role.</param>
+        public Client ActingAs(string role)
+        {
+            return new Client(this, role);
+        }
     }
 }

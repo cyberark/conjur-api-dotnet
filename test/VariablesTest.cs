@@ -18,11 +18,11 @@ namespace Conjur.Test
         [Test]
         public void GetVariableTest()
         {
-            Mocker.Mock(new Uri("test:///secrets/" + TestAccount +  "/variable/foo%2Fbar"), "testvalue");
+            Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foo%2Fbar"), "testvalue");
             Assert.AreEqual("testvalue", Client.Variable("foo/bar").GetValue());
 
             // TODO: not sure if this is supposed to be a plus or %20 or either
-            Mocker.Mock(new Uri("test:///secrets/" + TestAccount +  "/variable/foo+bar"), "space test");
+            Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foo+bar"), "space test");
             Assert.AreEqual("space test", Client.Variable("foo bar").GetValue());
         }
 
@@ -31,14 +31,14 @@ namespace Conjur.Test
         {
             string testValue = "testvalue";
 
-            var v = Mocker.Mock(new Uri ("test:///secrets/" + TestAccount + "/variable/foobar"), "");
-              v.Verifier = (WebRequest wr) =>
-              {
-                      MockRequest req = wr as WebMocker.MockRequest;
-                      Assert.AreEqual(WebRequestMethods.Http.Post, wr.Method);
-                      Assert.AreEqual("text\\plain", wr.ContentType);
-                      Assert.AreEqual($"{{\"value\": \"{testValue}\"}}", req.Body);
-              };
+            var v = Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foobar"), "");
+            v.Verifier = (WebRequest wr) =>
+            {
+                MockRequest req = wr as WebMocker.MockRequest;
+                Assert.AreEqual(WebRequestMethods.Http.Post, wr.Method);
+                Assert.AreEqual("text\\plain", wr.ContentType);
+                Assert.AreEqual($"{{\"value\": \"{testValue}\"}}", req.Body);
+            };
             Client.Variable("foobar").AddSecret(testValue);
         }
 
@@ -58,13 +58,13 @@ namespace Conjur.Test
             ClearMocker();
             Mocker.Mock(new Uri(variableUri + "&offset=0&limit=1000"), @"[""id"":""invalidjson""]");
             vars = (Client.ListVariables()).GetEnumerator();
-            Assert.Throws<SerializationException> (() => vars.MoveNext());
+            Assert.Throws<SerializationException>(() => vars.MoveNext());
 
         }
 
         private void verifyVariablesInfo(IEnumerator<Variable> vars, int excpectedNumVars)
         {
-            for (int id = 0; id < excpectedNumVars; ++id) 
+            for (int id = 0; id < excpectedNumVars; ++id)
             {
                 Assert.AreEqual(true, vars.MoveNext());
                 Assert.AreEqual($"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id{id}", vars.Current.Id);

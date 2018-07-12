@@ -7,7 +7,7 @@ namespace Conjur.Test
     public class ResourceTest : Base
     {
         protected readonly string Kind = Constants.KIND_USER;
-        protected readonly string Id = "bacon";
+        protected readonly string Name = "bacon";
 
         public ResourceTest()
         {
@@ -17,10 +17,10 @@ namespace Conjur.Test
         [Test]
         public void TestCheck()
         {
-            var resource = Client.Resource(Kind, Id);
+            var resource = Client.Resource(Kind, Name);
 
             var mock = Mocker.Mock(new Uri("test:///resources/" + TestAccount
-                   + "/" + Kind + "/" + Id + "/?check=true&privilege=fry"), "");
+                   + "/" + Kind + "/" + Name + "/?check=true&privilege=fry"), "");
             Assert.IsTrue(resource.Check("fry"));
 
             mock.Verifier = (WebRequest) =>
@@ -29,6 +29,13 @@ namespace Conjur.Test
                     HttpStatusCode.Forbidden, "Forbidden");
             };
             Assert.IsFalse(resource.Check("fry"));
+        }
+
+        [Test]
+        public void TestNameToId()
+        {
+            var resource = Client.Resource(Kind, Name);
+            Assert.AreEqual($"{Client.GetAccountName()}:{Kind}:{Name}", resource.Id);
         }
     }
 }

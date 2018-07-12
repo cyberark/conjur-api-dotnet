@@ -44,7 +44,7 @@
     <Compile Include="CertificateVerificationTest.cs" />
     <Compile Include="Certificates.cs" />
     <Compile Include="AuthenticatorTest.cs" />
-    <Compile Include="VariablesTests.cs" />
+    <Compile Include="VariablesTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

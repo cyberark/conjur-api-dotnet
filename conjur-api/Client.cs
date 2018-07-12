@@ -10,7 +10,6 @@ namespace Conjur
     using System;
     using System.Net;
     using System.Net.Security;
-    using System.Runtime.Serialization;
     using System.Security.Cryptography.X509Certificates;
     using System.Text;
     using System.Text.RegularExpressions;
@@ -22,16 +21,24 @@ namespace Conjur
     {
         private Uri applianceUri;
         private string account;
+        private string actingAs;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Conjur.Client"/> class.
+        /// Initializes a new instance of the <see cref="T:Conjur.Client"/> class.
         /// </summary>
         /// <param name="applianceUri">Appliance URI.</param>
+        /// <param name="account">Account.</param>
         public Client(string applianceUri, string account)
         {
             this.account = account;
             this.applianceUri = NormalizeBaseUri(applianceUri);
             this.TrustedCertificates = new X509Certificate2Collection();
+        }
+
+        internal Client(Client other, string role) : this(other.ApplianceUri.AbsoluteUri, other.account)
+        {
+            this.actingAs = role;
+            this.Authenticator = other.Authenticator;
         }
 
         /// <summary>
@@ -51,11 +58,7 @@ namespace Conjur
         /// This gets automatically set by setting <see cref="Client.Credential"/>.
         /// </summary>
         /// <value>The authenticator.</value>
-        public IAuthenticator Authenticator
-        {
-            get;
-            set;
-        }
+        public IAuthenticator Authenticator { get; set; }
 
         /// <summary>
         /// Sets the username and API key to authenticate.
@@ -69,7 +72,8 @@ namespace Conjur
             set
             {
                 this.Authenticator = new ApiKeyAuthenticator(
-                    new Uri(this.applianceUri + "authn"), this.GetAccountName(),
+                    new Uri(this.applianceUri + "authn"), 
+                    this.GetAccountName(),
                     value);
             }
         }
@@ -115,15 +119,13 @@ namespace Conjur
         /// where user name is for example "bob" or "host/jenkins".</param>
         public string LogIn(NetworkCredential credential)
         {
-            var wr = this.Request("authn/" + this.account + "/login");
-
+            WebRequest webRequest = this.Request($"authn/{this.account}/login");
 
             // there seems to be no sane way to force WebRequest to authenticate
             // properly by itself, so generate the header manually
-            var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(
-                               credential.UserName + ":" + credential.Password));
-            wr.Headers["Authorization"] = "Basic " + auth;
-            var apiKey = wr.Read();
+            string auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(credential.UserName + ":" + credential.Password));
+            webRequest.Headers["Authorization"] = "Basic " + auth;
+            string apiKey = webRequest.Read();
 
             this.Credential = new NetworkCredential(credential.UserName, apiKey);
             return apiKey;
@@ -147,6 +149,11 @@ namespace Conjur
         /// authorization header set using <see cref="Authenticator"/>.</returns>
         public WebRequest AuthenticatedRequest(string path)
         {
+            if (this.actingAs != null)
+            {
+                path += (path.Contains("?") ? "&" : "?") + $"acting_as={WebUtility.UrlEncode(this.actingAs)}";
+            }
+
             return this.ApplyAuthentication(this.Request(path));
         }
 
@@ -162,7 +169,7 @@ namespace Conjur
             // eg. it returns 401 on https://example.org//api/info
 
             // so normalize to remove double slashes
-            var normalizedUri = Regex.Replace(uri, "(?<!:)/+", "/");
+            string normalizedUri = Regex.Replace(uri, "(?<!:)/+", "/");
 
             // make sure there is a trailing slash
             return new Uri(Regex.Replace(normalizedUri, "(?<!/)\\z", "/"));
@@ -185,22 +192,24 @@ namespace Conjur
         {
             switch (sslPolicyErrors)
             {
-                case SslPolicyErrors.RemoteCertificateChainErrors:
-                    return chain.VerifyWithExtraRoots(certificate, this.TrustedCertificates);
-                case SslPolicyErrors.None:
-                    return true;
-                default:
-                    return false;
+            case SslPolicyErrors.RemoteCertificateChainErrors:
+                return chain.VerifyWithExtraRoots(certificate, this.TrustedCertificates);
+            case SslPolicyErrors.None:
+                return true;
+            default:
+                return false;
             }
         }
 
         private WebRequest ApplyAuthentication(WebRequest webRequest)
         {
             if (this.Authenticator == null)
+            {
                 throw new InvalidOperationException("Authentication required.");
+            }
 
-            var token = Convert.ToBase64String(
-                            Encoding.UTF8.GetBytes(this.Authenticator.GetToken()));
+            string token = Convert.ToBase64String(Encoding.UTF8.GetBytes(this.Authenticator.GetToken()));
+            
             webRequest.Headers["Authorization"] = "Token token=\"" + token + "\"";
             return webRequest;
         }

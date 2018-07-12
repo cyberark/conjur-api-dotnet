@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.Net;
-using Conjur;
 
 namespace Conjur.Test
 {
@@ -29,11 +29,11 @@ namespace Conjur.Test
         {
             Mocker.Mock(new Uri("test:///authn/" + TestAccount + "/" + LoginName + "/authenticate"), "token")
                 .Verifier = (WebRequest wr) =>
-            {
-                var req = wr as WebMocker.MockRequest;
-                Assert.AreEqual("POST", wr.Method);
-                Assert.AreEqual("api-key", req.Body);
-            };
+                {
+                    var req = wr as WebMocker.MockRequest;
+                    Assert.AreEqual("POST", wr.Method);
+                    Assert.AreEqual("api-key", req.Body);
+                };
             Assert.AreEqual("token", authenticator.GetToken());
         }
 
@@ -49,6 +49,27 @@ namespace Conjur.Test
             Client.Authenticator = null;
             Assert.Throws<InvalidOperationException>(() =>
                 Client.AuthenticatedRequest("info"));
+        }
+
+        [Test]
+        public void ActingAsTest()
+        {
+            // Test in mono fails when using : in role variable. role should be TestAccount:Kind:foo
+            string role = "foo";
+            string resourceVarUri = $"test:///resources/{TestAccount}?{Constants.KIND_VARIABLE}";
+
+            Mocker.Mock(new Uri($"{resourceVarUri}&offset=0&limit=1000&acting_as={role}"), $"[{{\"id\":\"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id\"}}]");
+            Mocker.Mock(new Uri($"{resourceVarUri}&offset=0&limit=1000"), "[]");
+
+            Client.Authenticator = new MockAuthenticator();
+
+            IEnumerator<Variable> actingAsClientVars = Client.ActingAs(role).ListVariables().GetEnumerator();
+            IEnumerator<Variable> plainClientVars = Client.ListVariables().GetEnumerator();
+
+            Assert.AreEqual(true, actingAsClientVars.MoveNext());
+            Assert.AreEqual($"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id", actingAsClientVars.Current.Id);
+
+            Assert.AreEqual(false, plainClientVars.MoveNext());
         }
     }
 }
