@@ -1,7 +1,9 @@
 ﻿using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
+using System.Text;
 
 namespace Conjur.Test
 {
@@ -70,6 +72,27 @@ namespace Conjur.Test
             Assert.AreEqual($"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id", actingAsClientVars.Current.Id);
 
             Assert.AreEqual(false, plainClientVars.MoveNext());
+        }
+
+        [Test]
+        public void CreatePolicyTest()
+        {
+            string policyId = "vaultname/policyname";
+            string policyPath = $"test:///policies/{Client.GetAccountName()}/{Constants.KIND_POLICY}";
+
+            // notice: We must encode policyId, we can check that sensitive data is not leaked (123456)
+            Mocker.Mock(new Uri($"{policyPath}/{WebUtility.UrlEncode(policyId)}"), "apisecret:123456");
+
+            Client.Authenticator = new MockAuthenticator();
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                using (StreamWriter sw = new StreamWriter(ms, Encoding.Unicode))
+                {
+                    sw.WriteLine("-!policy id: database body: -!host id: db - host - !variable id: db - password owner: !host db - host");
+                    new Policy(Client, policyId).LoadPolicy(ms);
+                }
+            }
         }
     }
 }
