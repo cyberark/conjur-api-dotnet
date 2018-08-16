@@ -98,7 +98,7 @@ namespace Conjur
             List<TResult> resultList;
             do
             {
-                string pathListResourceQuery = $"resources/{client.GetAccountName()}?{kind}&offset={offset}&limit={limit}"
+                string pathListResourceQuery = $"resources/{client.GetAccountName()}/{kind}?offset={offset}&limit={limit}"
                     + ((query != null) ? $"&search={query}" : string.Empty);
 
                 resultList = JsonSerializer<List<TResult>>.Read(client.AuthenticatedRequest(pathListResourceQuery));
@@ -111,6 +111,13 @@ namespace Conjur
             } while(resultList.Count > 0);
         }
 
+        /// <summary>
+        /// Parse Conjur id following format of acount:kind:name to extract name.
+        /// </summary>
+        /// <returns>Extracted name from id.</returns>
+        /// <param name="id">Conjur Identifier.</param>
+        /// <param name="account">Conjur Account.</param>
+        /// <param name="kind">Conjur resource kind.</param>
         protected static string IdToName(string id, string account, string kind)
         {
             return id.Substring($"{account}:{kind}:".Length);

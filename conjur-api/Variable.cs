@@ -55,6 +55,10 @@ namespace Conjur
             webRequest.ContentType = "text\\plain";
             webRequest.ContentLength = data.Length;
             webRequest.GetRequestStream().Write(data, 0, data.Length);
+            using (webRequest.GetResponse())
+            {
+                // Intentional do not care about response content
+            }
         }
 
         internal static IEnumerable<Variable> List(Client client, string query = null)

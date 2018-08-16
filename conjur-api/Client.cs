@@ -27,12 +27,14 @@ namespace Conjur
         /// Initializes a new instance of the <see cref="T:Conjur.Client"/> class.
         /// </summary>
         /// <param name="applianceUri">Appliance URI.</param>
-        /// <param name="account">Account.</param>
+        /// <param name="account">Conjur account.</param>
         public Client(string applianceUri, string account)
         {
             this.account = account;
             this.applianceUri = NormalizeBaseUri(applianceUri);
             this.TrustedCertificates = new X509Certificate2Collection();
+            ServicePointManager.ServerCertificateValidationCallback =
+                new RemoteCertificateValidationCallback(this.ValidateCertificate);
         }
 
         internal Client(Client other, string role) : this(other.ApplianceUri.AbsoluteUri, other.account)
