@@ -24,7 +24,8 @@ namespace Conjur
         /// into given policy name, over REST POST request.
         /// </summary>
         /// <param name="policyContent">Stream valid MAML Conjur policy strature.</param>
-        public void LoadPolicy(Stream policyContent)
+        /// <returns>Policy creation response as a stream</returns>
+        public Stream LoadPolicy(Stream policyContent)
         {
             WebRequest req = Client.AuthenticatedRequest(this.path);
             req.Method = WebRequestMethods.Http.Post;
@@ -34,9 +35,9 @@ namespace Conjur
             using (Stream reqStream = req.GetRequestStream())
             {
                 policyContent.CopyTo(reqStream);
-                using (req.GetResponse())
+                using (Stream resStream = req.GetResponse().GetResponseStream())
                 {
-                    // Intentional do not care about response content
+                    return resStream;
                 }
             }
         }
