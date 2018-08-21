@@ -16,18 +16,18 @@ namespace Conjur.Test
         [Test]
         public void ListUserTest()
         {
-            string resourceUrl = $"test:///resources/{TestAccount}?{Constants.KIND_USER}";
+            string resourceUrl = $"test:///resources/{TestAccount}/{Constants.KIND_USER}";
             IEnumerator<User> users;
 
             ClearMocker();
-            Mocker.Mock(new Uri(resourceUrl + "&offset=0&limit=1000"), GenerateUsersInfo(0, 1000));
-            Mocker.Mock(new Uri(resourceUrl + "&offset=1000&limit=1000"), GenerateUsersInfo(1000, 2000));
-            Mocker.Mock(new Uri(resourceUrl + "&offset=2000&limit=1000"), "[]");
+            Mocker.Mock(new Uri(resourceUrl + "?offset=0&limit=1000"), GenerateUsersInfo(0, 1000));
+            Mocker.Mock(new Uri(resourceUrl + "?offset=1000&limit=1000"), GenerateUsersInfo(1000, 2000));
+            Mocker.Mock(new Uri(resourceUrl + "?offset=2000&limit=1000"), "[]");
             users = Client.ListUsers().GetEnumerator();
             verifyUserInfo(users, 2000);
 
             ClearMocker();
-            Mocker.Mock(new Uri(resourceUrl + "&offset=0&limit=1000"), @"[""id"":""invalidjson""]");
+            Mocker.Mock(new Uri(resourceUrl + "?offset=0&limit=1000"), @"[""id"":""invalidjson""]");
             users = Client.ListUsers().GetEnumerator();
             Assert.Throws<SerializationException> (() => users.MoveNext());
 

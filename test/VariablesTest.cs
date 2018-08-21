@@ -29,7 +29,7 @@ namespace Conjur.Test
         [Test]
         public void AddSecretTest()
         {
-            string testValue = "testvalue";
+            string testValue = "testValue";
 
             var v = Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foobar"), "");
             v.Verifier = (WebRequest wr) =>
@@ -37,7 +37,7 @@ namespace Conjur.Test
                 MockRequest req = wr as WebMocker.MockRequest;
                 Assert.AreEqual(WebRequestMethods.Http.Post, wr.Method);
                 Assert.AreEqual("text\\plain", wr.ContentType);
-                Assert.AreEqual($"{{\"value\": \"{testValue}\"}}", req.Body);
+                Assert.AreEqual(testValue, req.Body);
             };
             Client.Variable("foobar").AddSecret(testValue);
         }
@@ -45,18 +45,18 @@ namespace Conjur.Test
         [Test]
         public void ListVariableTest()
         {
-            string variableUri = $"test:///resources/{TestAccount}?{Constants.KIND_VARIABLE}";
+            string variableUri = $"test:///resources/{TestAccount}/{Constants.KIND_VARIABLE}";
             IEnumerator<Variable> vars;
 
             ClearMocker();
-            Mocker.Mock(new Uri(variableUri + "&offset=0&limit=1000"), GenerateVariablesInfo(0, 1000));
-            Mocker.Mock(new Uri(variableUri + "&offset=1000&limit=1000"), GenerateVariablesInfo(1000, 2000));
-            Mocker.Mock(new Uri(variableUri + "&offset=2000&limit=1000"), "[]");
+            Mocker.Mock(new Uri(variableUri + "?offset=0&limit=1000"), GenerateVariablesInfo(0, 1000));
+            Mocker.Mock(new Uri(variableUri + "?offset=1000&limit=1000"), GenerateVariablesInfo(1000, 2000));
+            Mocker.Mock(new Uri(variableUri + "?offset=2000&limit=1000"), "[]");
             vars = (Client.ListVariables()).GetEnumerator();
             verifyVariablesInfo(vars, 2000);
 
             ClearMocker();
-            Mocker.Mock(new Uri(variableUri + "&offset=0&limit=1000"), @"[""id"":""invalidjson""]");
+            Mocker.Mock(new Uri(variableUri + "?offset=0&limit=1000"), @"[""id"":""invalidjson""]");
             vars = (Client.ListVariables()).GetEnumerator();
             Assert.Throws<SerializationException>(() => vars.MoveNext());
 

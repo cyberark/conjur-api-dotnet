@@ -56,10 +56,10 @@ namespace Conjur.Test
         {
             // Test in mono fails when using : in role variable. role should be TestAccount:Kind:foo
             string role = "foo";
-            string resourceVarUri = $"test:///resources/{TestAccount}?{Constants.KIND_VARIABLE}";
+            string resourceVarUri = $"test:///resources/{TestAccount}/{Constants.KIND_VARIABLE}";
 
-            Mocker.Mock(new Uri($"{resourceVarUri}&offset=0&limit=1000&acting_as={role}"), $"[{{\"id\":\"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id\"}}]");
-            Mocker.Mock(new Uri($"{resourceVarUri}&offset=0&limit=1000"), "[]");
+            Mocker.Mock(new Uri($"{resourceVarUri}?offset=0&limit=1000&acting_as={role}"), $"[{{\"id\":\"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id\"}}]");
+            Mocker.Mock(new Uri($"{resourceVarUri}?offset=0&limit=1000"), "[]");
 
             Client.Authenticator = new MockAuthenticator();
 
