@@ -51,6 +51,8 @@ namespace Conjur.Test
 
             public override long ContentLength { get; set; }
 
+            public override int Timeout { get; set; }
+
             public override Uri RequestUri
             {
                 get

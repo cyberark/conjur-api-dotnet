@@ -1,9 +1,10 @@
-﻿﻿﻿﻿using System;
-using System.Net;
-using Conjur;
-
-namespace Example
+﻿namespace Example
 {
+    using System;
+    using System.IO;
+    using System.Net;
+    using Conjur;
+
     class Program
     {
         // this example shows how to use the Conjur .NET api to
@@ -11,13 +12,14 @@ namespace Example
         // the credentials are passed as arguments.
         // Credentials are typically a hostId and api_key or
         // userId and password
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             if (args.Length < 7)
             {
                 Console.WriteLine("Usage: Example <applianceHostName> <applianceCertificatePath> <accountName> <username> <password> <variableId> <hostFactoryToken>");
                 return;
             }
+
             string applianceName = args[0];
             string certPath = args[1];
             string account = args[2];
@@ -34,8 +36,10 @@ namespace Example
 
             // If the Conjur root certificate is not in the system trust store,
             // add it as trusted explicitly
-            if (certPath.Length > 0)
-                conjurClient.TrustedCertificates.ImportPem(certPath);
+            if (certPath.Length > 0) 
+            {
+                conjurClient.TrustedCertificates.ImportPem (certPath);
+            }
 
             // Login with Conjur userid and password,
             // or hostid and api_key, etc
@@ -54,6 +58,25 @@ namespace Example
                 var apiKey = password;
                 conjurClient.Credential = new NetworkCredential(username, apiKey);
             }
+
+            // Load policy to root with request variable Id
+            Policy policy = conjurClient.Policy("root");
+            using (MemoryStream ms = new MemoryStream()) 
+            {
+                using (StreamWriter sw = new StreamWriter(ms)) 
+                {
+                    sw.WriteLine("- !variable");
+                    sw.WriteLine($"  id: {variableId}");
+                    sw.Flush();
+                    Stream policyOutputStream = policy.LoadPolicy(ms);
+                    using (StreamReader reader = new StreamReader(policyOutputStream)) 
+                    {
+                        string policyLoadOutput = reader.ReadToEnd();
+                        Console.WriteLine("Policy load successuly output: '{0}'", policyLoadOutput);
+                    }
+                }
+            }
+
             // Check if this user has permission to get the value of variableId
             // That requires exectue permissions on the variable
 
@@ -105,5 +128,6 @@ namespace Example
             }
 
         }
+
     }
 }

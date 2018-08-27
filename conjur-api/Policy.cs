@@ -16,7 +16,14 @@ namespace Conjur
         internal Policy(Client client, string name)
                 : base(client, Constants.KIND_POLICY, name)
         {
-            this.path = $"policies/{WebUtility.UrlEncode(client.GetAccountName())}/{Constants.KIND_POLICY}/{WebUtility.UrlEncode(name)}";
+                 this.path = string.Join("/", 
+                                         new string[] 
+                                         {
+                                            "policies",
+                                            WebUtility.UrlEncode(client.GetAccountName()),
+                                            Constants.KIND_POLICY,
+                                            WebUtility.UrlEncode(name)
+                                         });
         }
 
         /// <summary>
@@ -24,21 +31,21 @@ namespace Conjur
         /// into given policy name, over REST POST request.
         /// </summary>
         /// <param name="policyContent">Stream valid MAML Conjur policy strature.</param>
-        /// <returns>Policy creation response as a stream</returns>
+        /// <returns>Policy creation response as a stream.</returns>
         public Stream LoadPolicy(Stream policyContent)
         {
-            WebRequest req = Client.AuthenticatedRequest(this.path);
-            req.Method = WebRequestMethods.Http.Post;
-            req.ContentLength = policyContent.Length;
+            WebRequest loadPolicyRequest = Client.AuthenticatedRequest(this.path);
+            loadPolicyRequest.Method = WebRequestMethods.Http.Post;
+            loadPolicyRequest.ContentLength = policyContent.Length;
+            loadPolicyRequest.Timeout = ApiConfigurationManager.GetInstance().GetHttpRequestTimeout();
+
             policyContent.Seek(0, SeekOrigin.Begin);
 
-            using (Stream reqStream = req.GetRequestStream())
+            using (Stream reqStream = loadPolicyRequest.GetRequestStream())
             {
                 policyContent.CopyTo(reqStream);
-                using (Stream resStream = req.GetResponse().GetResponseStream())
-                {
-                    return resStream;
-                }
+                WebResponse loadPolicyResponse = loadPolicyRequest.GetResponse();
+                return loadPolicyResponse.GetResponseStream();
             }
         }
     }
