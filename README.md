@@ -1,9 +1,10 @@
 # Conjur API for .NET
 
-This is a *Draft* implementation of the .NET API for [Conjur](https://developer.conjur.net/).
+This is a *Draft* implementation of the .NET API for [V5 Conjur](https://developer.conjur.net/).
 This implementation includes an example that shows how to:
 
     - Authenticate
+    - Load Policy
     - Check permissions to get the value of a variable
     - Get the value of a variable
     - Use a Host Factory token to create a new Host and get an apiKey to use with Conjur
