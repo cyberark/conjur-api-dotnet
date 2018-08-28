@@ -57,6 +57,18 @@ namespace Conjur
         }
 
         /// <summary>
+        /// Create Conjur policy object, however not loading it to Conjur
+        /// In order to load it use LoadPolicy(Stream policyContent) method.
+        /// </summary>
+        /// <param name="policyName">Name of policy.</param>
+        /// <seealso cref="Policy()"/>
+        /// <returns>Policy entity.</returns>
+        public Policy Policy(string policyName)
+        {
+            return new Policy(this, policyName);
+        }
+
+        /// <summary>
         /// Creates a host using a host factory token.
         /// </summary>
         /// <param name="name">Name of the host to create.</param>

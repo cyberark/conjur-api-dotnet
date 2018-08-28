@@ -1,7 +1,9 @@
 ﻿using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
+using System.Text;
 
 namespace Conjur.Test
 {
@@ -70,6 +72,40 @@ namespace Conjur.Test
             Assert.AreEqual($"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id", actingAsClientVars.Current.Id);
 
             Assert.AreEqual(false, plainClientVars.MoveNext());
+        }
+
+        [Test]
+        public void CreatePolicyTest()
+        {
+            string policyId = "vaultname/policyname";
+            string policyPath = $"test:///policies/{Client.GetAccountName()}/{Constants.KIND_POLICY}";
+            string policyResponseText = "{\"created_roles\":{},\"version\":10}";
+
+            // notice: We must encode policyId, 
+            Mocker.Mock(new Uri($"{policyPath}/{WebUtility.UrlEncode(policyId)}"), policyResponseText);
+
+            Client.Authenticator = new MockAuthenticator();
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                using (StreamWriter sw = new StreamWriter(ms))
+                {
+                    sw.WriteLine("- !variable");
+                    sw.WriteLine("  id: TestVariable");
+
+                    Stream policyResStream = Client.Policy(policyId).LoadPolicy(ms);
+
+                    try
+                    {
+                        StreamReader reader = new StreamReader(policyResStream);
+                        Assert.AreEqual(policyResponseText, reader.ReadToEnd());
+                    } 
+                    catch 
+                    {
+                        Assert.Fail("Failure in policy load response");    
+                    }
+                }
+            }
         }
     }
 }
