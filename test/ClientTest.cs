@@ -79,8 +79,7 @@ namespace Conjur.Test
         {
             string policyId = "vaultname/policyname";
             string policyPath = $"test:///policies/{Client.GetAccountName()}/{Constants.KIND_POLICY}";
-            // we can check that sensitive data is not leaked (123456)
-            string policyResponseText = "apisecret:123456";
+            string policyResponseText = "{\"created_roles\":{},\"version\":10}";
 
             // notice: We must encode policyId, 
             Mocker.Mock(new Uri($"{policyPath}/{WebUtility.UrlEncode(policyId)}"), policyResponseText);
@@ -91,8 +90,11 @@ namespace Conjur.Test
             {
                 using (StreamWriter sw = new StreamWriter(ms))
                 {
-                    sw.WriteLine("-!policy id: database body: -!host id: db - host - !variable id: db - password owner: !host db - host");
+                    sw.WriteLine("- !variable");
+                    sw.WriteLine("  id: TestVariable");
+
                     Stream policyResStream = Client.Policy(policyId).LoadPolicy(ms);
+
                     try
                     {
                         StreamReader reader = new StreamReader(policyResStream);
