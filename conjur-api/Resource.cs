@@ -60,8 +60,8 @@ namespace Conjur
             {
                 if (this.resourcePath == null)
                     this.resourcePath = "resources/" +
-                    WebUtility.UrlEncode(this.Client.GetAccountName()) + "/" +
-                    WebUtility.UrlEncode(this.kind) + "/" + WebUtility.UrlEncode(this.Name);
+                    Uri.EscapeDataString(this.Client.GetAccountName()) + "/" +
+                    Uri.EscapeDataString(this.kind) + "/" + Uri.EscapeDataString(this.Name);
                 return this.resourcePath;
             }
         }
@@ -76,7 +76,7 @@ namespace Conjur
         public bool Check(string privilege)
         {
             var req = this.Client.AuthenticatedRequest(this.ResourcePath
-                          + "/?check=true&privilege=" + WebUtility.UrlEncode(privilege));
+                          + "/?check=true&privilege=" + Uri.EscapeDataString(privilege));
             req.Method = "HEAD";
 
             try
