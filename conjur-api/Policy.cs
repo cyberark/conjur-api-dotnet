@@ -6,6 +6,7 @@
 // </summary>
 namespace Conjur
 {
+    using System;
     using System.IO;
     using System.Net;
 
@@ -20,9 +21,9 @@ namespace Conjur
                                          new string[] 
                                          {
                                             "policies",
-                                            WebUtility.UrlEncode(client.GetAccountName()),
+                                            Uri.EscapeDataString(client.GetAccountName()),
                                             Constants.KIND_POLICY,
-                                            WebUtility.UrlEncode(name)
+                                            Uri.EscapeDataString(name)
                                          });
         }
 

@@ -153,7 +153,7 @@ namespace Conjur
         {
             if (this.actingAs != null)
             {
-                path += (path.Contains("?") ? "&" : "?") + $"acting_as={WebUtility.UrlEncode(this.actingAs)}";
+                path += (path.Contains("?") ? "&" : "?") + $"acting_as={Uri.EscapeDataString(this.actingAs)}";
             }
 
             return this.ApplyAuthentication(this.Request(path));

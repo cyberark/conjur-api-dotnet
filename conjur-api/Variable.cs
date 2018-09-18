@@ -30,7 +30,7 @@ namespace Conjur
         internal Variable(Client client, string name)
             : base(client, Constants.KIND_VARIABLE, name)
         {
-            this.path = $"secrets/{WebUtility.UrlEncode(client.GetAccountName())}/{Constants.KIND_VARIABLE}/{WebUtility.UrlEncode(name)}";
+            this.path = $"secrets/{Uri.EscapeDataString(client.GetAccountName())}/{Constants.KIND_VARIABLE}/{Uri.EscapeDataString(name)}";
         }
 
         /// <summary>

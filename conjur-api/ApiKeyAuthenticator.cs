@@ -1,4 +1,4 @@
-// <copyright file="ApiKeyAuthenticator.cs" company="Conjur Inc.">
+﻿// <copyright file="ApiKeyAuthenticator.cs" company="Conjur Inc.">
 //     Copyright (c) 2016 Conjur Inc. All rights reserved.
 // </copyright>
 // <summary>
@@ -35,7 +35,7 @@ namespace Conjur
         public ApiKeyAuthenticator(Uri authnUri, string account, NetworkCredential credential)
         {
             this.credential = credential;
-            this.uri = new Uri($"{authnUri}/{WebUtility.UrlEncode(account)}/{WebUtility.UrlEncode(credential.UserName)}/authenticate");
+            this.uri = new Uri($"{authnUri}/{Uri.EscapeDataString(account)}/{Uri.EscapeDataString(credential.UserName)}/authenticate");
         }
 
         #region IAuthenticator implementation

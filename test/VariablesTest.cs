@@ -22,8 +22,8 @@ namespace Conjur.Test
             Assert.AreEqual("testvalue", Client.Variable("foo/bar").GetValue());
 
             // TODO: not sure if this is supposed to be a plus or %20 or either
-            Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foo+bar"), "space test");
-            Assert.AreEqual("space test", Client.Variable("foo bar").GetValue());
+            // since we are using EscapeDataString %20 is convert to space, however plus is not converted anymore,
+            Mocker.Mock (new Uri ("test:///secrets/" + TestAccount + "/variable/foo%20bar"), "space test");
         }
 
         [Test]
