@@ -34,7 +34,7 @@ namespace Conjur
         {
             this.credential = credential;
             this.uri = new Uri(authnUri + "/users/"
-                + WebUtility.UrlEncode(credential.UserName)
+                + Uri.EscapeDataString(credential.UserName)
                 + "/authenticate");
             this.timer = new Timer((_) => Interlocked.Exchange(ref this.token, null));
         }

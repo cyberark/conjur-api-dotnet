@@ -57,7 +57,7 @@ namespace Conjur
             List<TResult> resultList;
             do
             {
-                string urlWithParams = $"authz/{WebUtility.UrlEncode(client.GetAccountName())}/resources/{kind}?offset={offset}"
+                string urlWithParams = $"authz/{Uri.EscapeDataString(client.GetAccountName())}/resources/{kind}?offset={offset}"
                                       + $"&limit={LIMIT_SEARCH_VAR_LIST_RETURNED}"
                                       + ((query != null) ? $"&search={query}" : string.Empty)
                                       + ((client.ActingAs != null) ? $"&acting_as={client.ActingAs}" : string.Empty);
@@ -82,8 +82,8 @@ namespace Conjur
             {
                 if (this.resourcePath == null)
                     this.resourcePath = "authz/" +
-                    WebUtility.UrlEncode(this.Client.GetAccountName()) + "/resources/" +
-                    WebUtility.UrlEncode(this.kind) + "/" + WebUtility.UrlEncode(this.Id);
+                    Uri.EscapeDataString(this.Client.GetAccountName()) + "/resources/" +
+                    Uri.EscapeDataString(this.kind) + "/" + Uri.EscapeDataString(this.Id);
                 return this.resourcePath;
             }
         }
@@ -98,7 +98,7 @@ namespace Conjur
         public bool Check(string privilege)
         {
             var req = this.Client.AuthenticatedRequest(this.ResourcePath
-                          + "/?check=true&privilege=" + WebUtility.UrlEncode(privilege));
+                          + "/?check=true&privilege=" + Uri.EscapeDataString(privilege));
             req.Method = "HEAD";
 
             try

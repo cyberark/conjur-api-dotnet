@@ -28,7 +28,7 @@ namespace Conjur
         internal Role(Client client, string kind, string name)
             : base(client, kind, name)
         {
-            this.path = $"authz/{WebUtility.UrlEncode(client.GetAccountName())}/roles/{WebUtility.UrlEncode(kind)}/{WebUtility.UrlEncode(name)}";
+            this.path = $"authz/{Uri.EscapeDataString(client.GetAccountName())}/roles/{Uri.EscapeDataString(kind)}/{Uri.EscapeDataString(name)}";
         }
 
         /// <summary>
