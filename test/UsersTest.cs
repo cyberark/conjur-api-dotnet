@@ -52,7 +52,7 @@ namespace Conjur.Test
         {
             for(int id = 0; id < expectedNumUsers; ++id) {
                 Assert.AreEqual(true, users.MoveNext());
-                Assert.AreEqual($"abc:user:{id}-admin@AutomationVault{id}", users.Current.Id);
+                Assert.AreEqual($"{id}-admin@AutomationVault{id}", users.Current.Id);
             }
             Assert.AreEqual(false, users.MoveNext());
         }

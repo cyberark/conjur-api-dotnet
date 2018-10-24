@@ -9,6 +9,7 @@ namespace Conjur
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Net;
 
     /// <summary>
@@ -21,7 +22,7 @@ namespace Conjur
         /// </summary>
         protected readonly Client Client;
         private const uint LIMIT_SEARCH_VAR_LIST_RETURNED = 1000;
-
+        private const int ID_PARTS_COUNT = 3;
         private readonly string kind;
         private string resourcePath;
         
@@ -70,6 +71,16 @@ namespace Conjur
 
                 offset += (uint)resultList.Count;
             } while (resultList.Count > 0);
+        }
+
+        /// <summary>
+        /// Parse Conjur id following format of acount:kind:name to extract name.
+        /// </summary>
+        /// <returns>Extracted name from id.</returns>
+        /// <param name="id">Conjur Identifier.</param>
+        protected static string IdToName(string id)
+        {
+            return id.Split(new [] { ':' }, ID_PARTS_COUNT).Last();
         }
 
         /// <summary>

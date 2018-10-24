@@ -34,7 +34,7 @@ namespace Conjur
         /// <returns>Returns IEnumerable to User.</returns>
         internal static IEnumerable<User> List(Client client, string query = null)
         {
-            Func<ResourceMetadata, User> newInst = (searchRes) => new User(client, searchRes.Id);
+            Func<ResourceMetadata, User> newInst = (searchRes) => new User(client, IdToName(searchRes.Id));
             return ListResources<User, ResourceMetadata>(client, "user", newInst, query);
         }
     }
