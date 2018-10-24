@@ -2,6 +2,7 @@
 using System;
 using System.Net;
 using Conjur;
+using System.Collections.Generic;
 
 namespace Conjur.Test
 {
@@ -49,6 +50,27 @@ namespace Conjur.Test
             Client.Authenticator = null;
             Assert.Throws<InvalidOperationException>(() => 
                 Client.AuthenticatedRequest("info"));
+        }
+
+        [Test]
+        public void ActingAsTest()
+        {
+            // Test in mono fails when using : in role variable. role should be TestAccount:Kind:foo
+            string role = "foo";
+            string resourceVarUri = $"test:///authz/test-account/resources/variable";
+
+            Mocker.Mock(new Uri ($"{resourceVarUri}?offset=0&limit=1000&acting_as={role}"), $"[{{\"id\":\"{Client.GetAccountName()}:variable:id\"}}]");
+            Mocker.Mock(new Uri ($"{resourceVarUri}?offset=0&limit=1000"), "[]");
+
+            Client.Authenticator = new MockAuthenticator();
+
+            IEnumerator<Variable> actingAsClientVars = Client.ActingAs(role).ListVariables().GetEnumerator();
+            IEnumerator<Variable> plainClientVars = Client.ListVariables().GetEnumerator();
+
+            Assert.AreEqual(true, actingAsClientVars.MoveNext());
+            Assert.AreEqual($"{Client.GetAccountName()}:variable:id", actingAsClientVars.Current.Id);
+
+            Assert.AreEqual(false, plainClientVars.MoveNext());
         }
     }
 }

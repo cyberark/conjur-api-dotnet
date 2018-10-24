@@ -57,10 +57,9 @@ namespace Conjur
             List<TResult> resultList;
             do
             {
-                string urlWithParams = $"authz/{WebUtility.UrlEncode(client.GetAccountName())}/resources/{kind}?offset={offset}"
-                                      + $"&limit={LIMIT_SEARCH_VAR_LIST_RETURNED}"
-                                      + ((query != null) ? $"&search={query}" : string.Empty)
-                                      + ((client.ActingAs != null) ? $"&acting_as={client.ActingAs}" : string.Empty);
+                string urlWithParams = $"authz/{WebUtility.UrlEncode (client.GetAccountName ())}/resources/{kind}?offset={offset}"
+                    + $"&limit={LIMIT_SEARCH_VAR_LIST_RETURNED}"
+                    + ((query != null) ? $"&search={query}" : string.Empty);
 
                 resultList = JsonSerializer<List<TResult>>.Read(client.AuthenticatedRequest(urlWithParams));
                 foreach (TResult searchVarResult in resultList)

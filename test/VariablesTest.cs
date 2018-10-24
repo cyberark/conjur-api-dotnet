@@ -56,18 +56,9 @@ namespace Conjur.Test
             vars = Client.ListVariables().GetEnumerator();
             verifyVariablesInfo(vars, 2000);
 
-            // Verify parameters of GetListVariables() passed as expected toward conjur server
-            ClearMocker();
-            Client.ActingAs = "user:role";
-            Mocker.Mock(new Uri($"{varListUrl}?offset=0&limit=1000&search=var_0&acting_as=user:role"), GenerateVariablesInfo(0, 1000));
-            Mocker.Mock(new Uri($"{varListUrl}?offset=1000&limit=1000&search=var_0&acting_as=user:role"), GenerateVariablesInfo(1000, 1872));
-            Mocker.Mock(new Uri($"{varListUrl}?offset=1872&limit=1000&search=var_0&acting_as=user:role"), "[]");
-            vars = (Client.ListVariables("var_0")).GetEnumerator();
-            verifyVariablesInfo(vars, 1872);
-
             // Check handling invalid json response from conjur server
             ClearMocker();
-            Mocker.Mock(new Uri($"{varListUrl}?offset=0&limit=1000&acting_as=user:role"), @"[""id"":""ivnalidjson""]");
+            Mocker.Mock(new Uri($"{varListUrl}?offset=0&limit=1000"), @"[""id"":""ivnalidjson""]");
             vars = (Client.ListVariables()).GetEnumerator();
             Assert.Throws<SerializationException>(() => vars.MoveNext());
         }

@@ -22,6 +22,7 @@ namespace Conjur
     {
         private Uri applianceUri;
         private string account;
+        private string actingAs;
         private bool urlValidated = false;
 
         /// <summary>
@@ -35,11 +36,15 @@ namespace Conjur
         }
 
         /// <summary>
-        /// Switch the client to ActingAs another role. Set to null by default.
+        /// Initializes a new impersonated instance of the <see cref="T:Conjur.Client"/> class.
         /// </summary>
-        /// Note support for this value is limited in the current version of this library.
-        /// <value>Fully qualified role name. For example MyCompanyName:group:security_admin.</value>
-        public string ActingAs { get; set; }
+        /// <param name="other">Authentificated client.</param>
+        /// <param name="role">Role.</param>
+        internal Client (Client other, string role) : this (other.ApplianceUri.AbsoluteUri)
+        {
+            this.actingAs = role;
+            this.Authenticator = other.Authenticator;
+        }
 
         /// <summary>
         /// Gets the appliance URI.
@@ -155,6 +160,10 @@ namespace Conjur
         /// authorization header set using <see cref="Authenticator"/>.</returns>
         public WebRequest AuthenticatedRequest(string path)
         {
+            if (this.actingAs != null) 
+            {
+                path += (path.Contains("?") ? "&" : "?") + $"acting_as={Uri.EscapeDataString(this.actingAs)}";
+            }
             return this.ApplyAuthentication(this.Request(path));
         }
 
@@ -191,6 +200,16 @@ namespace Conjur
             }
 
             return this.applianceUri;
+        }
+
+        /// <summary>
+        /// Actings as role is passed to new instanace of client.
+        /// </summary>
+        /// <returns>New instance of impersonated client with requested role.</returns>
+        /// <param name="role">Conjur Role.</param>
+        public Client ActingAs(string role)
+        {
+            return new Client(this, role);
         }
 
         /// <summary>
