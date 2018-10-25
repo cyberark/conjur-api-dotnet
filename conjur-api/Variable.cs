@@ -10,6 +10,7 @@ namespace Conjur
     using System;
     using System.Collections.Generic;
     using System.Net;
+    using System.Security;
     using System.Text;
 
     /// <summary>
@@ -43,6 +44,15 @@ namespace Conjur
         }
 
         /// <summary>
+        /// Gets the most recent value of the variable.
+        /// </summary>
+        /// <returns>The value as a SecureString.</returns>
+        public SecureString GetValueAsSecureString()
+        {
+            return this.Client.AuthenticatedRequest(this.path).ReadAsSecureString();
+        }
+
+        /// <summary>
         /// Set a secret (value) to this variable.
         /// </summary>
         /// <param name="val">Secret value.</param>
@@ -58,6 +68,35 @@ namespace Conjur
             using (webRequest.GetResponse())
             {
                 // Intentional do not care about response content
+            }
+        }
+
+        public void AddSecret(SecureString val)
+        {
+            WebRequest webRequest = this.Client.AuthenticatedRequest(this.path);
+            webRequest.Method = "POST";
+            webRequest.ContentType = "text\\plain";
+
+            byte[] data = null;
+            try 
+            {
+                data = val.ToByteArray();
+                webRequest.ContentLength = data.Length;
+                webRequest.GetRequestStream().Write(data, 0, data.Length);
+                using (webRequest.GetResponse())
+                {
+                    // Intentional do not care about response content
+                }
+            }
+            finally
+            {
+                if (data != null)
+                {
+                    for (int i = 0; i < data.Length; i++)
+                    {
+                        data[i] = 0;
+                    }
+                }
             }
         }
 

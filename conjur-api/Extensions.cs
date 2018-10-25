@@ -9,7 +9,10 @@ namespace Conjur
     using System;
     using System.IO;
     using System.Net;
+    using System.Runtime.InteropServices;
+    using System.Security;
     using System.Security.Cryptography.X509Certificates;
+    using System.Text;
     using System.Text.RegularExpressions;
 
     /// <summary>
@@ -45,6 +48,66 @@ namespace Conjur
             using (var reader
                 = new StreamReader(request.GetResponse().GetResponseStream()))
                 return reader.ReadToEnd();
+        }
+
+        /// <summary>
+        /// Read the response of a WebRequest as a SecureString.
+        /// </summary>
+        /// <returns>The contents of the response as a SecureString.</returns>
+        /// <param name="request">Request to read from.</param>
+        internal static SecureString ReadAsSecureString(this WebRequest request)
+        {
+            using (BinaryReader br = new BinaryReader(request.GetResponse().GetResponseStream()))
+            {
+                SecureString result = new SecureString();
+                while (br.BaseStream.Position < br.BaseStream.Length)
+                {
+                    result.AppendChar(br.ReadChar());
+                }
+                result.MakeReadOnly();
+                return result;
+            }
+        }
+
+        internal static unsafe byte[] ToByteArray(this SecureString secureString, Encoding encoding = null)
+        {
+            encoding = encoding ?? Encoding.UTF8;
+
+            int maxLength = encoding.GetMaxByteCount(secureString.Length);
+
+            IntPtr bytes = IntPtr.Zero;
+            IntPtr str = IntPtr.Zero;
+
+            try 
+            {
+                bytes = Marshal.AllocHGlobal(maxLength);
+                str = Marshal.SecureStringToBSTR(secureString);
+
+                char* chars = (char*)str.ToPointer();
+                byte* bptr = (byte*)bytes.ToPointer();
+                int len = encoding.GetBytes(chars, secureString.Length, bptr, maxLength);
+
+                byte[] _bytes = new byte[len];
+                for (int i = 0; i < len; ++i) {
+                    _bytes[i] = *bptr;
+                    bptr++;
+                }
+
+                return _bytes;
+            } 
+            finally
+            {
+                if (bytes != IntPtr.Zero)
+                {
+                    byte[] b = new byte[maxLength];
+                    Marshal.Copy(b, 0, bytes, maxLength);
+                    Marshal.FreeHGlobal(bytes);
+                }
+                if (str != IntPtr.Zero)
+                {
+                    Marshal.ZeroFreeBSTR(str);
+                }
+            }
         }
 
         internal static bool VerifyWithExtraRoots(
