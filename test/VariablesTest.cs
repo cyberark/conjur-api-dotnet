@@ -27,6 +27,14 @@ namespace Conjur.Test
         }
 
         [Test]
+        public void GetVariableAsSecureStringTest()
+        {
+            Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foo%2Fbar"), "testvalue");
+            NetworkCredential networkCredential = new NetworkCredential(string.Empty, Client.Variable("foo/bar").GetValueAsSecureString());
+            Assert.AreEqual("testvalue", networkCredential.Password);
+        }
+
+        [Test]
         public void AddSecretTest()
         {
             string testValue = "testValue";
@@ -40,6 +48,23 @@ namespace Conjur.Test
                 Assert.AreEqual(testValue, req.Body);
             };
             Client.Variable("foobar").AddSecret(testValue);
+        }
+
+        [Test]
+        public void AddSecretAsSecureStringTest()
+        {
+            string testValue = "testValue";
+
+            MockRequest v = Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foobar"), "");
+            v.Verifier = (WebRequest wr) => 
+            {
+                MockRequest req = wr as WebMocker.MockRequest;
+                Assert.AreEqual(WebRequestMethods.Http.Post, wr.Method);
+                Assert.AreEqual("text\\plain", wr.ContentType);
+                Assert.AreEqual(testValue, req.Body);
+            };
+            NetworkCredential networkCredential = new NetworkCredential(string.Empty, testValue);
+            Client.Variable("foobar").AddSecret(networkCredential.SecurePassword);
         }
 
         [Test]
