@@ -23,7 +23,7 @@ namespace Conjur.Test
 
             // TODO: not sure if this is supposed to be a plus or %20 or either
             // since we are using EscapeDataString %20 is convert to space, however plus is not converted anymore,
-            Mocker.Mock (new Uri ("test:///secrets/" + TestAccount + "/variable/foo%20bar"), "space test");
+            Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foo%20bar"), "space test");
         }
 
         [Test]
@@ -47,7 +47,7 @@ namespace Conjur.Test
         {
             byte[] testValue = new byte[] {116, 101, 115, 116, 86, 97, 108, 117, 101};
 
-            var v = Mocker.Mock(new Uri ("test:///secrets/" + TestAccount + "/variable/foobar"), "");
+            var v = Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foobar"), "");
             v.Verifier = (WebRequest wr) => {
                 MockRequest req = wr as WebMocker.MockRequest;
                 Assert.AreEqual(WebRequestMethods.Http.Post, wr.Method);
@@ -79,7 +79,7 @@ namespace Conjur.Test
 
         private void verifyVariablesInfo(IEnumerator<Variable> vars, int excpectedNumVars)
         {
-            for (int id = 0; id < excpectedNumVars; ++id)
+            for(int id = 0; id < excpectedNumVars; ++id)
             {
                 Assert.AreEqual(true, vars.MoveNext());
                 Assert.AreEqual($"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id{id}", vars.Current.Id);
@@ -91,11 +91,11 @@ namespace Conjur.Test
         {
             StringBuilder stringBuilder = new StringBuilder();
 
-            for (int varId = firstVarId; varId < lastVarId; varId++)
+            for(int varId = firstVarId; varId < lastVarId; varId++)
             {
                 stringBuilder.Append($"{{\"id\":\"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id{varId}\"}},");
             }
-            if (stringBuilder.Length != 0)
+            if(stringBuilder.Length != 0)
             {
                 stringBuilder.Remove(stringBuilder.Length - 1, 1);
             }
