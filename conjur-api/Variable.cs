@@ -31,7 +31,7 @@ namespace Conjur
         internal Variable(Client client, string name)
             : base(client, Constants.KIND_VARIABLE, name)
         {
-            this.path = $"secrets/{Uri.EscapeDataString(client.GetAccountName())}/{Constants.KIND_VARIABLE}/{Uri.EscapeDataString (name)}";
+            this.path = $"secrets/{Uri.EscapeDataString(client.GetAccountName())}/{Constants.KIND_VARIABLE}/{Uri.EscapeDataString(name)}";
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace Conjur
         /// <param name="val">Secret value.</param>
         public void AddSecret(string val)
         {
-            byte [] data = Encoding.UTF8.GetBytes(val);
+            byte[] data = Encoding.UTF8.GetBytes(val);
             AddSecret(data);
         }
 
@@ -58,7 +58,7 @@ namespace Conjur
         /// The value is being cleared after used!!!
         /// </summary>
         /// <param name="val">Secret value.</param>
-        public void AddSecret(byte [] val)
+        public void AddSecret(byte[] val)
         {
             WebRequest webRequest = this.Client.AuthenticatedRequest(this.path);
             webRequest.Method = "POST";
@@ -68,14 +68,17 @@ namespace Conjur
 
             webRequest.ContentType = "text\\plain";
             webRequest.ContentLength = val.Length;
-            using(Stream requestStream = webRequest.GetRequestStream()) {
+            using (Stream requestStream = webRequest.GetRequestStream())
+            {
                 requestStream.Write(val, 0, val.Length);
-                using(webRequest.GetResponse()) {
+                using (webRequest.GetResponse())
+                {
                     // Intentional do not care about response content
                 }
             }
-            for(int index = 0; index < val.Length; index++) {
-                val [index] = 0x0;
+            for (int index = 0; index < val.Length; index++)
+            {
+                val[index] = 0x0;
             }
         }
 
