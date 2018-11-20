@@ -79,7 +79,7 @@ namespace Conjur.Test
 
         private void verifyVariablesInfo(IEnumerator<Variable> vars, int excpectedNumVars)
         {
-            for(int id = 0; id < excpectedNumVars; ++id)
+            for (int id = 0; id < excpectedNumVars; ++id)
             {
                 Assert.AreEqual(true, vars.MoveNext());
                 Assert.AreEqual($"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id{id}", vars.Current.Id);
@@ -91,11 +91,11 @@ namespace Conjur.Test
         {
             StringBuilder stringBuilder = new StringBuilder();
 
-            for(int varId = firstVarId; varId < lastVarId; varId++)
+            for (int varId = firstVarId; varId < lastVarId; varId++)
             {
                 stringBuilder.Append($"{{\"id\":\"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id{varId}\"}},");
             }
-            if(stringBuilder.Length != 0)
+            if (stringBuilder.Length != 0)
             {
                 stringBuilder.Remove(stringBuilder.Length - 1, 1);
             }
