@@ -9,6 +9,7 @@ namespace Conjur
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Net;
     using System.Text;
 
@@ -27,44 +28,61 @@ namespace Conjur
         /// <param name="client">Conjur client to use to connect.</param>
         /// <param name="name">The variable name.</param>
         /// <seealso cref="Extensions.Variable"/>
-        internal Variable(Client client, string name)
-            : base(client, Constants.KIND_VARIABLE, name)
+        internal Variable (Client client, string name)
+            : base (client, Constants.KIND_VARIABLE, name)
         {
-            this.path = $"secrets/{Uri.EscapeDataString(client.GetAccountName())}/{Constants.KIND_VARIABLE}/{Uri.EscapeDataString(name)}";
+            this.path = $"secrets/{Uri.EscapeDataString (client.GetAccountName ())}/{Constants.KIND_VARIABLE}/{Uri.EscapeDataString (name)}";
         }
 
         /// <summary>
         /// Gets the most recent value of the variable.
         /// </summary>
         /// <returns>The value.</returns>
-        public string GetValue()
+        public string GetValue ()
         {
-            return this.Client.AuthenticatedRequest(this.path).Read();
+            return this.Client.AuthenticatedRequest (this.path).Read ();
         }
 
         /// <summary>
         /// Set a secret (value) to this variable.
         /// </summary>
         /// <param name="val">Secret value.</param>
-        public void AddSecret(string val)
+        public void AddSecret (string val)
         {
-            WebRequest webRequest = this.Client.AuthenticatedRequest(this.path);
-            webRequest.Method = "POST";
+            byte [] data = Encoding.UTF8.GetBytes (val);
+            AddSecret (data);
+        }
 
-            byte[] data = Encoding.UTF8.GetBytes(val);
+        /// <summary>
+        /// Set a secret (value) to this variable.
+        /// The value is being cleared after used!!!
+        /// </summary>
+        /// <param name="val">Secret value.</param>
+        public void AddSecret (byte [] val)
+        {
+            WebRequest webRequest = this.Client.AuthenticatedRequest (this.path);
+            webRequest.Method = "POST";
+#if (SIGNING)
+            (webRequest as HttpWebRequest).AllowWriteStreamBuffering = false;
+#endif
+
             webRequest.ContentType = "text\\plain";
-            webRequest.ContentLength = data.Length;
-            webRequest.GetRequestStream().Write(data, 0, data.Length);
-            using (webRequest.GetResponse())
-            {
-                // Intentional do not care about response content
+            webRequest.ContentLength = val.Length;
+            using (Stream requestStream = webRequest.GetRequestStream ()) {
+                requestStream.Write (val, 0, val.Length);
+                using (webRequest.GetResponse ()) {
+                    // Intentional do not care about response content
+                }
+            }
+            for (int index = 0; index < val.Length; index++) {
+                val [index] = 0x0;
             }
         }
 
-        internal static IEnumerable<Variable> List(Client client, string query = null)
+        internal static IEnumerable<Variable> List (Client client, string query = null)
         {
-            Func<ResourceMetadata, Variable> newInst = (searchRes) => new Variable(client, IdToName(searchRes.Id, client.GetAccountName(), Constants.KIND_VARIABLE));
-            return ListResources<Variable, ResourceMetadata>(client, Constants.KIND_VARIABLE, newInst, query);
+            Func<ResourceMetadata, Variable> newInst = (searchRes) => new Variable (client, IdToName (searchRes.Id, client.GetAccountName (), Constants.KIND_VARIABLE));
+            return ListResources<Variable, ResourceMetadata> (client, Constants.KIND_VARIABLE, newInst, query);
         }
     }
 }
