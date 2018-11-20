@@ -28,29 +28,29 @@ namespace Conjur
         /// <param name="client">Conjur client to use to connect.</param>
         /// <param name="name">The variable name.</param>
         /// <seealso cref="Extensions.Variable"/>
-        internal Variable (Client client, string name)
-            : base (client, Constants.KIND_VARIABLE, name)
+        internal Variable(Client client, string name)
+            : base(client, Constants.KIND_VARIABLE, name)
         {
-            this.path = $"secrets/{Uri.EscapeDataString (client.GetAccountName ())}/{Constants.KIND_VARIABLE}/{Uri.EscapeDataString (name)}";
+            this.path = $"secrets/{Uri.EscapeDataString(client.GetAccountName())}/{Constants.KIND_VARIABLE}/{Uri.EscapeDataString (name)}";
         }
 
         /// <summary>
         /// Gets the most recent value of the variable.
         /// </summary>
         /// <returns>The value.</returns>
-        public string GetValue ()
+        public string GetValue()
         {
-            return this.Client.AuthenticatedRequest (this.path).Read ();
+            return this.Client.AuthenticatedRequest(this.path).Read();
         }
 
         /// <summary>
         /// Set a secret (value) to this variable.
         /// </summary>
         /// <param name="val">Secret value.</param>
-        public void AddSecret (string val)
+        public void AddSecret(string val)
         {
-            byte [] data = Encoding.UTF8.GetBytes (val);
-            AddSecret (data);
+            byte [] data = Encoding.UTF8.GetBytes(val);
+            AddSecret(data);
         }
 
         /// <summary>
@@ -58,9 +58,9 @@ namespace Conjur
         /// The value is being cleared after used!!!
         /// </summary>
         /// <param name="val">Secret value.</param>
-        public void AddSecret (byte [] val)
+        public void AddSecret(byte [] val)
         {
-            WebRequest webRequest = this.Client.AuthenticatedRequest (this.path);
+            WebRequest webRequest = this.Client.AuthenticatedRequest(this.path);
             webRequest.Method = "POST";
 #if (SIGNING)
             (webRequest as HttpWebRequest).AllowWriteStreamBuffering = false;
@@ -68,21 +68,21 @@ namespace Conjur
 
             webRequest.ContentType = "text\\plain";
             webRequest.ContentLength = val.Length;
-            using (Stream requestStream = webRequest.GetRequestStream ()) {
-                requestStream.Write (val, 0, val.Length);
-                using (webRequest.GetResponse ()) {
+            using(Stream requestStream = webRequest.GetRequestStream()) {
+                requestStream.Write(val, 0, val.Length);
+                using(webRequest.GetResponse()) {
                     // Intentional do not care about response content
                 }
             }
-            for (int index = 0; index < val.Length; index++) {
+            for(int index = 0; index < val.Length; index++) {
                 val [index] = 0x0;
             }
         }
 
-        internal static IEnumerable<Variable> List (Client client, string query = null)
+        internal static IEnumerable<Variable> List(Client client, string query = null)
         {
-            Func<ResourceMetadata, Variable> newInst = (searchRes) => new Variable (client, IdToName (searchRes.Id, client.GetAccountName (), Constants.KIND_VARIABLE));
-            return ListResources<Variable, ResourceMetadata> (client, Constants.KIND_VARIABLE, newInst, query);
+            Func<ResourceMetadata, Variable> newInst = (searchRes) => new Variable(client, IdToName(searchRes.Id, client.GetAccountName(), Constants.KIND_VARIABLE));
+            return ListResources<Variable, ResourceMetadata>(client, Constants.KIND_VARIABLE, newInst, query);
         }
     }
 }
