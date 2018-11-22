@@ -55,19 +55,33 @@ namespace Conjur
             AddSecret(data);
         }
 
-        /// <summary>Set a secret (value) to this variable.</summary>
-        /// <remarks>
-        /// The value is being cleared after being used!!!
-        /// The clearing is done so no trace of the secret will be available in the dump.
-        /// </remarks>
-        /// <param name="val">Secret value as byte array.</param>
+        /// <summary>
+        /// Set a secret (value) to this variable.
+        /// The value is being cleared after used!!!
+        /// </summary>
+        /// <param name="val">Secret value.</param>
         public void AddSecret(byte[] val)
         {
+<<<<<<< HEAD
             try
             {
                 WebRequest webRequest = this.Client.AuthenticatedRequest (this.path);
                 webRequest.Method = postMethod;
                 if (webRequest is HttpWebRequest) 
+=======
+            WebRequest webRequest = this.Client.AuthenticatedRequest(this.path);
+            webRequest.Method = "POST";
+#if (SIGNING)
+            (webRequest as HttpWebRequest).AllowWriteStreamBuffering = false;
+#endif
+
+            webRequest.ContentType = "text\\plain";
+            webRequest.ContentLength = val.Length;
+            using (Stream requestStream = webRequest.GetRequestStream())
+            {
+                requestStream.Write(val, 0, val.Length);
+                using (webRequest.GetResponse())
+>>>>>>> parent of 10a6f95... Refer to Sasha's comments
                 {
                     (webRequest as HttpWebRequest).AllowWriteStreamBuffering = false;
                 }
