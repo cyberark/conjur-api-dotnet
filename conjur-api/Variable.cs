@@ -73,7 +73,7 @@ namespace Conjur
             using (Stream requestStream = webRequest.GetRequestStream()) 
             {
                 requestStream.Write(val, 0, val.Length);
-                using (webRequest.GetResponse ()) 
+                using (webRequest.GetResponse()) 
                 {
                     // Intentional do not care about response content
                 }
