@@ -55,6 +55,7 @@ namespace Conjur.Test
                 Assert.AreEqual(testValue, req.Body);
             };
             Client.Variable("foobar").AddSecret(testValue);
+            Assert.AreEqual (testValue, new byte [] { 0, 0, 0, 0, 0, 0, 0, 0, 0 });
         }
 
         [Test]
