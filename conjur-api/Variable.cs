@@ -50,7 +50,7 @@ namespace Conjur
         public void AddSecret(string val)
         {
             byte[] data = Encoding.UTF8.GetBytes(val);
-            AddSecret(data);
+            this.AddSecret(data);
         }
 
         /// <summary>Set a secret (value) to this variable.</summary>
@@ -59,26 +59,23 @@ namespace Conjur
         /// The clearing is done so no trace of the secret will be available in the dump.
         /// </remarks>
         /// <param name="val">Secret value as byte array.</param>
-        public void AddSecret (byte [] val)
+        public void AddSecret(byte[] val)
         {
-            try {
-                WebRequest webRequest = this.Client.AuthenticatedRequest (this.path);
-                webRequest.Method = WebRequestMethods.Http.Post;
-                if (webRequest is HttpWebRequest) {
-                    (webRequest as HttpWebRequest).AllowWriteStreamBuffering = false;
-                }
+            WebRequest webRequest = this.Client.AuthenticatedRequest(this.path);
+            webRequest.Method = WebRequestMethods.Http.Post;
+            if (webRequest is HttpWebRequest) 
+            {
+                (webRequest as HttpWebRequest).AllowWriteStreamBuffering = false;
+            }
 
-                webRequest.ContentType = "text\\plain";
-                webRequest.ContentLength = val.Length;
-                using (Stream requestStream = webRequest.GetRequestStream ()) {
-                    requestStream.Write (val, 0, val.Length);
-                    using (webRequest.GetResponse ()) {
-                        // Intentional do not care about response content
-                    }
-                }
-            } finally {
-                if (val != null) {
-                    Array.Clear (val, 0, val.Length);
+            webRequest.ContentType = "text\\plain";
+            webRequest.ContentLength = val.Length;
+            using (Stream requestStream = webRequest.GetRequestStream()) 
+            {
+                requestStream.Write(val, 0, val.Length);
+                using (webRequest.GetResponse ()) 
+                {
+                    // Intentional do not care about response content
                 }
             }
         }
