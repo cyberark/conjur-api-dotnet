@@ -20,6 +20,8 @@ namespace Conjur
     /// Conjur server.
     public class Variable : Resource
     {
+        private static readonly string postMethod = "POST";
+        private static readonly string contentType = "text\\plain";
         private readonly string path;
 
         /// <summary>
@@ -61,26 +63,30 @@ namespace Conjur
         /// <param name="val">Secret value as byte array.</param>
         public void AddSecret(byte[] val)
         {
-            WebRequest webRequest = this.Client.AuthenticatedRequest(this.path);
-            webRequest.Method = "POST";
-            if (webRequest is HttpWebRequest)
+            try
             {
-                (webRequest as HttpWebRequest).AllowWriteStreamBuffering = false;
-            }
-
-            webRequest.ContentType = "text\\plain";
-            webRequest.ContentLength = val.Length;
-            using (Stream requestStream = webRequest.GetRequestStream())
-            {
-                requestStream.Write(val, 0, val.Length);
-                using (webRequest.GetResponse())
+                WebRequest webRequest = this.Client.AuthenticatedRequest (this.path);
+                webRequest.Method = postMethod;
+                if (webRequest is HttpWebRequest) 
                 {
-                    // Intentional do not care about response content
+                    (webRequest as HttpWebRequest).AllowWriteStreamBuffering = false;
+                }
+
+                webRequest.ContentType = contentType;
+                webRequest.ContentLength = val.Length;
+                using (Stream requestStream = webRequest.GetRequestStream ()) {
+                    requestStream.Write (val, 0, val.Length);
+                    using (webRequest.GetResponse ()) {
+                        // Intentional do not care about response content
+                    }
                 }
             }
-            for (int index = 0; index < val.Length; index++)
+            finally
             {
-                val[index] = 0x0;
+                if(val != null)
+                {
+                    Array.Clear(val, 0, val.Length);
+                }
             }
         }
 

@@ -40,7 +40,9 @@
     <Compile Include="Client.cs" />
     <Compile Include="IAuthenticator.cs" />
     <Compile Include="ApiKeyAuthenticator.cs" />
-    <Compile Include="Variable.cs" />
+    <Compile Include="Variable.cs">
+      <ExcludeFromStyleCop>false</ExcludeFromStyleCop>
+    </Compile>
     <Compile Include="Extensions.cs" />
     <Compile Include="Host.cs" />
     <Compile Include="JsonSerializer.cs" />
