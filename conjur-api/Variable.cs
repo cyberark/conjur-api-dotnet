@@ -55,8 +55,8 @@ namespace Conjur
 
         /// <summary>Set a secret (value) to this variable.</summary>
         /// <remarks>
-        /// The value is being cleared after being used!!!
-        /// The clearing is done so no trace of the secret will be available in the dump.
+        /// It is the client responsability to clean the val after use
+        ///  so no trace of the secret will be available in the dump.
         /// </remarks>
         /// <param name="val">Secret value as byte array.</param>
         public void AddSecret(byte[] val)
