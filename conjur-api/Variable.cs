@@ -49,8 +49,7 @@ namespace Conjur
         /// <param name="val">Secret value.</param>
         public void AddSecret(string val)
         {
-            byte[] data = Encoding.UTF8.GetBytes(val);
-            this.AddSecret(data);
+            this.AddSecret(Encoding.UTF8.GetBytes(val));
         }
 
         /// <summary>Set a secret (value) to this variable.</summary>
