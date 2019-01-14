@@ -43,21 +43,16 @@ namespace Conjur
             return this.Client.AuthenticatedRequest(this.path).Read();
         }
 
-        /// <summary>
-        /// Set a secret (value) to this variable.
-        /// </summary>
-        /// <param name="val">Secret value.</param>
+        [Obsolete ("This function is obsolete, it is recommended to use AddSecret(byte[] val) method instead")]
         public void AddSecret(string val)
         {
             this.AddSecret(Encoding.UTF8.GetBytes(val));
         }
 
-        /// <summary>Set a secret (value) to this variable.</summary>
-        /// <remarks>
-        /// It is the client responsability to clean the val after use
-        ///  so no trace of the secret will be available in the dump.
-        /// </remarks>
-        /// <param name="val">Secret value as byte array.</param>
+        /// <summary>
+        /// Set a secret (value) to this variable.
+        /// </summary>
+        /// <param name="val">Secret value.</param>
         public void AddSecret(byte[] val)
         {
             WebRequest webRequest = this.Client.AuthenticatedRequest(this.path);
