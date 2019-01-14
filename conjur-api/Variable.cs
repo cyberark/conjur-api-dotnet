@@ -9,6 +9,7 @@ namespace Conjur
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Net;
     using System.Text;
 
@@ -42,22 +43,34 @@ namespace Conjur
             return this.Client.AuthenticatedRequest(this.path).Read();
         }
 
+        [Obsolete ("This function is obsolete, it is recommended to use AddSecret(byte[] val) method instead")]
+        public void AddSecret(string val)
+        {
+            this.AddSecret(Encoding.UTF8.GetBytes(val));
+        }
+
         /// <summary>
         /// Set a secret (value) to this variable.
         /// </summary>
         /// <param name="val">Secret value.</param>
-        public void AddSecret(string val)
+        public void AddSecret(byte[] val)
         {
             WebRequest webRequest = this.Client.AuthenticatedRequest(this.path);
-            webRequest.Method = "POST";
-
-            byte[] data = Encoding.UTF8.GetBytes(val);
-            webRequest.ContentType = "text\\plain";
-            webRequest.ContentLength = data.Length;
-            webRequest.GetRequestStream().Write(data, 0, data.Length);
-            using (webRequest.GetResponse())
+            webRequest.Method = WebRequestMethods.Http.Post;
+            if (webRequest is HttpWebRequest) 
             {
-                // Intentional do not care about response content
+                (webRequest as HttpWebRequest).AllowWriteStreamBuffering = false;
+            }
+
+            webRequest.ContentType = "text\\plain";
+            webRequest.ContentLength = val.Length;
+            using (Stream requestStream = webRequest.GetRequestStream()) 
+            {
+                requestStream.Write(val, 0, val.Length);
+                using (webRequest.GetResponse()) 
+                {
+                    // Intentional do not care about response content
+                }
             }
         }
 
