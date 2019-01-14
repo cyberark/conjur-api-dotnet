@@ -29,24 +29,7 @@ namespace Conjur.Test
         [Test]
         public void AddSecretTest()
         {
-            string testValue = "testValue";
-
-            var v = Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foobar"), "");
-            v.Verifier = (WebRequest wr) =>
-            {
-                MockRequest req = wr as WebMocker.MockRequest;
-                Assert.AreEqual(WebRequestMethods.Http.Post, wr.Method);
-                Assert.AreEqual("text\\plain", wr.ContentType);
-                Assert.AreEqual(testValue, req.Body);
-            };
-            Client.Variable("foobar").AddSecret(testValue);
-        }
-
-        [Test]
-        public void AddByteArraySecretTest()
-        {
-            byte[] testValue = new byte[] {116, 101, 115, 116, 86, 97, 108, 117, 101};
-
+            char[] testValue = { 't', 'e', 's', 't', 'V', 'a', 'l', 'u', 'e' };
             var v = Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foobar"), "");
             v.Verifier = (WebRequest wr) => {
                 MockRequest req = wr as WebMocker.MockRequest;
@@ -54,7 +37,7 @@ namespace Conjur.Test
                 Assert.AreEqual("text\\plain", wr.ContentType);
                 Assert.AreEqual(testValue, req.Body);
             };
-            Client.Variable("foobar").AddSecret(testValue);
+            Client.Variable("foobar").AddSecret(Encoding.UTF8.GetBytes (testValue));
         }
 
         [Test]
