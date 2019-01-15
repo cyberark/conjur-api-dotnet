@@ -36,6 +36,16 @@ namespace Conjur
         }
 
         /// <summary>
+        /// Counts Conjur resource of kind variable.
+        /// </summary>
+        /// <param name="query">Additional Query parameters, not required.</param>
+        /// <returns>A number represent the number of Variables resord.</returns>
+        public uint CountVariables(string query = null)
+        {
+            return Conjur.Variable.Count(this, query);
+        }
+
+        /// <summary>
         /// Create an object representing a Conjur ressource of kind user corresponding with the specifiy name.
         /// </summary>
         /// <param name="name">A Name for the requested user.</param>

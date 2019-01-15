@@ -42,6 +42,18 @@ namespace Conjur.Test
         }
 
         [Test]
+        public void CountVariablesTest()
+        {
+            string variableUri = $"test:///resources/{TestAccount}/{Constants.KIND_VARIABLE}";
+
+            ClearMocker();
+            Mocker.Mock(new Uri(variableUri + "?count=true&search=dummy"), @"{""count"":0}");
+
+            UInt32 result = Client.CountVariables("dummy");
+            Assert.AreEqual(result, 0);
+        }
+
+                [Test]
         public void ListVariableTest()
         {
             string variableUri = $"test:///resources/{TestAccount}/{Constants.KIND_VARIABLE}";
