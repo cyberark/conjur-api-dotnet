@@ -114,8 +114,8 @@ namespace Conjur
         internal static uint CountResources(Client client, string kind, string query = null)
         {
             string pathCountResourceQuery = $"resources/{client.GetAccountName()}/{kind}?count=true" + ((query != null) ? $"&search={query}" : string.Empty);
-            List<object> countJsonObj = JsonSerializer<List<Object>>.Read(client.AuthenticatedRequest(pathCountResourceQuery));
-            return Convert.ToUInt32(countJsonObj.Count);
+            CountResult countJsonObj = JsonSerializer<CountResult>.Read(client.AuthenticatedRequest(pathCountResourceQuery));
+            return Convert.ToUInt32(countJsonObj.count);
         }
 
         /// <summary>
