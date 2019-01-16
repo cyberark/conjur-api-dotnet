@@ -62,4 +62,11 @@ namespace Conjur
         [DataMember(Name = "expires_at")]
         public string ExpiresAt { get; set; }
     }
+
+    [DataContract]
+    public class CountResult
+    {
+        [DataMember]
+        public uint count { get; set; }
+    }
 }

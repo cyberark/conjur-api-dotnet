@@ -111,6 +111,13 @@ namespace Conjur
             } while(resultList.Count > 0);
         }
 
+        internal static uint CountResources(Client client, string kind, string query = null)
+        {
+            string pathCountResourceQuery = $"resources/{client.GetAccountName()}/{kind}?count=true" + ((query != null) ? $"&search={query}" : string.Empty);
+            CountResult countJsonObj = JsonSerializer<CountResult>.Read(client.AuthenticatedRequest(pathCountResourceQuery));
+            return Convert.ToUInt32(countJsonObj.count);
+        }
+
         /// <summary>
         /// Parse Conjur id following format of acount:kind:name to extract name.
         /// </summary>

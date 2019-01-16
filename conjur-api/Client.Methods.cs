@@ -14,6 +14,17 @@ namespace Conjur
     public partial class Client
     {
         /// <summary>
+        /// Counts Conjur resource of kind variable.
+        /// </summary>
+        /// <param name="kind">Resource kind.</param>
+        /// <param name="query">Additional Query parameters, not required.</param>
+        /// <returns>Number of resource's occurence.</returns>
+        public uint CountResources(string kind, string query = null)
+        {
+            return Conjur.Resource.CountResources(this, kind, query);
+        }
+
+        /// <summary>
         /// Creates an object representing the named variable.
         /// </summary>
         /// Note the existence of the variable is not verified.
@@ -33,6 +44,16 @@ namespace Conjur
         public IEnumerable<Variable> ListVariables(string query = null)
         {
             return Conjur.Variable.List(this, query);
+        }
+
+        /// <summary>
+        /// Counts Conjur resource of kind variable.
+        /// </summary>
+        /// <param name="query">Additional Query parameters, not required.</param>
+        /// <returns>A number represent the number of Variables resord.</returns>
+        public uint CountVariables(string query = null)
+        {
+            return Conjur.Variable.Count(this, query);
         }
 
         /// <summary>

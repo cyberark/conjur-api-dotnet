@@ -79,5 +79,10 @@ namespace Conjur
             Func<ResourceMetadata, Variable> newInst = (searchRes) => new Variable(client, IdToName(searchRes.Id, client.GetAccountName(), Constants.KIND_VARIABLE));
             return ListResources<Variable, ResourceMetadata>(client, Constants.KIND_VARIABLE, newInst, query);
         }
+
+        internal static uint Count(Client client, string query)
+        {
+            return CountResources(client, Constants.KIND_VARIABLE, query);
+        }
     }
 }
