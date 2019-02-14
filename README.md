@@ -1,6 +1,6 @@
 # Conjur API for .NET
 
-This is a *Draft* implementation of the .NET API for [Conjur](https://developer.conjur.net/).
+This is an implementation of the .NET API for [Conjur](https://developer.conjur.net/).
 This implementation includes an example that shows how to:
 
     - Authenticate
@@ -84,7 +84,7 @@ hostFactoryToken: A hostfactory token. The easiest way to get a host factory tok
 
 ## License
 
-Copyright 2016-2017 CyberArk
+Copyright 2016-2019 CyberArk
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
