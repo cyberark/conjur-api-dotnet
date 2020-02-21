@@ -9,6 +9,14 @@ pipeline {
   }
 
   stages {
+    stage('Validate') {
+      parallel {
+        stage('Changelog') {
+          steps { sh './test/parse-changelog.sh' }
+        }
+      }
+    }
+    
     stage('Prepare build environment') {
       steps {
         sh '''
