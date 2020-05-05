@@ -3,7 +3,7 @@ using System.Net;
 using System.Web;
 using Conjur;
 
-namespace Example
+namespace Demo
 {
     class Program
     {
@@ -14,9 +14,10 @@ namespace Example
         // userId and password
         static void Main(string[] args)
         {
-            if (args.Length < 8)
+            
+            if (args.Length < 6)
             {
-                Console.WriteLine("Usage: Example <applianceHostName> <applianceCertificatePath> <username> <password> <variableId> <hostFactoryToken> <account> <useSSL>");
+                Console.WriteLine("Usage: Example <applianceHostName> <applianceCertificatePath> <username> <password> <variableId> <account> <useSSL>");
                 return;
             }
             string applianceName = args[0];
@@ -24,17 +25,11 @@ namespace Example
             string username = args[2];
             string password = args[3];
             string variableId = args[4];
-            string token = args[5];
-            string account = args[6];
-            bool useSSL = bool.Parse(args[7]);
+            string account = args[5];
+            bool useSSL = bool.Parse(args[6]);
 
-            if (!useSSL)
-            {
+            if (!useSSL) {
                 ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls
-               | SecurityProtocolType.Tls11
-               | SecurityProtocolType.Tls12
-               | SecurityProtocolType.Ssl3;
             }
 
             // Instantiate a Conjur Client object.
@@ -59,11 +54,11 @@ namespace Example
             }
             catch (Exception e)
             {
-                Console.WriteLine("Authentication failed. An exception occurred '{0}'", e);
+                Console.WriteLine("Authentication failed. An exception occurred '{0}'.  Trying as API key...", e);
 
                 // to log in with an API key use it directly, ie.
-                var apiKey = password;
-                conjurClient.Credential = new NetworkCredential(username, apiKey);
+                conjurClient.Authenticate(new NetworkCredential(HttpUtility.UrlEncode(username), password), account);
+                Console.WriteLine("Logged in as '{0}' to '{1}'", username, applianceName);
             }
             // Check if this user has permission to get the value of variableId
             // That requires exectue permissions on the variable
@@ -91,27 +86,7 @@ namespace Example
             catch (Exception e)
             {
                 Console.WriteLine("Permission check failed. An exception occurred '{0}'", e);
-            }
-
-            // Create a host and get the apiKey 
-            //   parameters: hostName - the name of the new Conjur host identity
-            try
-            {
-                // Use a hostfactory token to create a host
-                // This example assumes the host factory token was created through
-                // the UI or CLI and passed to this application. Read more
-                // about HostFactory on developer.conjur.net
-                string hostname = String.Format("exampleHost{0}", System.DateTime.Now.ToString("yyyMMddHHmmss")); 
-                Host host = conjurClient.CreateHost(hostname, token);
-                Console.WriteLine("Created host: {0}, apiKey: {1}", host.Id, host.ApiKey);
-
-                // now you can log in as the host
-                conjurClient.Credential = host.Credential;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Failed to create a host. An exception occurred '{0}'", e);
-            }
+            }           
 
         }
     }

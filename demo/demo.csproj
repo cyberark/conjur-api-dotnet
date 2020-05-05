@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\conjur-api\conjur-api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="conjur-api">
+      <HintPath>..\conjur-api\bin\Debug\conjur-api.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

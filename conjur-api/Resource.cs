@@ -81,8 +81,8 @@ namespace Conjur
             get
             {
                 if (this.resourcePath == null)
-                    this.resourcePath = "authz/" +
-                    WebUtility.UrlEncode(this.Client.GetAccountName()) + "/resources/" +
+                    this.resourcePath = "secrets/" +
+                    WebUtility.UrlEncode(this.Client.GetAccountName()) + "/" +
                     WebUtility.UrlEncode(this.kind) + "/" + WebUtility.UrlEncode(this.Id);
                 return this.resourcePath;
             }

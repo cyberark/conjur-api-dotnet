@@ -23,6 +23,7 @@ namespace Conjur
         private Uri applianceUri;
         private string account;
         private bool urlValidated = false;
+        private string token;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Conjur.Client"/> class.
@@ -110,9 +111,12 @@ namespace Conjur
         /// <param name="userName">User name to log in as (for example "bob"
         /// or "host/example.com".</param>
         /// <param name="password">Password of the user.</param>
-        public string LogIn(string userName, string password)
+        public void LogIn(string userName, string password, string account)
         {
-            return this.LogIn(new NetworkCredential(userName, password));
+            this.account = account;
+
+            var apiKey = this.LogIn(new NetworkCredential(userName, password), account);
+            this.Authenticate(new NetworkCredential(userName, apiKey), account);
         }
 
         /// <summary>
@@ -122,19 +126,42 @@ namespace Conjur
         /// <returns>The API key.</returns>
         /// <param name="credential">The credential of user name and password, 
         /// where user name is for example "bob" or "host/jenkins".</param>
-        public string LogIn(NetworkCredential credential)
+        public string LogIn(NetworkCredential credential, string account)
         {
-            var wr = this.Request("authn/users/login");
-
-            // there seems to be no sane way to force WebRequest to authenticate 
-            // properly by itself, so generate the header manually
+            var wr = this.Request(String.Format("authn/{0}/login", account));
+            wr.Method = "GET";
             var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(
                                credential.UserName + ":" + credential.Password));
+
             wr.Headers["Authorization"] = "Basic " + auth;
             var apiKey = wr.Read();
 
             this.Credential = new NetworkCredential(credential.UserName, apiKey);
+
             return apiKey;
+        }
+
+        /// <summary>
+        /// Authenticates the user/host using their API key. Sets <see cref="token"/> and <see cref="Credential"/>
+        /// <seealso cref="Credential"/>
+        /// </summary>
+        /// <returns>nothing</returns>
+        /// <param name="credential">The credential of user name and password,
+        /// where user name is for example "bob" or "host/jenkins".</param>
+        /// <param name="account">The account of the user/host.</param>
+        public void Authenticate(NetworkCredential credential, string account)
+        {
+            var wr = this.Request(String.Format("authn/{0}/{1}/authenticate", account, credential.UserName));
+            wr.Method = "POST";
+            byte[] byteArray = Encoding.UTF8.GetBytes(credential.Password);
+            wr.ContentType = "application/json; charset=utf-8";
+            var dataStream = wr.GetRequestStream();
+            dataStream.Write(byteArray, 0, byteArray.Length);
+            dataStream.Close();
+
+            this.token = Convert.ToBase64String(Encoding.UTF8.GetBytes(wr.Read()));
+
+            this.Credential = new NetworkCredential(credential.UserName, credential.Password);
         }
 
         /// <summary>
@@ -179,7 +206,7 @@ namespace Conjur
                     wr.GetResponse().Close();
                 }
                 catch (WebException)
-                {
+                {   // TODO: deprecated, in need of refactor.
                     // forgotten /api at the end of the Uri? Try again.
                     this.applianceUri = new Uri(this.applianceUri + "api/");
                     wr = WebRequest.Create(this.applianceUri + "info");
@@ -242,8 +269,6 @@ namespace Conjur
             if (this.Authenticator == null)
                 throw new InvalidOperationException("Authentication required.");
 
-            var token = Convert.ToBase64String(
-                            Encoding.UTF8.GetBytes(this.Authenticator.GetToken()));
             webRequest.Headers["Authorization"] = "Token token=\"" + token + "\"";
             return webRequest;
         }

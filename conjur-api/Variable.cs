@@ -29,7 +29,7 @@ namespace Conjur
         internal Variable(Client client, string name)
             : base(client, "variable", name)
         {
-            this.path = "variables/" + Uri.EscapeDataString(name);
+            this.path = client.GetAccountName() + "/variable/" + Uri.EscapeDataString(name);
         }
 
         /// <summary>
@@ -38,7 +38,9 @@ namespace Conjur
         /// <returns>The value.</returns>
         public string GetValue()
         {
-            return this.Client.AuthenticatedRequest(this.path + "/value").Read();
+            var req = this.Client.AuthenticatedRequest("secrets/" + this.path);
+            req.Method = "GET";
+            return req.Read();
         }
 
         /// <summary>
