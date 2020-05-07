@@ -36,8 +36,7 @@
   <ItemGroup>
     <Compile Include="ClientTest.cs" />
     <Compile Include="WebMocker.cs" />
-    <Compile Include="VariablesTest.cs" />
-    <Compile Include="UsersTest.cs" />
+    <Compile Include="UserTest.cs" />
     <Compile Include="Base.cs" />
     <Compile Include="MockAuthenticator.cs" />
     <Compile Include="HostFactoryTest.cs" />
@@ -45,7 +44,7 @@
     <Compile Include="CertificateVerificationTest.cs" />
     <Compile Include="Certificates.cs" />
     <Compile Include="AuthenticatorTest.cs" />
-    <Compile Include="RoleTest.cs" />
+    <Compile Include="VariablesTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

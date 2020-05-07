@@ -1,8 +1,10 @@
 ﻿using System;
-using System.Net;
-using NUnit.Framework;
 using System.Collections.Generic;
+using System.Net;
 using System.Runtime.Serialization;
+using System.Text;
+using NUnit.Framework;
+using static Conjur.Test.WebMocker;
 
 namespace Conjur.Test
 {
@@ -14,114 +16,86 @@ namespace Conjur.Test
         }
 
         [Test]
-        public void TestGetValue()
+        public void GetVariableTest()
         {
-            Mocker.Mock(new Uri("test:///variables/foo%2Fbar/value"), "testvalue");
+            Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foo%2Fbar"), "testvalue");
             Assert.AreEqual("testvalue", Client.Variable("foo/bar").GetValue());
 
-            Mocker.Mock(new Uri("test:///variables/foo%20bar/value"), "space test");
+            // TODO: not sure if this is supposed to be a plus or %20 or either
+            Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foo+bar"), "space test");
             Assert.AreEqual("space test", Client.Variable("foo bar").GetValue());
         }
-        
+
         [Test]
-        public void TestAddValue()
+        public void AddSecretTest()
         {
-            string testValue = "testvalue";
+            char[] testValue = { 't', 'e', 's', 't', 'V', 'a', 'l', 'u', 'e' };
 
-            // AddValue doesn't have a content in the response so we don't mock it
-            Mocker.Mock(new Uri("test:///variables/foo%2Fbar/values"), "")
-            .Verifier = (WebRequest wr) =>
+            var v = Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foobar"), "");
+            v.Verifier = (WebRequest wr) =>
             {
-                var req = wr as WebMocker.MockRequest;
-                Assert.AreEqual("POST", wr.Method);
-                Assert.AreEqual("application/json", wr.ContentType);
-                Assert.AreEqual($"{{\"value\": \"{testValue}\"}}", req.Body);
+                MockRequest req = wr as WebMocker.MockRequest;
+                Assert.AreEqual(WebRequestMethods.Http.Post, wr.Method);
+                Assert.AreEqual("text\\plain", wr.ContentType);
+                Assert.AreEqual(testValue, req.Body);
             };
-
-            Client.Variable("foo/bar").AddValue(testValue);
+            Client.Variable("foobar").AddSecret(Encoding.UTF8.GetBytes(testValue));
         }
 
         [Test]
-        public void TestListVariables()
+        public void ListVariableTest()
         {
-            String varListUrl = "test:///authz/test-account/resources/variable";
+            string variableUri = $"test:///resources/{TestAccount}/{Constants.KIND_VARIABLE}";
             IEnumerator<Variable> vars;
 
-            // Verify REST requests and response handling as expected. 
-            // Verify offset, and limit evaluation made as expected
             ClearMocker();
-            Mocker.Mock(new Uri($"{varListUrl}?offset=0&limit=1000"), GenerateVariablesInfo(0, 1000));
-            Mocker.Mock(new Uri($"{varListUrl}?offset=1000&limit=1000"), GenerateVariablesInfo(1000, 2000));
-            Mocker.Mock(new Uri($"{varListUrl}?offset=2000&limit=1000"), "[]");
-            vars = Client.ListVariables().GetEnumerator();
+            Mocker.Mock(new Uri(variableUri + "?offset=0&limit=1000"), GenerateVariablesInfo(0, 1000));
+            Mocker.Mock(new Uri(variableUri + "?offset=1000&limit=1000"), GenerateVariablesInfo(1000, 2000));
+            Mocker.Mock(new Uri(variableUri + "?offset=2000&limit=1000"), "[]");
+            vars = (Client.ListVariables()).GetEnumerator();
             verifyVariablesInfo(vars, 2000);
 
-            // Verify parameters of GetListVariables() passed as expected toward conjur server
             ClearMocker();
-            Client.ActingAs = "user:role";
-            Mocker.Mock(new Uri($"{varListUrl}?offset=0&limit=1000&search=var_0&acting_as=user:role"), GenerateVariablesInfo(0, 1000));
-            Mocker.Mock(new Uri($"{varListUrl}?offset=1000&limit=1000&search=var_0&acting_as=user:role"), GenerateVariablesInfo(1000, 1872));
-            Mocker.Mock(new Uri($"{varListUrl}?offset=1872&limit=1000&search=var_0&acting_as=user:role"), "[]");
-            vars = (Client.ListVariables("var_0")).GetEnumerator();
-            verifyVariablesInfo(vars, 1872);
-
-            // Check handling invalid json response from conjur server
-            ClearMocker();
-            Mocker.Mock(new Uri($"{varListUrl}?offset=0&limit=1000&acting_as=user:role"), @"[""id"":""ivnalidjson""]");
+            Mocker.Mock(new Uri(variableUri + "?offset=0&limit=1000"), @"[""id"":""invalidjson""]");
             vars = (Client.ListVariables()).GetEnumerator();
             Assert.Throws<SerializationException>(() => vars.MoveNext());
         }
 
-        private void verifyVariablesInfo(IEnumerator<Variable> vars, int expectedNumVars)
+        [Test]
+        public void CountVariablesTest()
         {
-            for (int id = 0; id < expectedNumVars; ++id)
+            string variableUri = $"test:///resources/{TestAccount}/{Constants.KIND_VARIABLE}";
+
+            ClearMocker();
+            Mocker.Mock(new Uri(variableUri + "?count=true&search=dummy"), @"{""count"":10}");
+
+            UInt32 result = Client.CountVariables("dummy");
+            Assert.AreEqual(result, 10);
+        }
+
+        private void verifyVariablesInfo(IEnumerator<Variable> vars, int excpectedNumVars)
+        {
+            for (int id = 0; id < excpectedNumVars; ++id)
             {
                 Assert.AreEqual(true, vars.MoveNext());
-                Assert.AreEqual($"id{id}", vars.Current.Id);
+                Assert.AreEqual($"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id{id}", vars.Current.Id);
             }
             Assert.AreEqual(false, vars.MoveNext());
         }
 
         private string GenerateVariablesInfo(int firstVarId, int lastVarId)
         {
-            Random rnd = new Random();
-            string res = "";
+            StringBuilder stringBuilder = new StringBuilder();
 
             for (int varId = firstVarId; varId < lastVarId; varId++)
             {
-                string permissions = "";
-                string annoations = "";
-                int nPermissions = rnd.Next(4);
-                int nAnnoations = rnd.Next(4);
-
-                for (int perId = 0; perId < nPermissions; perId++)
-                {
-                    permissions += (perId == 0) ? "" : ",";
-                    permissions += $"{{\"privilege\":\"privilege{varId}_{perId}\"," +
-                              $"\"grant_option\":\"grant_option{varId}_{perId}\"," +
-                              $"\"resource\":\"resource{varId}_{perId}\"," +
-                              $"\"role\":\"role{varId}_{perId}\"," +
-                              $"\"grantor\":\"grantor{varId}_{perId}\" }}";
-                }
-                for (int annotId = 0; annotId < nAnnoations; annotId++)
-                {
-                    annoations += (annotId == 0) ? "" : ",";
-                    annoations += $"{{\"resource_id\":\"resource_id{varId}_{annotId}\"," +
-                              $"\"name\":\"name{varId}_{annotId}\"," +
-                              $"\"value\":\"value{varId}_{annotId}\"," +
-                              $"\"created_at\":\"created_at{varId}_{annotId}\"," +
-                              $"\"updated_at\":\"updated_at{varId}_{annotId}\" }}";
-                }
-                res += (varId == firstVarId) ? "" : ",";
-                res += $"{{\"id\":\"id{varId}\"," +
-                          $"\"created_at\":\"created_at{varId}\"," +
-                          $"\"owner\":\"owner{varId}\"," +
-                          $"\"created_by\":\"created_by{varId}\"," +
-                          $"\"permissions\":[{permissions}]," +
-                          $"\"annotations\":[{annoations}]  }}";
+                stringBuilder.Append($"{{\"id\":\"{Client.GetAccountName()}:{Constants.KIND_VARIABLE}:id{varId}\"}},");
             }
-            return $"[{res}]";
+            if (stringBuilder.Length != 0)
+            {
+                stringBuilder.Remove(stringBuilder.Length - 1, 1);
+            }
+            return $"[{stringBuilder}]";
         }
-
     }
 }

@@ -1,16 +1,17 @@
 # Conjur API for .NET
 
-This is an implementation of the .NET API for [Conjur](https://developer.conjur.net/).
+This is a *Draft* implementation of the .NET API for [V5 Conjur](https://developer.conjur.net/).
 This implementation includes an example that shows how to:
 
     - Authenticate
+    - Load Policy
     - Check permissions to get the value of a variable
     - Get the value of a variable
     - Use a Host Factory token to create a new Host and get an apiKey to use with Conjur
 
 ## Building
 
-This sample was built and tested with Visual Studio 2015. 
+This sample was built and tested with Visual Studio 2015.
 
 To load in Visual Studio, from the Visual Studio File menu select Open > Project/Solution > api-dotnet.sln and build the solution. This will create:
 
@@ -22,20 +23,23 @@ Optionally, to build in a Docker container, it is recommended to use Mono and xb
 
 ## Usage
 
-To run the sample in Visual Studio, set the `example` project as the Startup Project.  To do so, in the Solution Explorer right click over `example` and select `Set as Startup Project`. 
+To run the sample in Visual Studio, set the `example` project as the Startup Project.  To do so, in the Solution Explorer right click over `example` and select `Set as Startup Project`.
 
 ```sh
 Usage: Example  <applianceURL>
                 <applianceCertificatePath>
-                <username> 
-                <password> 
+                <accountName>
+                <username>
+                <password>
                 <variableId>
                 <hostFactoryToken>
 ```
 
-applianceURL: the applianceURL including /api e.g. https://conjurmaster.myorg.com/api
+applianceURL: the applianceURL e.g. https://conjurmaster.myorg.com/
 
 applianceCertificatePath: the path and name of the Conjur appliance certificate. The easiest way to get the certifiate is to use the Conjur CLI command `conjur init -h conjurmaster.myorg.com -f .conjurrc`. The certificate can be taken from any system you have run the Conjur CLI from.
+
+accountName: The name of the account in Conjur.
 
 username: Username of a user in Conjur. Alternatively can be a hostname.
 
@@ -49,10 +53,11 @@ hostFactoryToken: A hostfactory token. The easiest way to get a host factory tok
 
 ```sh
     // Instantiate a Conjur Client object.
-    //  parameter: URI - conjur appliance URI (including /api)
+    //  parameter: URI - conjur appliance URI
+    //  parameter: ACCOUNT - conjur account name
     //  return: Client object - if URI is incorrect errors thrown when used
-    Uri uri = new Uri("https://myorg.com/api");
-    Client conjurClient = new Client(uri);
+    Uri uri = new Uri("https://myorg.com");
+    Client conjurClient = new Client(uri, account);
 
     // Login with Conjur credentials like userid and password,
     // or hostid and api_key, etc
@@ -81,14 +86,3 @@ hostFactoryToken: A hostfactory token. The easiest way to get a host factory tok
         Console.WriteLine("{0} has the value: {1}", variableId, conjurVariable.GetValue());
     }
 ```
-
-## Contributing
-
-We welcome contributions of all kinds to this repository. For instructions on how to get started and descriptions of our development workflows, please see our [contributing
-guide][contrib].
-
-[contrib]: https://github.com/cyberark/conjur-api-dotnet/blob/master/CONTRIBUTING.md
-
-## License
-
-This repository is licensed under Apache License 2.0 - see [`LICENSE`](LICENSE) for more details.

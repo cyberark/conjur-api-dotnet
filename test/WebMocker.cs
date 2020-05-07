@@ -40,29 +40,18 @@ namespace Conjur.Test
         public class MockRequest : WebRequest
         {
             private readonly string content;
-            private string contentType;
             private string method = "GET";
             private ICredentials credentials;
             private Uri uri;
             MemoryStream requestStream;
 
-            public override WebHeaderCollection Headers
-            {
-                get;
-                set;
-            }
+            public override WebHeaderCollection Headers { get; set; }
 
-            public override string ContentType
-            {
-                get
-                {
-                    return this.contentType;
-                }
-                set
-                {
-                    this.contentType = value;
-                }
-            }
+            public override string ContentType { get; set; }
+
+            public override long ContentLength { get; set; }
+
+            public override int Timeout { get; set; }
 
             public override Uri RequestUri
             {
@@ -92,6 +81,7 @@ namespace Conjur.Test
                 }
                 set
                 {
+                    base.PreAuthenticate = value;
                 }
             }
 

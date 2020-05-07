@@ -7,6 +7,7 @@
 
 namespace Conjur
 {
+    using System;
     using System.Net;
 
     internal class HostFactoryToken
@@ -23,7 +24,7 @@ namespace Conjur
         public Host CreateHost(string name)
         {
             var request = this.client.Request("host_factories/hosts?id="
-                              + WebUtility.UrlEncode(name));
+                              + Uri.EscapeDataString(name));
             request.Headers["Authorization"] = "Token token=\"" + this.token + "\"";
             request.Method = "POST";
 

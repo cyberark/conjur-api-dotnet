@@ -1,9 +1,10 @@
-﻿using System;
-using System.Net;
-using Conjur;
-
-namespace Example
+﻿namespace Example
 {
+    using System;
+    using System.IO;
+    using System.Net;
+    using Conjur;
+
     class Program
     {
         // this example shows how to use the Conjur .NET api to
@@ -11,30 +12,34 @@ namespace Example
         // the credentials are passed as arguments.
         // Credentials are typically a hostId and api_key or
         // userId and password
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            if (args.Length < 6)
+            if (args.Length < 7)
             {
-                Console.WriteLine("Usage: Example <applianceHostName> <applianceCertificatePath> <username> <password> <variableId> <hostFactoryToken>");
+                Console.WriteLine("Usage: Example <applianceHostName> <applianceCertificatePath> <accountName> <username> <password> <variableId> <hostFactoryToken>");
                 return;
             }
+
             string applianceName = args[0];
             string certPath = args[1];
-            string username = args[2];
-            string password = args[3];
-            string variableId = args[4];
-            string token = args[5];
+            string account = args[2];
+            string username = args[3];
+            string password = args[4];
+            string variableId = args[5];
+            string token = args[6];
 
             // Instantiate a Conjur Client object.
-            //  parameter: applianceUri - conjur appliance URI (including /api)
+            //  parameter: applianceUri - conjur appliance URI
             //  return: Client object - if URI is incorrect errors thrown when used
-            string uri = String.Format("https://{0}/api", applianceName);
-            var conjurClient = new Client(uri);
+            string uri = String.Format("https://{0}", applianceName);
+            var conjurClient = new Client(uri, account);
 
             // If the Conjur root certificate is not in the system trust store,
             // add it as trusted explicitly
-            if (certPath.Length > 0)
-                conjurClient.TrustedCertificates.ImportPem(certPath);
+            if (certPath.Length > 0) 
+            {
+                conjurClient.TrustedCertificates.ImportPem (certPath);
+            }
 
             // Login with Conjur userid and password,
             // or hostid and api_key, etc
@@ -53,6 +58,25 @@ namespace Example
                 var apiKey = password;
                 conjurClient.Credential = new NetworkCredential(username, apiKey);
             }
+
+            // Load policy to root with request variable Id
+            Policy policy = conjurClient.Policy("root");
+            using (MemoryStream ms = new MemoryStream()) 
+            {
+                using (StreamWriter sw = new StreamWriter(ms)) 
+                {
+                    sw.WriteLine("- !variable");
+                    sw.WriteLine($"  id: {variableId}");
+                    sw.Flush();
+                    Stream policyOutputStream = policy.LoadPolicy(ms);
+                    using (StreamReader reader = new StreamReader(policyOutputStream)) 
+                    {
+                        string policyLoadOutput = reader.ReadToEnd();
+                        Console.WriteLine("Policy load successuly output: '{0}'", policyLoadOutput);
+                    }
+                }
+            }
+
             // Check if this user has permission to get the value of variableId
             // That requires exectue permissions on the variable
 
@@ -72,8 +96,10 @@ namespace Example
                 }
                 else
                 {
-                    string value = conjurVariable.GetValue();
-                    Console.WriteLine("'{0}' has the value: '{1}'", variableId, value);
+                    conjurVariable.AddSecret("ExampleValue");
+
+                    string val = conjurVariable.GetValue();
+                    Console.WriteLine("'{0}' has the value: '{1}'", variableId, val);
                 }
             }
             catch (Exception e)
@@ -102,5 +128,6 @@ namespace Example
             }
 
         }
+
     }
 }

@@ -1,10 +1,9 @@
-﻿// <copyright file="VariableInfo.cs" company="Cyberark Inc.">
-//     Copyright (c) 2018 Cyberark Inc. All rights reserved.
+﻿// <copyright file="ResourceMetadata.cs" company="Conjur Inc.">
+//     Copyright (c) 2016 Conjur Inc. All rights reserved.
 // </copyright>
 // <summary>
-//     Resource metadata for deserialization, returned from List\Search Resource
+//     Class representing resource metadata returned from web request.
 // </summary>
-
 
 namespace Conjur
 {
@@ -13,62 +12,61 @@ namespace Conjur
     [DataContract]
     public class ResourceMetadata
     {
-        // these data members are assigned by a deserializer
-#pragma warning disable 169
         [DataMember(Name = "id")]
-        public string Id { get; private set; }
+        public string Id { get; set; }
+        [DataMember(Name = "policy")]
+        public string Policy { get; set; }
         [DataMember(Name = "created_at")]
-        public string CreatedAt { get; private set; }
+        public string CreatedAt { get; set; }
         [DataMember(Name = "owner")]
-        public string Owner { get; private set; }
-        [DataMember(Name = "created_by")]
-        public string CreatedBy { get; private set; }
+        public string Owner { get; set; }
         [DataMember(Name = "permissions")]
-        public Permission[] Permissions { get; private set; }
+        public Permission[] Permissions { get; set; }
         [DataMember(Name = "annotations")]
-        public Annoatation[] Annoatations { get; private set; }
+        public Annotation[] Annotations { get; set; }
+        [DataMember(Name = "secrets")]
+        public Secrets[] Secrets { get; set; }
     }
 
     [DataContract]
     public class Permission
     {
         [DataMember(Name = "privilege")]
-        public string Privilege { get; private set; }
+        public string Privilege { get; set; }
         [DataMember(Name = "grant_option")]
-        public string GrantOption { get; private set; }
+        public string GrantOption { get; set; }
         [DataMember(Name = "resource")]
-        public string Resource { get; private set; }
-        [DataMember(Name = "role")]
-        public string Role { get; private set; }
-        [DataMember(Name = "grantor")]
-        public string Grantor { get; private set; }
-    }
-
-    [DataContract]
-    public class Annoatation
-    {
-        [DataMember(Name = "resource_id")]
-        public string ResourceId { get; private set; }
-        [DataMember(Name = "name")]
-        public string Name { get; private set; }
-        [DataMember(Name = "value")]
-        public string Value { get; private set; }
-        [DataMember(Name = "created_at")]
-        public string CreatedAt { get; private set; }
-        [DataMember(Name = "updated_at")]
-        public string UpdatedAt { get; private set; }
-    }
-
-    [DataContract]
-    public class RoleMember
-    {
-        [DataMember(Name = "admin_option")]
-        public bool Admin { get; set; }
-        [DataMember(Name = "grantor")]
-        public string Grantor { get; set; }
-        [DataMember(Name = "member")]
-        public string Member { get; set; }
+        public string Resource { get; set; }
         [DataMember(Name = "role")]
         public string Role { get; set; }
+        [DataMember(Name = "grantor")]
+        public string Grantor { get; set; }
+    }
+
+    [DataContract]
+    public class Annotation
+    {
+        [DataMember(Name = "name")]
+        public string Name { get; set; }
+        [DataMember(Name = "value")]
+        public string Value { get; set; }
+        [DataMember(Name = "policy")]
+        public string Policy { get; set; }
+    }
+
+    [DataContract]
+    public class Secrets
+    {
+        [DataMember(Name = "version")]
+        public string Version { get; set; }
+        [DataMember(Name = "expires_at")]
+        public string ExpiresAt { get; set; }
+    }
+
+    [DataContract]
+    internal class CountResult
+    {
+        [DataMember]
+        public uint count { get; set; }
     }
 }

@@ -8,6 +8,8 @@ namespace Conjur.Test
     public abstract class Base
     {
         protected readonly Conjur.Client Client;
+        protected readonly string TestAccount = "test-account";
+        protected readonly string LoginName = "admin";
         static protected readonly WebMocker Mocker = new WebMocker();
 
         static Base()
@@ -19,13 +21,12 @@ namespace Conjur.Test
         protected void ClearMocker()
         {
             Mocker.Clear();
-            Mocker.Mock(new Uri("test:///info"), "{ \"account\": \"test-account\" }");
+            Mocker.Mock(new Uri ("test:///info"), "{ \"account\": \"test-account\"}");
         }
 
         protected Base()
         {
-            Client = new Conjur.Client("test:///");
+            Client = new Conjur.Client("test:///", TestAccount);
         }
     }
 }
-
