@@ -1,5 +1,5 @@
 ﻿// <copyright file="Client.cs" company="Conjur Inc.">
-//     Copyright (c) 2016-2018 Conjur Inc. All rights reserved.
+//     Copyright (c) 2016 Conjur Inc. All rights reserved.
 // </copyright>
 // <summary>
 //     Base Conjur client class implementation.
@@ -10,7 +10,6 @@ namespace Conjur
     using System;
     using System.Net;
     using System.Net.Security;
-    using System.Runtime.Serialization;
     using System.Security.Cryptography.X509Certificates;
     using System.Text;
     using System.Text.RegularExpressions;
@@ -22,24 +21,27 @@ namespace Conjur
     {
         private Uri applianceUri;
         private string account;
-        private bool urlValidated = false;
+        private string actingAs;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Conjur.Client"/> class.
+        /// Initializes a new instance of the <see cref="T:Conjur.Client"/> class.
         /// </summary>
         /// <param name="applianceUri">Appliance URI.</param>
-        public Client(string applianceUri)
+        /// <param name="account">Conjur account.</param>
+        public Client(string applianceUri, string account)
         {
+            this.account = account;
             this.applianceUri = NormalizeBaseUri(applianceUri);
             this.TrustedCertificates = new X509Certificate2Collection();
+            ServicePointManager.ServerCertificateValidationCallback =
+                new RemoteCertificateValidationCallback(this.ValidateCertificate);
         }
 
-        /// <summary>
-        /// Switch the client to ActingAs another role. Set to null by default.
-        /// </summary>
-        /// Note support for this value is limited in the current version of this library.
-        /// <value>Fully qualified role name. For example MyCompanyName:group:security_admin.</value>
-        public string ActingAs { get; set; }
+        internal Client(Client other, string role) : this(other.ApplianceUri.AbsoluteUri, other.account)
+        {
+            this.actingAs = role;
+            this.Authenticator = other.Authenticator;
+        }
 
         /// <summary>
         /// Gets the appliance URI.
@@ -58,11 +60,7 @@ namespace Conjur
         /// This gets automatically set by setting <see cref="Client.Credential"/>.
         /// </summary>
         /// <value>The authenticator.</value>
-        public IAuthenticator Authenticator
-        {
-            get;
-            set;
-        }
+        public IAuthenticator Authenticator { get; set; }
 
         /// <summary>
         /// Sets the username and API key to authenticate.
@@ -76,7 +74,8 @@ namespace Conjur
             set
             {
                 this.Authenticator = new ApiKeyAuthenticator(
-                    new Uri(this.ValidateBaseUri() + "authn"), 
+                    new Uri(this.applianceUri + "authn"), 
+                    this.GetAccountName(),
                     value);
             }
         }
@@ -97,8 +96,6 @@ namespace Conjur
         /// <returns>The account name.</returns>
         public string GetAccountName()
         {
-            if (this.account == null)
-                this.account = this.Info().account;
             return this.account;
         }
 
@@ -120,18 +117,17 @@ namespace Conjur
         /// <seealso cref="Credential"/>
         /// </summary>
         /// <returns>The API key.</returns>
-        /// <param name="credential">The credential of user name and password, 
+        /// <param name="credential">The credential of user name and password,
         /// where user name is for example "bob" or "host/jenkins".</param>
         public string LogIn(NetworkCredential credential)
         {
-            var wr = this.Request("authn/users/login");
+            WebRequest webRequest = this.Request($"authn/{this.account}/login");
 
-            // there seems to be no sane way to force WebRequest to authenticate 
+            // there seems to be no sane way to force WebRequest to authenticate
             // properly by itself, so generate the header manually
-            var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(
-                               credential.UserName + ":" + credential.Password));
-            wr.Headers["Authorization"] = "Basic " + auth;
-            var apiKey = wr.Read();
+            string auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(credential.UserName + ":" + credential.Password));
+            webRequest.Headers["Authorization"] = "Basic " + auth;
+            string apiKey = webRequest.Read();
 
             this.Credential = new NetworkCredential(credential.UserName, apiKey);
             return apiKey;
@@ -144,53 +140,25 @@ namespace Conjur
         /// <returns>A WebRequest for the specified appliance path.</returns>
         public WebRequest Request(string path)
         {
-            return WebRequest.Create(this.ValidateBaseUri() + path);
+            WebRequest reqest = WebRequest.Create(this.applianceUri + path);
+            reqest.Timeout = ApiConfigurationManager.GetInstance().HttpRequestTimeout;
+            return reqest;
         }
 
         /// <summary>
         /// Create an authenticated WebRequest for the specified path.
         /// </summary>
         /// <param name="path">Path, NOT including the leading slash.</param>
-        /// <returns>A WebRequest for the specified appliance path, with 
+        /// <returns>A WebRequest for the specified appliance path, with
         /// authorization header set using <see cref="Authenticator"/>.</returns>
         public WebRequest AuthenticatedRequest(string path)
         {
-            return this.ApplyAuthentication(this.Request(path));
-        }
-
-        /// <summary>
-        /// Validates the appliance base URI.
-        /// Tries to connect to /info; if not successful, try again adding an /api prefix.
-        /// Also sets up certificate validation.
-        /// </summary>
-        /// <returns>The validated base appliance URI.</returns>
-        public Uri ValidateBaseUri()
-        {
-            if (!this.urlValidated)
+            if (this.actingAs != null)
             {
-                // TODO: figure out how to avoid changing the default for all hosts
-                ServicePointManager.ServerCertificateValidationCallback = 
-                    new RemoteCertificateValidationCallback(this.ValidateCertificate);
-
-                var wr = WebRequest.Create(this.applianceUri + "info");
-                wr.Method = "HEAD";
-                try
-                {
-                    wr.GetResponse().Close();
-                }
-                catch (WebException)
-                {
-                    // forgotten /api at the end of the Uri? Try again.
-                    this.applianceUri = new Uri(this.applianceUri + "api/");
-                    wr = WebRequest.Create(this.applianceUri + "info");
-                    wr.Method = "HEAD";
-                    wr.GetResponse().Close();
-                }
-
-                this.urlValidated = true;
+                path += (path.Contains("?") ? "&" : "?") + $"acting_as={Uri.EscapeDataString(this.actingAs)}";
             }
 
-            return this.applianceUri;
+            return this.ApplyAuthentication(this.Request(path));
         }
 
         /// <summary>
@@ -205,15 +173,15 @@ namespace Conjur
             // eg. it returns 401 on https://example.org//api/info
 
             // so normalize to remove double slashes
-            var normalizedUri = Regex.Replace(uri, "(?<!:)/+", "/");
+            string normalizedUri = Regex.Replace(uri, "(?<!:)/+", "/");
 
             // make sure there is a trailing slash
             return new Uri(Regex.Replace(normalizedUri, "(?<!/)\\z", "/"));
         }
 
         /// <summary>
-        /// Validates the Conjur appliance certificate. 
-        /// <see cref="RemoteCertificateValidationCallback"/> 
+        /// Validates the Conjur appliance certificate.
+        /// <see cref="RemoteCertificateValidationCallback"/>
         /// </summary>
         /// <returns><c>true</c>, if certificate was valid, <c>false</c> otherwise.</returns>
         /// <param name="sender">Sender of the validation request.</param>
@@ -221,47 +189,33 @@ namespace Conjur
         /// <param name="chain">Certificate chain, as resolved by the system.</param>
         /// <param name="sslPolicyErrors">SSL policy errors from the system.</param>
         private bool ValidateCertificate(
-            object sender, 
-            X509Certificate certificate, 
-            X509Chain chain, 
+            object sender,
+            X509Certificate certificate,
+            X509Chain chain,
             SslPolicyErrors sslPolicyErrors)
         {
             switch (sslPolicyErrors)
             {
-                case SslPolicyErrors.RemoteCertificateChainErrors:
-                    return chain.VerifyWithExtraRoots(certificate, this.TrustedCertificates);
-                case SslPolicyErrors.None:
-                    return true;
-                default:
-                    return false;
+            case SslPolicyErrors.RemoteCertificateChainErrors:
+                return chain.VerifyWithExtraRoots(certificate, this.TrustedCertificates);
+            case SslPolicyErrors.None:
+                return true;
+            default:
+                return false;
             }
         }
 
         private WebRequest ApplyAuthentication(WebRequest webRequest)
         {
             if (this.Authenticator == null)
+            {
                 throw new InvalidOperationException("Authentication required.");
+            }
 
-            var token = Convert.ToBase64String(
-                            Encoding.UTF8.GetBytes(this.Authenticator.GetToken()));
+            string token = Convert.ToBase64String(Encoding.UTF8.GetBytes(this.Authenticator.GetToken()));
+
             webRequest.Headers["Authorization"] = "Token token=\"" + token + "\"";
             return webRequest;
-        }
-
-        /// <summary>
-        /// Get the server info.
-        /// </summary>
-        /// <returns>Server information.</returns>
-        private ServerInfo Info()
-        {
-            return JsonSerializer<ServerInfo>.Read(this.Request("info"));
-        }
-
-        [DataContract]
-        internal class ServerInfo
-        {
-            [DataMember]
-            internal string account;
         }
     }
 }

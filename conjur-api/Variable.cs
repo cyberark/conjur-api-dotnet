@@ -1,5 +1,5 @@
 ﻿// <copyright file="Variable.cs" company="Conjur Inc.">
-//     Copyright (c) 2016-2018 Conjur Inc. All rights reserved.
+//     Copyright (c) 2016 Conjur Inc. All rights reserved.
 // </copyright>
 // <summary>
 //     Variable manipulation routines.
@@ -9,7 +9,9 @@ namespace Conjur
 {
     using System;
     using System.Collections.Generic;
-    using System.Json;    //using System.Json;
+    using System.IO;
+    using System.Net;
+    using System.Text;
 
     /// <summary>
     /// Conjur variable reference.
@@ -27,9 +29,9 @@ namespace Conjur
         /// <param name="name">The variable name.</param>
         /// <seealso cref="Extensions.Variable"/>
         internal Variable(Client client, string name)
-            : base(client, "variable", name)
+            : base(client, Constants.KIND_VARIABLE, name)
         {
-            this.path = "variables/" + Uri.EscapeDataString(name);
+            this.path = $"secrets/{Uri.EscapeDataString(client.GetAccountName())}/{Constants.KIND_VARIABLE}/{Uri.EscapeDataString(name)}";
         }
 
         /// <summary>
@@ -38,40 +40,49 @@ namespace Conjur
         /// <returns>The value.</returns>
         public string GetValue()
         {
-            return this.Client.AuthenticatedRequest(this.path + "/value").Read();
+            return this.Client.AuthenticatedRequest(this.path).Read();
+        }
+
+        [Obsolete ("This function is obsolete, it is recommended to use AddSecret(byte[] val) method instead")]
+        public void AddSecret(string val)
+        {
+            AddSecret(Encoding.UTF8.GetBytes(val));
         }
 
         /// <summary>
-        /// Adds a value to the variable.
+        /// Set a secret (value) to this variable.
         /// </summary>
-        /// <param name="value">Value to be added to the Variable.</param>
-        public void AddValue(string value)
+        /// <param name="val">Secret value.</param>
+        public void AddSecret(byte[] val)
         {
-            var req = this.Client.AuthenticatedRequest($"{this.path}/values");
-            req.Method = "POST";
-            req.ContentType = "application/json";
-
-            using (var dataStream = req.GetRequestStream()) {
-                JsonObject jsonObject = new JsonObject();
-                jsonObject.Add("value", value);
-                using (var dataStreamWriter = new System.IO.StreamWriter(dataStream)) {
-                    dataStreamWriter.Write(jsonObject.ToString());
-                }
+            WebRequest webRequest = this.Client.AuthenticatedRequest(this.path);
+            webRequest.Method = WebRequestMethods.Http.Post;
+            if (webRequest is HttpWebRequest)
+            {
+                (webRequest as HttpWebRequest).AllowWriteStreamBuffering = false;
             }
 
-            req.GetResponse().Close();
-        }
+            webRequest.ContentType = "text\\plain";
+            webRequest.ContentLength = val.Length;
+            using (Stream requestStream = webRequest.GetRequestStream())
+            {
+                requestStream.Write(val, 0, val.Length);
+                using (webRequest.GetResponse())
+                {
+                    // Intentional do not care about response content
+                }
+            }
+         }
 
-        /// <summary>
-        /// Search for variables
-        /// </summary>
-        /// <param name="client">Conjur client to query.</param>
-        /// <param name="query">Query for search.</param>
-        /// <returns>Returns IEnumerable to Variable.</returns>
         internal static IEnumerable<Variable> List(Client client, string query = null)
         {
-            Func<ResourceMetadata, Variable> newInst = (searchRes) => new Variable(client, searchRes.Id);
-            return ListResources<Variable, ResourceMetadata>(client, "variable", newInst, query);
+            Func<ResourceMetadata, Variable> newInst = (searchRes) => new Variable(client, IdToName(searchRes.Id, client.GetAccountName(), Constants.KIND_VARIABLE));
+            return ListResources<Variable, ResourceMetadata>(client, Constants.KIND_VARIABLE, newInst, query);
+        }
+
+        internal static uint Count(Client client, string query)
+        {
+            return CountResources(client, Constants.KIND_VARIABLE, query);
         }
     }
 }

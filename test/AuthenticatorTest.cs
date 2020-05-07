@@ -2,13 +2,21 @@
 using System.Net;
 using NUnit.Framework;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Conjur.Test
 {
-    [TestFixture]
     public class AuthenticatorTest : Base
     {
+        static protected readonly NetworkCredential credential = new NetworkCredential("username", "api-key");
+
+        protected ApiKeyAuthenticator Authenticator;
+        
+        [SetUp]
+        public void CreateAuthenticator()
+        {
+            Authenticator = new ApiKeyAuthenticator(new Uri("test:///authn"), TestAccount, credential);
+        }
+
         [Test]
         public void TestTokenCaching()
         {
@@ -17,7 +25,7 @@ namespace Conjur.Test
             MockToken("token2");
 
             Assert.AreEqual("token1", Authenticator.GetToken());
-            MockTokenExpiration();
+            MockTokenExpiration ();
             Assert.AreEqual("token2", Authenticator.GetToken());
         }
 
@@ -26,11 +34,11 @@ namespace Conjur.Test
         {
             int authenticationCount = 0;
             Action<WebRequest> verifier = (WebRequest wr) =>
-                {
-                    ApiKeyVerifier(wr);
-                    Thread.Sleep(10);
-                    Interlocked.Increment(ref authenticationCount);
-                };
+            {
+                ApiKeyVerifier(wr);
+                Thread.Sleep (10);
+                Interlocked.Increment(ref authenticationCount);
+            };
 
             string token = "token1";
 
@@ -40,12 +48,12 @@ namespace Conjur.Test
             Assert.AreEqual(1, authenticationCount);
 
             ThreadStart checker = () =>
-                {
-                    Assert.AreEqual(token, Authenticator.GetToken());
-                };
+            {
+                Assert.AreEqual(token, Authenticator.GetToken());
+            };
 
-            var t1 = new Thread(checker);
-            var t2 = new Thread(checker);
+            Thread t1 = new Thread(checker);
+            Thread t2 = new Thread(checker);
 
             t1.Start(); t2.Start();
             t1.Join(); t2.Join();
@@ -67,17 +75,16 @@ namespace Conjur.Test
         }
 
         static protected readonly Action<WebRequest> ApiKeyVerifier = (WebRequest wr) =>
-            {
-                var req = wr as WebMocker.MockRequest;
-                Assert.AreEqual("POST", wr.Method);
-                Assert.AreEqual("api-key", req.Body);
-            };
+        {
+            var req = wr as WebMocker.MockRequest;
+            Assert.AreEqual("POST", wr.Method);
+            Assert.AreEqual("api-key", req.Body);
+        };
 
-        static protected readonly NetworkCredential credential = new NetworkCredential("username", "api-key");
 
         protected WebMocker.MockRequest MockToken(string token)
         {
-            var mock = Mocker.Mock(new Uri("test:///authn/users/username/authenticate"), token);
+            var mock = Mocker.Mock(new Uri($"test:///authn/{TestAccount}/username/authenticate"), token);
             mock.Verifier = ApiKeyVerifier;
             return mock;
         }
@@ -87,14 +94,5 @@ namespace Conjur.Test
             Authenticator.StartTokenTimer(new TimeSpan(0, 0, 0, 0, 1));
             Thread.Sleep(10);
         }
-
-        protected ApiKeyAuthenticator Authenticator;
-
-        [SetUp]
-        public void CreateAuthenticator()
-        {
-            Authenticator = new ApiKeyAuthenticator(new Uri("test:///authn"), credential);
-        }
     }
 }
-
