@@ -21,6 +21,67 @@ To load in Visual Studio, from the Visual Studio File menu select Open > Project
 
 Optionally, to build in a Docker container, it is recommended to use Mono and xbuild.
 
+## Methods
+
+### Client
+`Client Client(uri, account)`
+- Create new Conjur instance
+   - uri - URI of the Conjur server. Example: https://myconjur.org.com/api
+   - account - Name of the Conjur account
+
+`LogIn(string userName, string password)`
+- Login to a Conjur user
+   - userName - Username of Conjur user to login as
+   - password - Passwordof user
+
+`TrustedCertificates.ImportPem (string certPath)`
+- Add Conjur root certificate to system trust store
+   - certPath = Path to cert
+
+`<Client>.Credential = new NetworkCredential(string userName, string apiKey)`
+- To login with an API key, use it directly
+   - userName - Username of user to login as
+   - apiKey - API key of user
+
+`IEnumerable<Variable> ListVariables(string query = null)`
+- Returns a list of variable objects
+   - name="query" - Additional Query parameters, not required
+
+`uint CountVariables(string query = null)`
+- Count Conjur resource of kind variable
+    - name="query" - Additional Query parameters, not required
+
+`Host CreateHost(string name, string hostFactoryToken)`
+- Creates a host using a host factory token
+   - name - Name of the host to create
+   - hostFactoryToken - Host factory token
+
+### Policy
+`Policy <Client>.Policy(string policyName)`
+- Create a Conjur policy object 
+   - policyName - Name of policy
+
+`policy.LoadPolicy(Stream policyContent)`
+- Load policy into Conjur
+   -  policyContent - The policy
+
+### Variable
+`Variable <Client>.Variable(string name)`
+- Instantiate a Variable object
+   - name - Name of the variable
+
+`Boolean Check(string privilege)`
+- Check if the current user has specified privilege on this variable
+   - privilege - string name of the privilege to check for
+      - Privileges: read, create, update, delete, execute
+
+`AddSecret(string val)`
+- Change current Variable to val
+   - val - Value to update current Variable to
+
+`String GetValue()`
+- Return the value of the current Variable
+
 ## Usage
 
 To run the sample in Visual Studio, set the `example` project as the Startup Project.  To do so, in the Solution Explorer right click over `example` and select `Set as Startup Project`.
@@ -37,7 +98,7 @@ Usage: Example  <applianceURL>
 
 applianceURL: the applianceURL e.g. https://conjurmaster.myorg.com/
 
-applianceCertificatePath: the path and name of the Conjur appliance certificate. The easiest way to get the certifiate is to use the Conjur CLI command `conjur init -h conjurmaster.myorg.com -f .conjurrc`. The certificate can be taken from any system you have run the Conjur CLI from.
+applianceCertificatePath: the path and name of the Conjur appliance certificate. The easiest way to get the certifiate is to use the Conjur CLI command `conjur init -u conjurmaster.myorg.com -f .conjurrc`. The certificate can be taken from any system you have run the Conjur CLI from.
 
 accountName: The name of the account in Conjur.
 
