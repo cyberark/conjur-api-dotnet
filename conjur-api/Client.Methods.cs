@@ -34,10 +34,12 @@ namespace Conjur
         /// Lists Conjur resource of kind variable.
         /// </summary>
         /// <param name="query">Additional Query parameters, not required.</param>
+        /// <param name="limit">Additional limit parameters, not required.</param>
+        /// <param name="offset">Additional offset parameters, not required.</param>
         /// <returns>A list of variables objects.</returns>
-        public IEnumerable<Variable> ListVariables(string query = null)
+        public IEnumerable<Variable> ListVariables(string query = null, uint limit = 10000, uint offset = 0)
         {
-            return Conjur.Variable.List(this, query);
+            return Conjur.Variable.List(this, query, limit, offset);
         }
 
         /// <summary>
