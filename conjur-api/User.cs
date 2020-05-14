@@ -31,10 +31,10 @@ namespace Conjur
         /// <param name="client">Conjur Client to query.</param>
         /// <param name="query">Query to search.</param>
         /// <returns>Returns IEnumerable to User.</returns>
-        internal static IEnumerable<User> List(Client client, string query = null)
+        internal static IEnumerable<User> List(Client client, string query = null, uint limit = 10000, uint offset = 0)
         {
             Func<ResourceMetadata, User> newInst = (searchRes) => new User(client, IdToName(searchRes.Id, client.GetAccountName(), Constants.KIND_USER));
-            return ListResources<User, ResourceMetadata>(client, Constants.KIND_USER, newInst, query);
+            return ListResources<User, ResourceMetadata>(client, Constants.KIND_USER, newInst, query, limit,offset);
         }
     }
 }

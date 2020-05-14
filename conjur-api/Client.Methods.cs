@@ -67,10 +67,12 @@ namespace Conjur
         /// Lists Conjur resources of kind user.
         /// </summary>
         /// <param name="query">Additional Query parameters, not required.</param>
+        /// <param name="limit">Additional limit parameters, not required.</param>
+        /// <param name="offset">Additional offset parameters, not required.</param>
         /// <returns>A list of users objects.</returns>
-        public IEnumerable<User> ListUsers(string query = null)
+        public IEnumerable<User> ListUsers(string query = null, uint limit = 10000, uint offset = 0)
         {
-            return Conjur.User.List(this, query);
+            return Conjur.User.List(this, query, limit, offset);
         }
 
         /// <summary>
