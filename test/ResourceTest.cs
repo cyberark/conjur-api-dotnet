@@ -14,22 +14,22 @@ namespace Conjur.Test
             Client.Authenticator = new MockAuthenticator();
         }
 
-        [Test]
-        public void TestCheck()
-        {
-            var resource = Client.Resource(Kind, Name);
+        //[Test]
+        //public void TestCheck()
+        //{
+        //    var resource = Client.Resource(Kind, Name);
 
-            var mock = Mocker.Mock(new Uri("test:///resources/" + TestAccount
-                   + "/" + Kind + "/" + Name + "/?check=true&privilege=fry"), "");
-            Assert.IsTrue(resource.Check("fry"));
+        //    var mock = Mocker.Mock(new Uri("test:///resources/" + TestAccount
+        //           + "/" + Kind + "/" + Name + "/?check=true&privilege=fry"), "");
+        //    Assert.IsTrue(resource.Check("fry"));
 
-            mock.Verifier = (WebRequest) =>
-            {
-                throw new WebMocker.MockResponseException(
-                    HttpStatusCode.Forbidden, "Forbidden");
-            };
-            Assert.IsFalse(resource.Check("fry"));
-        }
+        //    mock.Verifier = (WebRequest) =>
+        //    {
+        //        throw new WebMocker.MockResponseException(
+        //            HttpStatusCode.Forbidden, "Forbidden");
+        //    };
+        //    Assert.IsFalse(resource.Check("fry"));
+        //}
 
         [Test]
         public void TestNameToId()
