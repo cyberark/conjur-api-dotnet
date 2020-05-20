@@ -16,6 +16,7 @@ namespace Conjur.Test
             Assert.AreEqual(TestAccount, Client.GetAccountName());
         }
 
+        // TODO: This test has been commented out and will be fixed in Issue #45 (https://github.com/cyberark/conjur-api-dotnet/issues/45)
         //[Test]
         //public void TestLogin()
         //{

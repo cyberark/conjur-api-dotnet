@@ -1,5 +1,5 @@
 ﻿// <copyright file="ResourceMetadata.cs" company="Conjur Inc.">
-//     Copyright (c) 2016 Conjur Inc. All rights reserved.
+//     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>
 //     Class representing resource metadata returned from web request.

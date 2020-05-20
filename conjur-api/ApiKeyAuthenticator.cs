@@ -92,7 +92,7 @@ namespace Conjur
             }
             return this.token;
         }
-         #endregion
+        #endregion
 
         internal void StartTokenTimer(TimeSpan timeout)
         {

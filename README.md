@@ -23,63 +23,66 @@ Optionally, to build in a Docker container, it is recommended to use Mono and xb
 
 ## Methods
 
-### Client
-`Client Client(uri, account)`
+### `Client`
+
+#### `Client Client(uri, account)`
 - Create new Conjur instance
-   - uri - URI of the Conjur server. Example: https://myconjur.org.com/api
-   - account - Name of the Conjur account
+   - `uri` - URI of the Conjur server. Example: `https://myconjur.org.com/api`
+   - `account` - Name of the Conjur account
 
-`LogIn(string userName, string password)`
+#### `void client.LogIn(string userName, string password)`
 - Login to a Conjur user
-   - userName - Username of Conjur user to login as
-   - password - Passwordof user
+   - `userName` - Username of Conjur user to login as
+   - `password` - Password of user
 
-`TrustedCertificates.ImportPem (string certPath)`
+#### `void client.TrustedCertificates.ImportPem (string certPath)`
 - Add Conjur root certificate to system trust store
-   - certPath = Path to cert
+   - `certPath` = Path to cert
 
-`<Client>.Credential = new NetworkCredential(string userName, string apiKey)`
+#### `client.Credential = new NetworkCredential(string userName, string apiKey)`
 - To login with an API key, use it directly
-   - userName - Username of user to login as
-   - apiKey - API key of user
+   - `userName` - Username of user to login as
+   - `apiKey` - API key of user/host/etc
 
-`IEnumerable<Variable> ListVariables(string query = null)`
+#### `IEnumerable<Variable> client.ListVariables(string query = null)`
 - Returns a list of variable objects
-   - name="query" - Additional Query parameters, not required
+   - `query` - Additional query parameters (not required)
 
-`uint CountVariables(string query = null)`
-- Count Conjur resource of kind variable
-    - name="query" - Additional Query parameters, not required
+#### `uint client.CountVariables(string query = null)`
+- Return count of Conjur variables conforming to the `query` parameter
+    - `query` - Additional query parameters (not required)
 
-`Host CreateHost(string name, string hostFactoryToken)`
+#### `Host client.CreateHost(string name, string hostFactoryToken)`
 - Creates a host using a host factory token
-   - name - Name of the host to create
-   - hostFactoryToken - Host factory token
+   - `name` - Name of the host to create
+   - `hostFactoryToken` - Host factory token
 
-### Policy
-`Policy <Client>.Policy(string policyName)`
+### `Policy`
+
+#### `Policy client.Policy(string policyName)`
 - Create a Conjur policy object 
-   - policyName - Name of policy
+   - `policyName` - Name of policy
 
-`policy.LoadPolicy(Stream policyContent)`
+#### `policy.LoadPolicy(Stream policyContent)`
 - Load policy into Conjur
-   -  policyContent - The policy
+   -  `policyContent` - The policy
 
-### Variable
-`Variable <Client>.Variable(string name)`
+### `Variable`
+
+#### `Variable client.Variable(string name)`
 - Instantiate a Variable object
-   - name - Name of the variable
+   - `name` - Name of the variable
 
-`Boolean Check(string privilege)`
-- Check if the current user has specified privilege on this variable
-   - privilege - string name of the privilege to check for
+#### `Boolean variable.Check(string privilege)`
+- Check if the current entity has the specified privilege on this variable
+   - `privilege` - string name of the privilege to check for
       - Privileges: read, create, update, delete, execute
 
-`AddSecret(string val)`
-- Change current Variable to val
-   - val - Value to update current Variable to
+#### `void variable.AddSecret(bytes val)`
+- Change current variable to val
+   - `val` - Value in bytes to update current variable to
 
-`String GetValue()`
+#### `String variable.GetValue()`
 - Return the value of the current Variable
 
 ## Usage
@@ -96,19 +99,19 @@ Usage: Example  <applianceURL>
                 <hostFactoryToken>
 ```
 
-applianceURL: the applianceURL e.g. https://conjurmaster.myorg.com/
+`applianceURL`: the applianceURL e.g. `https://conjurmaster.myorg.com/`
 
-applianceCertificatePath: the path and name of the Conjur appliance certificate. The easiest way to get the certifiate is to use the Conjur CLI command `conjur init -u conjurmaster.myorg.com -f .conjurrc`. The certificate can be taken from any system you have run the Conjur CLI from.
+`applianceCertificatePath`: the path and name of the Conjur appliance certificate. The easiest way to get the certifiate is to use the Conjur CLI command `conjur init -u conjurmaster.myorg.com -f .conjurrc`. The certificate can be taken from any system you have run the Conjur CLI from.
 
-accountName: The name of the account in Conjur.
+`accountName`: The name of the account in Conjur.
 
-username: Username of a user in Conjur. Alternatively can be a hostname.
+`username`: Username of a user in Conjur. Alternatively can be a hostname.
 
-password: Password of a user in Conjur. Alternatively can be a host apiKey.
+`password`: Password of a user in Conjur. Alternatively can be a host apiKey.
 
-variableId: The name of an existing variable in Conjur that has a value set and for which the `username` has execute permissions.
+`variableId`: The name of an existing variable in Conjur that has a value set and for which the `username` has execute permissions.
 
-hostFactoryToken: A hostfactory token. The easiest way to get a host factory token for testing is to add a hostfactory to a layer using the Conjur CLI command `conjur hostfactory create` and `conjur hostfactory token create`. Take the token returned from that call and pass it as the hostFactoryToken parameter to this example.
+`hostFactoryToken`: A host factory token. The easiest way to get a host factory token for testing is to add a hostfactory to a layer using the Conjur CLI command `conjur hostfactory create` and `conjur hostfactory token create`. Take the token returned from that call and pass it as the hostFactoryToken parameter to this example.
 
 ## Example
 
@@ -147,3 +150,7 @@ hostFactoryToken: A hostfactory token. The easiest way to get a host factory tok
         Console.WriteLine("{0} has the value: {1}", variableId, conjurVariable.GetValue());
     }
 ```
+
+## License
+
+This repository is licensed under Apache License 2.0 - see [`LICENSE`](LICENSE) for more details.

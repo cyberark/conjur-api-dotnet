@@ -93,7 +93,8 @@ namespace Conjur
             }
         }
 
-        internal static IEnumerable<T> ListResources<T, TResult>(Client client, string kind, Func<TResult, T> newT, string query = null, uint limit = 10000, uint offset = 0)
+        internal static IEnumerable<T> ListResources<T, TResult>(Client client, string kind, Func<TResult, T> newT,
+         string query = null, uint limit = 10000, uint offset = 0)
         {
             List<TResult> resultList;
             do

@@ -6,6 +6,7 @@ namespace Conjur.Test
 {
     public class HostFactoryTest : Base
     {
+        // TODO: This test has been commented out and will be fixed in Issue #46 (https://github.com/cyberark/conjur-api-dotnet/issues/46)
         //[Test]
         //public void TestCreateHost()
         //{

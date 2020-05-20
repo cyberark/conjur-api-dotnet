@@ -1,5 +1,5 @@
 ﻿// <copyright file="Client.Methods.cs" company="Conjur Inc.">
-//     Copyright (c) 2016 Conjur Inc. All rights reserved.
+//     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>
 //     Conjur Client methods delegating to entity-specific classes.
@@ -53,7 +53,7 @@ namespace Conjur
         }
 
         /// <summary>
-        /// Create an object representing a Conjur ressource of kind user corresponding with the specifiy name.
+        /// Create an object representing a Conjur resource of kind "user" corresponding with the specific name.
         /// </summary>
         /// <param name="name">A Name for the requested user.</param>
         /// <returns>An Object respresenting a user.</returns>

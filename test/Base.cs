@@ -21,7 +21,7 @@ namespace Conjur.Test
         protected void ClearMocker()
         {
             Mocker.Clear();
-            Mocker.Mock(new Uri ("test:///info"), "{ \"account\": \"test-account\"}");
+            Mocker.Mock(new Uri("test:///info"), "{ \"account\": \"test-account\"}");
         }
 
         protected Base()

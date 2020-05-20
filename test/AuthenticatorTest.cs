@@ -17,6 +17,8 @@ namespace Conjur.Test
             Authenticator = new ApiKeyAuthenticator(new Uri("test:///authn"), TestAccount, credential);
         }
 
+    // TODO: These tests have been commented out and will be fixed in Issue #45 (https://github.com/cyberark/conjur-api-dotnet/issues/45)
+
         //[Test]
         //public void TestTokenCaching()
         //{
