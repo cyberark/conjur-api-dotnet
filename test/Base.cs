@@ -7,10 +7,10 @@ namespace Conjur.Test
     [TestFixture]
     public abstract class Base
     {
-        protected readonly Conjur.Client Client;
+        protected readonly Client Client;
         protected readonly string TestAccount = "test-account";
         protected readonly string LoginName = "admin";
-        static protected readonly WebMocker Mocker = new WebMocker();
+        protected static readonly WebMocker Mocker = new WebMocker();
 
         static Base()
         {
@@ -26,7 +26,7 @@ namespace Conjur.Test
 
         protected Base()
         {
-            Client = new Conjur.Client("test:///", TestAccount);
+            Client = new Client("test:///", TestAccount);
         }
     }
 }

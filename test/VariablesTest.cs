@@ -30,7 +30,7 @@ namespace Conjur.Test
         {
             char[] testValue = { 't', 'e', 's', 't', 'V', 'a', 'l', 'u', 'e' };
 
-            var v = Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foobar"), "");
+            MockRequest v = Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foobar"), "");
             v.Verifier = (WebRequest wr) =>
             {
                 MockRequest req = wr as WebMocker.MockRequest;
@@ -50,18 +50,18 @@ namespace Conjur.Test
             ClearMocker ();
             Mocker.Mock (new Uri (variableUri + "?offset=0&limit=1000"), GenerateVariablesInfo(0, 1000));
             Mocker.Mock (new Uri (variableUri + "?offset=1000&limit=1000"), "[]");
-            vars = (Client.ListVariables (null, 1000, 0)).GetEnumerator ();
-            verifyVariablesInfo (vars, 0, 1000);
+            vars = Client.ListVariables (null, 1000, 0).GetEnumerator ();
+            VerifyVariablesInfo (vars, 0, 1000);
 
             ClearMocker ();
             Mocker.Mock (new Uri (variableUri + "?offset=1000&limit=1000"), GenerateVariablesInfo (1000, 2000));
             Mocker.Mock (new Uri (variableUri + "?offset=2000&limit=1000"), "[]");
-            vars = (Client.ListVariables (null, 1000, 1000)).GetEnumerator ();
-            verifyVariablesInfo (vars, 1000, 2000);
+            vars = Client.ListVariables (null, 1000, 1000).GetEnumerator ();
+            VerifyVariablesInfo (vars, 1000, 2000);
 
             ClearMocker ();
             Mocker.Mock(new Uri(variableUri + "?offset=0&limit=1000"), @"[""id"":""invalidjson""]");
-            vars = (Client.ListVariables(null,1000,0)).GetEnumerator();
+            vars = Client.ListVariables(null,1000,0).GetEnumerator();
             Assert.Throws<SerializationException>(() => vars.MoveNext());
         }
 
@@ -73,12 +73,12 @@ namespace Conjur.Test
             ClearMocker();
             Mocker.Mock(new Uri(variableUri + "?count=true&search=dummy"), @"{""count"":10}");
 
-            UInt32 result = Client.CountVariables("dummy");
+            uint result = Client.CountVariables("dummy");
             Assert.AreEqual(result, 10);
         }
 
         //Typo in excpectedNumVars?
-        private void verifyVariablesInfo(IEnumerator<Variable> vars, int offset, int excpectedNumVars)
+        private void VerifyVariablesInfo(IEnumerator<Variable> vars, int offset, int excpectedNumVars)
         {
             for (int id = offset; id < excpectedNumVars; ++id)
             {

@@ -1,16 +1,16 @@
-﻿// <copyright file="Resource.cs" company="Conjur Inc.">
-//     Copyright (c) 2016 Conjur Inc. All rights reserved.
+﻿// <copyright file="Resource.cs" company="CyberArk Software Ltd.">
+//     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>
 //     Base class representing a Conjur resource.
 // </summary>
 
+using System;
+using System.Collections.Generic;
+using System.Net;
+
 namespace Conjur
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Net;
-
     /// <summary>
     /// Base class representing a Conjur resource.
     /// </summary>
@@ -58,10 +58,12 @@ namespace Conjur
         {
             get
             {
-                if (this.resourcePath == null)
+                if (this.resourcePath == null) {
                     this.resourcePath = "resources/" +
                     Uri.EscapeDataString(this.Client.GetAccountName()) + "/" +
                     Uri.EscapeDataString(this.kind) + "/" + Uri.EscapeDataString(this.Name);
+                }
+
                 return this.resourcePath;
             }
         }
@@ -75,7 +77,7 @@ namespace Conjur
         /// <param name="privilege">Privilege to check.</param>
         public bool Check(string privilege)
         {
-            var req = this.Client.AuthenticatedRequest(this.ResourcePath
+            WebRequest req = this.Client.AuthenticatedRequest(this.ResourcePath
                           + "/?check=true&privilege=" + Uri.EscapeDataString(privilege));
             req.Method = "HEAD";
 
@@ -86,9 +88,11 @@ namespace Conjur
             }
             catch (WebException exn)
             {
-                var hr = exn.Response as HttpWebResponse;
-                if (hr != null && hr.StatusCode == HttpStatusCode.Forbidden)
+                HttpWebResponse hr = exn.Response as HttpWebResponse;
+                if (hr != null && hr.StatusCode == HttpStatusCode.Forbidden) {
                     return false;
+                }
+
                 throw;
             }
         }
@@ -116,7 +120,7 @@ namespace Conjur
         {
             string pathCountResourceQuery = $"resources/{client.GetAccountName()}/{kind}?count=true" + ((query != null) ? $"&search={query}" : string.Empty);
             CountResult countJsonObj = JsonSerializer<CountResult>.Read(client.AuthenticatedRequest(pathCountResourceQuery));
-            return Convert.ToUInt32(countJsonObj.count);
+            return Convert.ToUInt32(countJsonObj.Count);
         }
 
         /// <summary>

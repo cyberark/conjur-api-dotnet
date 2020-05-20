@@ -35,7 +35,7 @@ namespace Conjur.Test
         [Test]
         public void TestNameToId()
         {
-            var resource = Client.Resource(Kind, Name);
+            Resource resource = Client.Resource(Kind, Name);
             Assert.AreEqual($"{Client.GetAccountName()}:{Kind}:{Name}", resource.Id);
         }
     }

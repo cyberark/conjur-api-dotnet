@@ -46,7 +46,7 @@ namespace Conjur.Test
         {
             Mocker.Mock(new Uri("test:///info"), "{ \"account\": \"test-account\" }");
             Client.Authenticator = new MockAuthenticator();
-            var testRequest = Client.AuthenticatedRequest("info");
+            WebRequest testRequest = Client.AuthenticatedRequest("info");
             Assert.AreEqual("Token token=\"dG9rZW4=\"", // "token" base64ed
                 testRequest.Headers["Authorization"]);
 

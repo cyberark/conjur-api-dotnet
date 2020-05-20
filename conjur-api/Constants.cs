@@ -1,4 +1,4 @@
-﻿// <copyright file="Constants.cs" company="Conjur Inc.">
+﻿// <copyright file="Constants.cs" company="CyberArk Software Ltd.">
 //     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>

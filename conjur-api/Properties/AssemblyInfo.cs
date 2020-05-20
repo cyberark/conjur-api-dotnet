@@ -1,5 +1,5 @@
-﻿// <copyright file="AssemblyInfo.cs" company="Conjur Inc.">
-//     Copyright (c) 2016 Conjur Inc. All rights reserved.
+﻿// <copyright file="AssemblyInfo.cs" company="CyberArk Software Ltd.">
+//     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>
 // Assembly info.
@@ -10,9 +10,9 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyTitle("Conjur.dll")]
 [assembly: AssemblyDescription("Conjur server API library")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Conjur Inc.")]
+[assembly: AssemblyCompany("CyberArk Software Ltd.")]
 [assembly: AssemblyProduct("Conjur .NET API")]
-[assembly: AssemblyCopyright("(c) Conjur Inc.")]
+[assembly: AssemblyCopyright("(c) CyberArk Software Ltd.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

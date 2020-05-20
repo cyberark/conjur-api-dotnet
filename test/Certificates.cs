@@ -14,8 +14,8 @@ namespace Conjur.Test
 
         internal static byte[] GetBytes(string fileName)
         {
-            var stream = GetStream(fileName);
-            var mem = new MemoryStream((int)stream.Length);
+            Stream stream = GetStream(fileName);
+            MemoryStream mem = new MemoryStream((int)stream.Length);
             stream.CopyTo(mem);
             return mem.ToArray();
         }

@@ -1,18 +1,18 @@
-// <copyright file="ApiKeyAuthenticator.cs" company="Conjur Inc.">
-//     Copyright (c) 2016 Conjur Inc. All rights reserved.
+// <copyright file="ApiKeyAuthenticator.cs" company="CyberArk Software Ltd.">
+//     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>
 //     API key authenticator.
 // </summary>
 
+using System;
+using System.IO;
+using System.Net;
+using System.Runtime.InteropServices;
+using System.Threading;
+
 namespace Conjur
 {
-    using System;
-    using System.IO;
-    using System.Net;
-    using System.Runtime.InteropServices;
-    using System.Threading;
-
     /// <summary>
     /// API key authenticator.
     /// </summary>

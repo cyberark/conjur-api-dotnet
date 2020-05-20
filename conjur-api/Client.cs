@@ -1,27 +1,26 @@
-﻿// <copyright file="Client.cs" company="Conjur Inc.">
+﻿// <copyright file="Client.cs" company="CyberArk Software Ltd.">
 //     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>
 //     Base Conjur client class implementation.
 // </summary>
 
+using System;
+using System.Net;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Text.RegularExpressions;
+
 namespace Conjur
 {
-    using System;
-    using System.Net;
-    using System.Net.Security;
-    using System.Security.Cryptography.X509Certificates;
-    using System.Text;
-    using System.Text.RegularExpressions;
-
     /// <summary>
     /// Conjur API client.
     /// </summary>
     public partial class Client
     {
-        private Uri applianceUri;
-        private string account;
-        private string actingAs;
+        private readonly string account;
+        private readonly string actingAs;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="T:Conjur.Client"/> class.
@@ -31,7 +30,7 @@ namespace Conjur
         public Client(string applianceUri, string account)
         {
             this.account = account;
-            this.applianceUri = NormalizeBaseUri(applianceUri);
+            this.ApplianceUri = NormalizeBaseUri(applianceUri);
             this.TrustedCertificates = new X509Certificate2Collection();
             ServicePointManager.ServerCertificateValidationCallback =
                 new RemoteCertificateValidationCallback(this.ValidateCertificate);
@@ -47,13 +46,7 @@ namespace Conjur
         /// Gets the appliance URI.
         /// </summary>
         /// <value>The appliance URI.</value>
-        public Uri ApplianceUri
-        {
-            get
-            {
-                return this.applianceUri;
-            }
-        }
+        public Uri ApplianceUri { get; }
 
         /// <summary>
         /// Gets or sets the authenticator used to establish Conjur identity.
@@ -69,15 +62,11 @@ namespace Conjur
         /// </summary>
         /// <value>The credential of user name and API key, where user name is
         /// for example "bob" or "host/jenkins".</value>
-        public NetworkCredential Credential
-        {
-            set
-            {
-                this.Authenticator = new ApiKeyAuthenticator(
-                    new Uri(this.applianceUri + "authn"), 
-                    this.GetAccountName(),
+        public NetworkCredential Credential {
+            set => this.Authenticator = new ApiKeyAuthenticator (
+                    new Uri (this.ApplianceUri + "authn"),
+                    this.GetAccountName (),
                     value);
-            }
         }
 
         /// <summary>
@@ -140,7 +129,7 @@ namespace Conjur
         /// <returns>A WebRequest for the specified appliance path.</returns>
         public WebRequest Request(string path)
         {
-            WebRequest reqest = WebRequest.Create(this.applianceUri + path);
+            WebRequest reqest = WebRequest.Create(this.ApplianceUri + path);
             reqest.Timeout = ApiConfigurationManager.GetInstance().HttpRequestTimeout;
             return reqest;
         }

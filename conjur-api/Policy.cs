@@ -1,15 +1,15 @@
-﻿// <copyright file="Policy.cs" company="Conjur Inc.">
+﻿// <copyright file="Policy.cs" company="CyberArk Software Ltd.">
 //     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>
 // Conjur Policy entity
 // </summary>
+using System;
+using System.IO;
+using System.Net;
+
 namespace Conjur
 {
-    using System;
-    using System.IO;
-    using System.Net;
-
     public class Policy : Resource
     {
         private readonly string path;

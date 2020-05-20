@@ -1,14 +1,14 @@
-﻿// <copyright file="User.cs" company="Conjur Inc.">
+﻿// <copyright file="User.cs" company="CyberArk Software Ltd.">
 //     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>
 //     User manipulation routines.
 // </summary>
+using System;
+using System.Collections.Generic;
+
 namespace Conjur
 {
-    using System;
-    using System.Collections.Generic;
-
     /// <summary>
     /// A user represents resource for a human identity.
     /// </summary>

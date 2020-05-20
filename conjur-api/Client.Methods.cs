@@ -1,13 +1,13 @@
-﻿// <copyright file="Client.Methods.cs" company="Conjur Inc.">
+﻿// <copyright file="Client.Methods.cs "company="CyberArk Software Ltd.">
 //     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>
 //     Conjur Client methods delegating to entity-specific classes.
 // </summary>
+using System.Collections.Generic;
+
 namespace Conjur
 {
-    using System.Collections.Generic;
-
     /// <summary>
     /// Entity-specific methods for the Client facade.
     /// </summary>

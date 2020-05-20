@@ -1,18 +1,18 @@
-﻿// <copyright file="Variable.cs" company="Conjur Inc.">
+﻿// <copyright file="Variable.cs" company="CyberArk Software Ltd.">
 //     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>
 //     Variable manipulation routines.
 // </summary>
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Text;
+
 namespace Conjur
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Net;
-    using System.Text;
-
     /// <summary>
     /// Conjur variable reference.
     /// </summary>

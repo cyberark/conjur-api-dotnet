@@ -9,8 +9,8 @@ namespace Conjur.Test
         [Test]
         public void SelfSignedTest()
         {
-            var chain = new X509Chain();
-            var trusted = new X509Certificate2Collection();
+            X509Chain chain = new X509Chain();
+            X509Certificate2Collection trusted = new X509Certificate2Collection();
 
             Assert.IsFalse(chain.Build(Certificates.SelfSigned));
             Assert.IsFalse(chain.VerifyWithExtraRoots(Certificates.SelfSigned, trusted));
@@ -27,8 +27,8 @@ namespace Conjur.Test
         [Test]
         public void SelfSignedRootTest()
         {
-            var chain = new X509Chain();
-            var trusted = new X509Certificate2Collection();
+            X509Chain chain = new X509Chain();
+            X509Certificate2Collection trusted = new X509Certificate2Collection();
             chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
 
             Assert.IsFalse(chain.Build(Certificates.SignedBySelfSigned));

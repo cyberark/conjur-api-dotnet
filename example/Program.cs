@@ -1,11 +1,12 @@
-﻿namespace Example
-{
-    using System;
-    using System.IO;
-    using System.Net;
-    using Conjur;
+﻿using System;
+using System.IO;
+using System.Net;
+using System.Text;
+using Conjur;
 
-    class Program
+namespace Example
+{
+    internal class Program
     {
         // this example shows how to use the Conjur .NET api to
         // login, get a secret value, & check a permission
@@ -31,8 +32,8 @@
             // Instantiate a Conjur Client object.
             //  parameter: applianceUri - conjur appliance URI
             //  return: Client object - if URI is incorrect errors thrown when used
-            string uri = String.Format("https://{0}", applianceName);
-            var conjurClient = new Client(uri, account);
+            string uri = string.Format("https://{0}", applianceName);
+            Client conjurClient = new Client(uri, account);
 
             // If the Conjur root certificate is not in the system trust store,
             // add it as trusted explicitly
@@ -55,7 +56,7 @@
                 Console.WriteLine("Authentication failed. An exception occurred '{0}'", e);
 
                 // to log in with an API key use it directly, ie.
-                var apiKey = password;
+                string apiKey = password;
                 conjurClient.Credential = new NetworkCredential(username, apiKey);
             }
 
@@ -82,7 +83,7 @@
 
             // Instantiate a Variable object
             //               name - the name of the variable
-            var conjurVariable = conjurClient.Variable(variableId);
+            Variable conjurVariable = conjurClient.Variable(variableId);
 
             // Check if the current user has "execute" privilege required to get
             // the value of the variable
@@ -96,7 +97,7 @@
                 }
                 else
                 {
-                    conjurVariable.AddSecret("ExampleValue");
+                    conjurVariable.AddSecret(Encoding.ASCII.GetBytes("ExampleValue"));
 
                     string val = conjurVariable.GetValue();
                     Console.WriteLine("'{0}' has the value: '{1}'", variableId, val);
@@ -115,7 +116,7 @@
                 // This example assumes the host factory token was created through
                 // the UI or CLI and passed to this application. Read more
                 // about HostFactory on developer.conjur.net
-                string hostname = String.Format("exampleHost{0}", System.DateTime.Now.ToString("yyyMMddHHmmss")); 
+                string hostname = string.Format("exampleHost{0}", DateTime.Now.ToString("yyyMMddHHmmss")); 
                 Host host = conjurClient.CreateHost(hostname, token);
                 Console.WriteLine("Created host: {0}, apiKey: {1}", host.Id, host.ApiKey);
 

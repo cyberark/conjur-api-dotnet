@@ -1,15 +1,15 @@
-﻿// <copyright file="UnauthorizedException.cs" company="Conjur Inc.">
-//     Copyright (c) 2016 Conjur Inc. All rights reserved.
+﻿// <copyright file="UnauthorizedException.cs" company="CyberArk Software Ltd.">
+//     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>
 //     Unauthorized exception.
 // </summary>
 
+using System;
+using System.Net;
+
 namespace Conjur
 {
-    using System;
-    using System.Net;
-
     /// <summary>
     /// Exception raised on bad authorization.
     /// </summary>

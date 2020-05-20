@@ -1,14 +1,14 @@
-﻿// <copyright file="ResourceMetadata.cs" company="Conjur Inc.">
+﻿// <copyright file="ResourceMetadata.cs" company="CyberArk Software Ltd.">
 //     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>
 //     Class representing resource metadata returned from web request.
 // </summary>
 
+using System.Runtime.Serialization;
+
 namespace Conjur
 {
-    using System.Runtime.Serialization;
-
     [DataContract]
     public class ResourceMetadata
     {
@@ -66,7 +66,7 @@ namespace Conjur
     [DataContract]
     internal class CountResult
     {
-        [DataMember]
-        public uint count { get; set; }
+        [DataMember (Name = "count")]
+        public uint Count { get; set; }
     }
 }

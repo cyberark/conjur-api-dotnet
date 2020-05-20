@@ -7,7 +7,7 @@ namespace Conjur.Test
 {
     public class AuthenticatorTest : Base
     {
-        static protected readonly NetworkCredential credential = new NetworkCredential("username", "api-key");
+        protected static readonly NetworkCredential credential = new NetworkCredential("username", "api-key");
 
         protected ApiKeyAuthenticator Authenticator;
         
