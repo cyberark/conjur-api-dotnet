@@ -58,18 +58,36 @@ namespace Conjur.Test
             public override Uri RequestUri => uri;
 
             public override string Method {
-                get => this.method;
-                set => this.method = value;
+                get
+                {
+                    return this.method;
+                }
+                set
+                {
+                    this.method = value;
+                }
             }
 
             public override bool PreAuthenticate {
-                get => base.PreAuthenticate;
-                set => base.PreAuthenticate = value;
+                get
+                {
+                   return base.PreAuthenticate;
+                }
+                set
+                {
+                    base.PreAuthenticate = value;
+                }
             }
 
             public override ICredentials Credentials {
-                get => credentials;
-                set => credentials = value;
+                get
+                {
+                    return credentials;
+                }
+                set
+                {
+                    credentials = value;
+                }
             }
 
             public Action<WebRequest> Verifier;

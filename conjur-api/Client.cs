@@ -63,10 +63,12 @@ namespace Conjur
         /// <value>The credential of user name and API key, where user name is
         /// for example "bob" or "host/jenkins".</value>
         public NetworkCredential Credential {
-            set => this.Authenticator = new ApiKeyAuthenticator (
-                    new Uri (this.ApplianceUri + "authn"),
-                    this.GetAccountName (),
-                    value);
+            set {
+                this.Authenticator = new ApiKeyAuthenticator (
+                  new Uri (this.ApplianceUri + "authn"),
+                  this.GetAccountName (),
+                  value);
+            }
         }
 
         /// <summary>

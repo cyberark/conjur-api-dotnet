@@ -46,7 +46,9 @@ namespace Conjur
                 }
                 return httpRequestTimeout.Value;
             }
-            set => httpRequestTimeout = value;
+            set {
+                httpRequestTimeout = value;
+            }
         }
 
         private uint? tokenRefreshTimeout = null;
@@ -70,7 +72,9 @@ namespace Conjur
                 }
                 return tokenRefreshTimeout.Value;
             }
-            set => tokenRefreshTimeout = value;
+            set {
+                tokenRefreshTimeout = value;
+            }
         }
 
         private class Nested
