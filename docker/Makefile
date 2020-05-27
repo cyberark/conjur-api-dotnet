@@ -9,8 +9,8 @@ TAG := ${REPO}:$(shell date -u +%Y%m%dT%H%M%SZ)
 
 tag: $(FILES)
 	docker build -t ${TAG} .
-	docker tag ${TAG} ${REPO}
 	echo ${TAG} > tag
+	docker tag -f ${TAG} ${REPO}
 
 .PHONY: rebuild push
 rebuild: tag

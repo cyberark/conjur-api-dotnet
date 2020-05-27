@@ -1,5 +1,3 @@
-using System;
-
 namespace Conjur.Test
 {
     public class MockAuthenticator : IAuthenticator

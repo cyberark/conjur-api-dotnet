@@ -1,15 +1,15 @@
-﻿// <copyright file="JsonSerializer.cs" company="Conjur Inc.">
-//     Copyright (c) 2016 Conjur Inc. All rights reserved.
+﻿// <copyright file="JsonSerializer.cs" company="CyberArk Software Ltd.">
+//     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>
 // JSON utilities.
 // </summary>
 
+using System.Net;
+using System.Runtime.Serialization.Json;
+
 namespace Conjur
 {
-    using System.Net;
-    using System.Runtime.Serialization.Json;
-
     internal static class JsonSerializer<T> where T : class
     {
         // Analysis disable once StaticFieldInGenericType
@@ -19,8 +19,9 @@ namespace Conjur
 
         public static T Read(WebRequest request)
         {
-            using (var stream = request.GetResponse().GetResponseStream())
+            using (System.IO.Stream stream = request.GetResponse().GetResponseStream()) {
                 return Instance.ReadObject(stream) as T;
+            }
         }
     }
 }

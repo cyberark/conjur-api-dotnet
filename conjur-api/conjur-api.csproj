@@ -31,11 +31,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Json">
-      <HintPath>..\System.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Configuration" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -43,7 +41,6 @@
     <Compile Include="IAuthenticator.cs" />
     <Compile Include="ApiKeyAuthenticator.cs" />
     <Compile Include="Variable.cs" />
-    <Compile Include="User.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Host.cs" />
     <Compile Include="JsonSerializer.cs" />
@@ -52,7 +49,10 @@
     <Compile Include="Resource.cs" />
     <Compile Include="Client.Methods.cs" />
     <Compile Include="ResourceMetadata.cs" />
-    <Compile Include="Role.cs" />
+    <Compile Include="User.cs" />
+    <Compile Include="Constants.cs" />
+    <Compile Include="Policy.cs" />        
+    <Compile Include="ApiConfigurationManager.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

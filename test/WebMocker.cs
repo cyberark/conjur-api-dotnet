@@ -30,8 +30,10 @@ namespace Conjur.Test
 
         public WebRequest Create(Uri uri)
         {
-            if (!responses.ContainsKey(uri))
+            if (!responses.ContainsKey(uri)) {
                 throw new KeyNotFoundException(uri.ToString());
+            }
+
             return responses[uri];
         }
 
@@ -40,40 +42,22 @@ namespace Conjur.Test
         public class MockRequest : WebRequest
         {
             private readonly string content;
-            private string contentType;
             private string method = "GET";
             private ICredentials credentials;
-            private Uri uri;
-            MemoryStream requestStream;
+            private readonly Uri uri;
+            private MemoryStream requestStream;
 
-            public override WebHeaderCollection Headers
-            {
-                get;
-                set;
-            }
+            public override WebHeaderCollection Headers { get; set; }
 
-            public override string ContentType
-            {
-                get
-                {
-                    return this.contentType;
-                }
-                set
-                {
-                    this.contentType = value;
-                }
-            }
+            public override string ContentType { get; set; }
 
-            public override Uri RequestUri
-            {
-                get
-                {
-                    return uri;
-                }
-            }
+            public override long ContentLength { get; set; }
 
-            public override string Method
-            {
+            public override int Timeout { get; set; }
+
+            public override Uri RequestUri => uri;
+
+            public override string Method {
                 get
                 {
                     return this.method;
@@ -84,19 +68,18 @@ namespace Conjur.Test
                 }
             }
 
-            public override bool PreAuthenticate
-            {
+            public override bool PreAuthenticate {
                 get
                 {
-                    return base.PreAuthenticate;
+                   return base.PreAuthenticate;
                 }
                 set
                 {
+                    base.PreAuthenticate = value;
                 }
             }
 
-            public override ICredentials Credentials
-            {
+            public override ICredentials Credentials {
                 get
                 {
                     return credentials;
@@ -118,8 +101,7 @@ namespace Conjur.Test
 
             public override WebResponse GetResponse()
             {
-                if (Verifier != null)
-                    Verifier(this);
+                Verifier?.Invoke (this);
                 return new MockResponse(this.content);
             }
 
@@ -128,13 +110,7 @@ namespace Conjur.Test
                 return requestStream = new MemoryStream();
             }
 
-            public string Body
-            {
-                get
-                {
-                    return Encoding.UTF8.GetString(requestStream.ToArray());
-                }
-            }
+            public string Body => Encoding.UTF8.GetString (requestStream.ToArray ());
         }
 
         public class MockResponse : WebResponse
@@ -146,7 +122,7 @@ namespace Conjur.Test
                 this.content = content;
             }
 
-            public override System.IO.Stream GetResponseStream()
+            public override Stream GetResponseStream ()
             {
                 return new MemoryStream(Encoding.UTF8.GetBytes(content));
             }
@@ -168,13 +144,13 @@ namespace Conjur.Test
                 this.Code = code;
             }
 
-            new static string Message(HttpStatusCode code, string message)
+            private static new string Message(HttpStatusCode code, string message)
             {
                 return "The remote server returned an error: (" + (int)code + ") "
                 + message;
             }
 
-            new private static HttpWebResponse Response(HttpStatusCode code, string description)
+            private static new HttpWebResponse Response(HttpStatusCode code, string description)
             {
                 // HACK: there is no public way of creating an HttpWebResponse, but
                 // we use it to get to the status code. So synthesize one using

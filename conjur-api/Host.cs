@@ -1,16 +1,16 @@
-// <copyright file="Host.cs" company="Conjur Inc.">
-//     Copyright (c) 2016 Conjur Inc. All rights reserved.
+// <copyright file="Host.cs" company="CyberArk Software Ltd.">
+//     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>
 //     Host objects.
 // </summary>
 
+using System;
+using System.Net;
+using System.Runtime.Serialization;
+
 namespace Conjur
 {
-    using System;
-    using System.Net;
-    using System.Runtime.Serialization;
-
     /// <summary>
     /// Conjur host resource and role.
     /// </summary>
@@ -35,37 +35,19 @@ namespace Conjur
         /// Gets the identifier.
         /// </summary>
         /// <value>The identifier.</value>
-        public string Id
-        {
-            get
-            {
-                return this.id;
-            }
-        }
+        public string Id => this.id;
 
         /// <summary>
         /// Gets the API key.
         /// </summary>
         /// <value>The API key, or null if unknown.</value>
-        public string ApiKey
-        {
-            get
-            {
-                return this.api_key;
-            }
-        }
+        public string ApiKey => this.api_key;
 
         /// <summary>
         /// Gets the authn username corresponding to the host.
         /// </summary>
         /// <value>The authn username.</value>
-        public string UserName
-        {
-            get
-            {
-                return "host/" + this.id;
-            }
-        }
+        public string UserName => "host/" + this.id;
 
         /// <summary>
         /// Gets the credential.
@@ -78,9 +60,10 @@ namespace Conjur
             {
                 if (this.credential == null)
                 {
-                    if (this.ApiKey == null)
+                    if (this.ApiKey == null) {
                         throw new InvalidOperationException("Unknown host API key");
-                    
+                    }
+
                     this.credential = new NetworkCredential(
                         this.UserName, this.ApiKey);
                 }
