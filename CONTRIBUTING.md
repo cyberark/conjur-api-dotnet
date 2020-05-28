@@ -2,7 +2,29 @@
 
 For general contribution and community guidelines, please see the [community repo](https://github.com/cyberark/community).
 
-## Contributing
+## Table of Contents
+
+- [Development](#development)
+- [Testing](#testing)
+- [Releases](#releases)
+- [Contributing](#contributing-workflow)
+
+## Development
+
+- Visual Studio 2015
+- Use C#6 syntax
+   - C#7 syntax is not supported
+
+## Testing
+
+- Tests are stored in `test/`
+- WebMocker.cs is used to mock web requests
+
+## Releases
+
+Manual releases
+
+## Contributing Workflow
 
 1. [Fork the project](https://help.github.com/en/github/getting-started-with-github/fork-a-repo)
 2. [Clone your fork](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository)
@@ -12,5 +34,4 @@ For general contribution and community guidelines, please see the [community rep
 5. [Create new Pull Request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork)
 
 From here your pull request will be reviewed and once you've responded to all
-feedback it will be merged into the project. Congratulations, you're a
-contributor!
+feedback it will be merged into the project. Congratulations, you're a contributor!
