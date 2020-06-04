@@ -15,9 +15,9 @@ invoking our Conjur API to perform operations on stored data (add, retrieve, etc
 
 ## Requirements
 
-Ensure your Conjur/DAP version use the [V5 API](https://docs.conjur.org/latest/en/Content/Developer/lp_REST_API.htm?tocpath=Developer%7CREST%C2%A0APIs%7C_____0#rest-api).
+- DAP v10+ or Conjur OSS v1+
 
-For V4, use the [V4 branch](https://github.com/cyberark/conjur-api-dotnet/tree/v4)
+For Conjur Enterprise V4, use the [V4 branch](https://github.com/cyberark/conjur-api-dotnet/tree/v4)
 
 ## Building
 
