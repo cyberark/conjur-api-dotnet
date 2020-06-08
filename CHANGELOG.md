@@ -5,14 +5,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-### Removed
-- Conjur V4 API support
 
 ### Added
 - Conjur V5 API support
 - Ability to control "limit" and "offset" for `ListUsers()` and `ListVariables()`
-- More README detail
-- More CONTRIBUTING detail
+
+### Removed
+- Conjur V4 API support
 
 ## [1.4.0] - 2018-07-05
 ### Added
