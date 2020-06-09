@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.0.0] - 2020-06-10
 ### Added
 - Conjur V5 API support
 - Ability to control "limit" and "offset" for `ListUsers()` and `ListVariables()`
@@ -35,7 +36,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - `Variable.AddValue()` method for adding variable values.
 
-[Unreleased]: https://github.com/cyberark/conjur-api-dotnet/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/cyberark/conjur-api-dotnet/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/cyberark/conjur-api-dotnet/compare/v1.4.0...v2.0.0
 [1.4.0]: https://github.com/cyberark/conjur-api-dotnet/compare/v1.3.0...v1.4.0
 [1.1.1]: https://github.com/cyberark/conjur-api-dotnet/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/cyberark/conjur-api-dotnet/releases/tag/v1.1.0
