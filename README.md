@@ -6,12 +6,24 @@ invoking our Conjur API to perform operations on stored data (add, retrieve, etc
 
 ## Table of Contents
 
+- [Using this Project With Conjur OSS](#Using-conjur-api-dotnet-with-Conjur-OSS)
 - [Requirements](#requirements)
 - [Building](#building)
 - [Methods](#methods)
 - [Example](#example)
 - [Contributing](#contributing)
 - [License](#license)
+
+## Using conjur-api-dotnet with Conjur OSS 
+
+Are you using this project with [Conjur OSS](https://github.com/cyberark/conjur)? Then we 
+**strongly** recommend choosing the version of this project to use from the latest [Conjur OSS 
+suite release](https://docs.conjur.org/Latest/en/Content/Overview/Conjur-OSS-Suite-Overview.html). 
+Conjur maintainers perform additional testing on the suite release versions to ensure 
+compatibility. When possible, upgrade your Conjur version to match the 
+[latest suite release](https://docs.conjur.org/Latest/en/Content/ReleaseNotes/ConjurOSS-suite-RN.htm); 
+when using integrations, choose the latest suite release that matches your Conjur version. For any 
+questions, please contact us on [Discourse](https://discuss.cyberarkcommons.org/c/conjur/5).
 
 ## Requirements
 
