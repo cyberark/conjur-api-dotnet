@@ -117,8 +117,7 @@ Optionally, to build in a Docker container, it is recommended to use Mono and xb
     //  parameter: URI - conjur appliance URI
     //  parameter: ACCOUNT - conjur account name
     //  return: Client object - if URI is incorrect errors thrown when used
-    Uri uri = new Uri("https://myorg.com");
-    Client conjurClient = new Client(uri, account);
+    Client conjurClient = new Client("https://myorg.com", account);
 
     // Login with Conjur credentials like userid and password,
     // or hostid and api_key, etc
