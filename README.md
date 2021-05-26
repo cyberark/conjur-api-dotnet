@@ -171,11 +171,11 @@ Usage: Example  <applianceURL>
                 <hostFactoryToken>
 ```
 
-`applianceURL`: the applianceURL e.g. `https://conjurmaster.myorg.com/`
+`applianceURL`: the applianceURL e.g. `https://conjur.myorg.com/`
 
 `applianceCertificatePath`: the path and name of the Conjur appliance
  certificate. The easiest way to get the certifiate is to use the Conjur 
-CLI command `conjur init -u conjurmaster.myorg.com -f .conjurrc`. The certificate can be taken from any system you have run the Conjur CLI from.
+CLI command `conjur init -u conjur.myorg.com -f .conjurrc`. The certificate can be taken from any system you have run the Conjur CLI from.
 
 `accountName`: The name of the account in Conjur.
 
@@ -197,7 +197,7 @@ and pass it as the hostFactoryToken parameter to this example.
 
 We welcome contributions of all kinds to this repository. For instructions on
  how to get started and descriptions
-of our development workflows, please see our [contributing guide](https://github.com/cyberark/conjur-api-dotnet/blob/master/CONTRIBUTING.md).
+of our development workflows, please see our [contributing guide](https://github.com/cyberark/conjur-api-dotnet/blob/main/CONTRIBUTING.md).
 
 ## License
 
