@@ -1,12 +1,12 @@
 # Conjur API for .NET
 
-Programmatic .NET access to [Conjur](https://conjur.org) (for both Conjur OSS and Enterprise/DAP versions).
+Programmatic .NET access to [Conjur](https://conjur.org) (for both Conjur Open Source and Enterprise/DAP versions).
 This .NET SDK allows developers to build new apps in .NET that communicate with Conjur by
 invoking our Conjur API to perform operations on stored data (add, retrieve, etc)
 
 ## Table of Contents
 
-- [Using this Project With Conjur OSS](#Using-conjur-api-dotnet-with-Conjur-OSS)
+- [Using this Project With Conjur Open Source](#Using-conjur-api-dotnet-with-Conjur-Open-Source)
 - [Requirements](#requirements)
 - [Building](#building)
 - [Methods](#methods)
@@ -14,9 +14,9 @@ invoking our Conjur API to perform operations on stored data (add, retrieve, etc
 - [Contributing](#contributing)
 - [License](#license)
 
-## Using conjur-api-dotnet with Conjur OSS 
+## Using conjur-api-dotnet with Conjur Open Source 
 
-Are you using this project with [Conjur OSS](https://github.com/cyberark/conjur)? Then we 
+Are you using this project with [Conjur Open Source](https://github.com/cyberark/conjur)? Then we 
 **strongly** recommend choosing the version of this project to use from the latest [Conjur OSS 
 suite release](https://docs.conjur.org/Latest/en/Content/Overview/Conjur-OSS-Suite-Overview.html). 
 Conjur maintainers perform additional testing on the suite release versions to ensure 
@@ -27,7 +27,7 @@ questions, please contact us on [Discourse](https://discuss.cyberarkcommons.org/
 
 ## Requirements
 
-- DAP v10+ or Conjur OSS v1+
+- Conjur Enterprise (formerly DAP) v10+ or Conjur Open Source v1+
 
 For Conjur Enterprise V4, use the [V4 branch](https://github.com/cyberark/conjur-api-dotnet/tree/v4)
 
