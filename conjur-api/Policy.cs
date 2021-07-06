@@ -29,14 +29,14 @@ namespace Conjur
 
         /// <summary>
         /// Loading a Conjur policy MAML stream structure
-        /// into given policy name, over REST POST request.
+        /// into given policy name, over REST request. By default POST request
         /// </summary>
         /// <param name="policyContent">Stream valid MAML Conjur policy strature.</param>
         /// <returns>Policy creation response as a stream.</returns>
-        public Stream LoadPolicy(Stream policyContent)
+        public Stream LoadPolicy(Stream policyContent, String method = WebRequestMethods.Http.Post)
         {
             WebRequest loadPolicyRequest = Client.AuthenticatedRequest(this.path);
-            loadPolicyRequest.Method = WebRequestMethods.Http.Post;
+            loadPolicyRequest.Method = method;
             loadPolicyRequest.ContentLength = policyContent.Length;
 
             policyContent.Seek(0, SeekOrigin.Begin);
