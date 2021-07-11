@@ -33,11 +33,13 @@ pipeline {
       }
     }
 
-    stage('Build and test package') {
-      def GIT_COMMIT_HASH = sh(script: "git rev-parse --short=8 HEAD", returnStdout: true).trim()
-      def ARTIFACT_REMOTE_DIRECTORY = "${env.BRANCH_NAME}_${GIT_COMMIT_HASH}"
+    stage('Build and test package') {      
       steps {
-        sh "summon -e pipeline ./build.sh ${ARTIFACT_REMOTE_DIRECTORY}"
+        script {
+          GIT_COMMIT_HASH = sh(script: "git rev-parse --short=8 HEAD", returnStdout: true).trim()
+          ARTIFACT_REMOTE_DIRECTORY = "${env.BRANCH_NAME}_${GIT_COMMIT_HASH}"
+          sh "summon -e pipeline ./build.sh ${ARTIFACT_REMOTE_DIRECTORY}"
+        }
         step([$class: 'XUnitBuilder',
           tools: [[$class: 'NUnitJunitHudsonTestType', pattern: 'TestResult.xml']]])
         archiveArtifacts artifacts: 'bin/*', fingerprint: true
