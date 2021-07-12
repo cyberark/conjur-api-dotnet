@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <package >
   <metadata>
-    <id>conjur-api</id>
+    <id>conjur-api-dotnet</id>
     <version>$version$</version>
-    <title>conjur-api</title>
+    <title>conjur-api-dotnet</title>
     <authors>CyberArk Software Ltd</authors>
     <owners>CyberArk Software Ltd</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>

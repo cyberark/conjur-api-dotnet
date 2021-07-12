@@ -35,9 +35,8 @@ pipeline {
 
     stage('Build and test package') {      
       steps {
-        script {
-          GIT_COMMIT_HASH = sh(script: "git rev-parse --short=8 HEAD", returnStdout: true).trim()
-          ARTIFACT_REMOTE_DIRECTORY = "${env.BRANCH_NAME}_${GIT_COMMIT_HASH}"
+        script {          
+          ARTIFACT_REMOTE_DIRECTORY = "${env.BUILD_NUMBER}-${env.BRANCH_NAME.replace('/','-')}"
           sh "summon -e pipeline ./build.sh ${ARTIFACT_REMOTE_DIRECTORY}"
         }
         step([$class: 'XUnitBuilder',
