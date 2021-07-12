@@ -12,8 +12,7 @@ trap finish EXIT
 TAG=`cat docker/tag`
 
 CIDFILE=`mktemp -u`
-REMOTE_REPO_VERSION=$1
-docker run -v $PWD:/src:ro --cidfile=$CIDFILE $TAG $REMOTE_REPO_VERSION
+docker run -v $PWD:/src:ro --cidfile=$CIDFILE  -e version=$1 -e WRITE_ARTIFACTORY_USERNAME -e WRITE_ARTIFACTORY_PASSWORD $TAG
 
 CID=`cat $CIDFILE`
 
