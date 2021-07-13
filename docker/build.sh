@@ -9,7 +9,7 @@ nuget restore
 
 # test
 xbuild
-#nunit-console test/test.csproj #TODO! available versions for nunit-console are too old for project tests. 
+nunit-console test/test.csproj
 
 # build
 cd conjur-api
@@ -18,4 +18,4 @@ xbuild \
   /property:KeyOriginatorFile=/src/conjur-sn.pub \
   /property:configuration=Release
 
-/src/docker/nuget.sh
+../docker/nuget.sh
