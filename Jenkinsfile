@@ -36,7 +36,7 @@ pipeline {
     stage('Build and test package') {      
       steps {
         script {          
-          ARTIFACT_REMOTE_DIRECTORY = "${env.BUILD_NUMBER}-${env.BRANCH_NAME.replace('/','-')}"
+          ARTIFACT_REMOTE_DIRECTORY = "${env.BUILD_NUMBER}.0.0-${env.BRANCH_NAME.replace('/','-')}"
           sh "summon -e pipeline ./build.sh ${ARTIFACT_REMOTE_DIRECTORY}"
         }
         step([$class: 'XUnitBuilder',
