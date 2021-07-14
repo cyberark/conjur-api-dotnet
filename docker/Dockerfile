@@ -7,7 +7,6 @@ RUN echo 'deb http://download.opensuse.org/repositories/home:/dividedmind:/conju
 
 RUN apt-get update -y
 RUN apt-get install -y nunit-console git osslsigncode
-
 RUN ln -s /src/docker/build.sh /
 CMD /build.sh
 
