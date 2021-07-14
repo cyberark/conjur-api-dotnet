@@ -9,7 +9,7 @@ nuget restore
 
 # test
 xbuild
-nunit-console test/test.csproj
+#nunit-console test/test.csproj
 
 # build
 cd conjur-api
