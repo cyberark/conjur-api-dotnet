@@ -9,11 +9,11 @@ RUN echo 'deb http://download.opensuse.org/repositories:/dividedmind:/conjur/Deb
 
 RUN apt-get install -y nunit-console git osslsigncode
 
-#ENV NUNIT_VERSION 3.0.1
-#RUN nuget install NUnit.ConsoleRunner -o /tmp/nunit -version $NUNIT_VERSION && \
-#    cp -r /tmp/nunit/NUnit.ConsoleRunner.$NUNIT_VERSION/tools/ /nunit/
-#RUN echo '#!/bin/bash\nmono /nunit/nunit3-console.exe "$@"' > /usr/bin/nunit-console && \
-#    chmod +x /usr/bin/nunit-console
+ENV NUNIT_VERSION 3.0.1
+RUN nuget install NUnit.Console -o /tmp/nunit -version $NUNIT_VERSION && \
+    cp -r /tmp/nunit/NUnit.Console.$NUNIT_VERSION/tools/ /nunit/
+RUN echo '#!/bin/bash\nmono /nunit/nunit3-console.exe "$@"' > /usr/bin/nunit-console && \
+    chmod +x /usr/bin/nunit-console
 
 RUN ln -s /src/docker/build.sh /
 CMD /build.sh
