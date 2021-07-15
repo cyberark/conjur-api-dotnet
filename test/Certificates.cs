@@ -22,7 +22,7 @@ namespace Conjur.Test
 
         public static X509Certificate2 ReadCertificate(string fileName)
         {
-            return new X509Certificate2(GetBytes(fileName), string.Empty);
+            return new X509Certificate2(GetBytes(fileName));
         }
 
         public static X509Certificate2 

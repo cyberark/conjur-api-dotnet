@@ -7,6 +7,7 @@ namespace Conjur.Test
     public class CertificateVerificationTest
     {
         [Test]
+        [Ignore("Doesn't test project code")]
         public void SelfSignedTest()
         {
             X509Chain chain = new X509Chain();
@@ -25,6 +26,7 @@ namespace Conjur.Test
         }
 
         [Test]
+        [Ignore("Doesn't test project code")]
         public void SelfSignedRootTest()
         {
             X509Chain chain = new X509Chain();

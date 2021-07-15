@@ -33,7 +33,7 @@ pipeline {
       }
     }
 
-    stage('Build and test package') {      
+    stage('Build and test package') {
       steps {
         script {          
           ARTIFACT_REMOTE_DIRECTORY = "${env.BUILD_NUMBER}.0.0-${env.BRANCH_NAME.replace('/','-')}"
