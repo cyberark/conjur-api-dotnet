@@ -33,7 +33,7 @@ namespace Conjur
         /// </summary>
         /// <param name="policyContent">Stream valid MAML Conjur policy strature.</param>
         /// <returns>Policy creation response as a stream.</returns>
-        public Stream LoadPolicy(Stream policyContent, String method = WebRequestMethods.Http.Post)
+        public Stream LoadPolicy(Stream policyContent, string method = WebRequestMethods.Http.Post)
         {
             WebRequest loadPolicyRequest = Client.AuthenticatedRequest(this.path);
             loadPolicyRequest.Method = method;

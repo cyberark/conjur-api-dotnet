@@ -9,6 +9,7 @@ RUN echo 'deb http://download.opensuse.org/repositories/home:/dividedmind:/conju
 
 RUN apt-get install -y nunit-console git osslsigncode
 
+# Install nuget-console of version 3.X.X as apt-get only has up to 2.X.X version
 ENV NUNIT_VERSION 3.0.1
 RUN nuget install NUnit.Console -o /tmp/nunit -version $NUNIT_VERSION && \
     cp -r /tmp/nunit/NUnit.Console.$NUNIT_VERSION/tools/ /nunit/
