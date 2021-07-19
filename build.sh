@@ -12,7 +12,7 @@ trap finish EXIT
 TAG=`cat docker/tag`
 
 CIDFILE=`mktemp -u`
-docker run -v $PWD:/src:ro --cidfile=$CIDFILE  -e version=$1 -e WRITE_ARTIFACTORY_USERNAME -e WRITE_ARTIFACTORY_PASSWORD $TAG
+docker run -v $PWD:/src:ro --cidfile=$CIDFILE  -e build_name=$1 -e WRITE_ARTIFACTORY_USERNAME -e WRITE_ARTIFACTORY_PASSWORD $TAG
 
 CID=`cat $CIDFILE`
 
