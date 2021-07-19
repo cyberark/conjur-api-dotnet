@@ -17,3 +17,5 @@ xbuild \
   /property:DelaySign=true \
   /property:KeyOriginatorFile=/src/conjur-sn.pub \
   /property:configuration=Release
+
+../docker/nuget.sh
