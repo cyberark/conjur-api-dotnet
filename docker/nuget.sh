@@ -1,6 +1,6 @@
 mkdir nugetPackages
 
-version=`ikdasm -assembly bin/Release/conjur-api.dll | grep -E Version | sed -n -r 's@^Version:\s+([[:digit:]]+\.[[:digit:]]+)\..*@\1@p'` || '0.0'
+version=`ikdasm -assembly bin/Release/conjur-api.dll | grep -E Version | sed -n -r 's@^Version:\s+([[:digit:]]+\.[[:digit:]]+)\..*@\1@p'`
 nuget pack ./conjur-api.nuspec -Properties configuration="Release" -Properties platform="Any CPU" \
           -OutputDirectory ./nugetPackages -Version "${version:-0.0}.${build_name}" -Verbosity detailed
 
