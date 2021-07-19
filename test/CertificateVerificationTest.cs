@@ -3,11 +3,10 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Conjur.Test
 {
-    [TestFixture]
-    [Ignore("Doesn't test project code")]
+    [TestFixture]    
     public class CertificateVerificationTest
     {
-        [Test]        
+        [Test]
         public void SelfSignedTest()
         {
             X509Chain chain = new X509Chain();
@@ -25,7 +24,7 @@ namespace Conjur.Test
             Assert.IsFalse(chain.Build(Certificates.SelfSigned));
         }
 
-        [Test]        
+        [Test]
         public void SelfSignedRootTest()
         {
             X509Chain chain = new X509Chain();
@@ -38,6 +37,7 @@ namespace Conjur.Test
             trusted.Add(Certificates.SelfSigned);
             Assert.IsTrue(chain.VerifyWithExtraRoots(Certificates.SignedBySelfSigned, trusted));
             Assert.IsFalse(chain.Build(Certificates.SignedBySelfSigned));
+            
 
             trusted.Clear();
             Assert.IsFalse(chain.VerifyWithExtraRoots(Certificates.SignedBySelfSigned, trusted));
