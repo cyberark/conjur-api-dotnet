@@ -28,6 +28,7 @@ pipeline {
           if [ -z `docker images -q $TAG` ]; then
             # the image is not present, so pull or build
             docker pull $TAG || make -C docker rebuild
+            make -C docker push
           fi
         '''
       }
