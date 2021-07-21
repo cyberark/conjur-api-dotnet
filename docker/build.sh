@@ -13,9 +13,8 @@ nunit-console test/test.csproj
 
 # build
 cd conjur-api
-xbuild \
-  /property:DelaySign=true \
-  /property:KeyOriginatorFile=/src/conjur-sn.pub \
-  /property:configuration=Release
+msbuild api-dotnet.sln /t:build /p:Configuration="Release" /p:Platform="Any CPU" /p:SkipInvalidConfigurations=true /m \
+  /p:BuildInParallel=true /p:AllowUntrustedCertificate=False /p:CreatePackageOnPublish=False /p:DeployOnBuild=False \
+   /p:GenerateVSPropsFile=True /p:NodeReuse=False /p:RunCodeAnalysis=AsConfigured /p:ToolPlatform=Auto /p:Verbosity=Normal
 
 ../docker/nuget.sh
