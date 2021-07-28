@@ -7,7 +7,7 @@ ADD dividedmind.pub /tmp
 RUN apt-key add - < /tmp/dividedmind.pub && rm /tmp/dividedmind.pub
 RUN echo 'deb http://download.opensuse.org/repositories/home:/dividedmind:/conjur/Debian_7.0/ /' >> /etc/apt/sources.list.d/dividedmind.list
 
-RUN apt-get install -y nunit-console git osslsigncode
+RUN apt-get install -y git osslsigncode
 
 # Install nuget-console of version 3.X.X as apt-get only has up to 2.X.X version
 ENV NUNIT_VERSION 3.0.1

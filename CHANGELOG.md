@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added
-- Add parameter to the function `Policy::LoadPolicy()` to allow a different load method other than POST. POST is still the default value
+- Add parameter to the function `Policy::LoadPolicy()` to allow a different load method other than POST. POST being the default value. Currently Conjur supports POST, PUT and PATCH
 
 ## [2.0.0] - 2020-06-10
 ### Added
