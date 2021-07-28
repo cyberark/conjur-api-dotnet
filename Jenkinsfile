@@ -35,7 +35,10 @@ pipeline {
 
     stage('Build and test package') {
       steps {
-        sh './build.sh'
+        script {          
+          BUILD_NAME = "${env.BUILD_NUMBER}-${env.BRANCH_NAME.replace('/','-')}"
+          sh "summon -e pipeline ./build.sh ${BUILD_NAME}"
+        }
         step([$class: 'XUnitBuilder',
           tools: [[$class: 'NUnitJunitHudsonTestType', pattern: 'TestResult.xml']]])
         archiveArtifacts artifacts: 'bin/*', fingerprint: true
