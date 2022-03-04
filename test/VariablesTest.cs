@@ -35,7 +35,7 @@ namespace Conjur.Test
             {
                 MockRequest req = wr as WebMocker.MockRequest;
                 Assert.AreEqual(WebRequestMethods.Http.Post, wr.Method);
-                Assert.AreEqual("text\\plain", wr.ContentType);
+                Assert.AreEqual("text/plain", wr.ContentType);
                 Assert.AreEqual(testValue, req.Body);
             };
             Client.Variable("foobar").AddSecret(Encoding.UTF8.GetBytes(testValue));

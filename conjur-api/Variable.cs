@@ -62,7 +62,7 @@ namespace Conjur
                 (webRequest as HttpWebRequest).AllowWriteStreamBuffering = false;
             }
 
-            webRequest.ContentType = "text\\plain";
+            webRequest.ContentType = "text/plain";
             webRequest.ContentLength = val.Length;
             using (Stream requestStream = webRequest.GetRequestStream())
             {

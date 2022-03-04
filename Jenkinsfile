@@ -39,7 +39,7 @@ pipeline {
           BUILD_NAME = "${env.BUILD_NUMBER}-${env.BRANCH_NAME.replace('/','-')}"
           sh "summon -e pipeline ./build.sh ${BUILD_NAME}"
         }
-        step([$class: 'XUnitBuilder',
+        step([$class: 'XUnitPublisher',
           tools: [[$class: 'NUnitJunitHudsonTestType', pattern: 'TestResult.xml']]])
         archiveArtifacts artifacts: 'bin/*', fingerprint: true
       }
