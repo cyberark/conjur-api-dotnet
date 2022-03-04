@@ -8,6 +8,10 @@ pipeline {
     buildDiscarder(logRotator(numToKeepStr: '30'))
   }
 
+  triggers {
+    cron(getDailyCronString())
+  }
+
   stages {
     stage('Validate') {
       parallel {
@@ -16,7 +20,7 @@ pipeline {
         }
       }
     }
-    
+
     stage('Prepare build environment') {
       steps {
         sh '''
@@ -35,7 +39,7 @@ pipeline {
 
     stage('Build and test package') {
       steps {
-        script {          
+        script {
           BUILD_NAME = "${env.BUILD_NUMBER}-${env.BRANCH_NAME.replace('/','-')}"
           sh "summon -e pipeline ./build.sh ${BUILD_NAME}"
         }
@@ -45,7 +49,7 @@ pipeline {
       }
     }
   }
-  
+
   post {
     always {
       cleanupAndNotify(currentBuild.currentResult)
