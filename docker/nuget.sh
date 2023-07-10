@@ -9,4 +9,7 @@ nuget sources add -Name "conjur-api-dotnet" -Source "https://conjurinc.jfrog.io/
 
 nuget push ./nugetPackages/* -Source "conjur-api-dotnet" -Verbosity detailed
 
+nuget setApiKey $NUGET_API_KEY
+nuget push ./nugetPackages/* -Source "https://api.nuget.org/v3/index.json" -Verbosity detailed
+
 rm -rf nugetPackages
