@@ -3,7 +3,7 @@
 # As long as tag is committed in the repo, the corresponding image can be
 # pushed to dockerhub and then pulled when necessary.
 
-FILES = Dockerfile packages.config
+FILES = Dockerfile
 REPO = conjurinc/dotnet-build
 TAG := ${REPO}:$(shell date -u +%Y%m%dT%H%M%SZ)
 

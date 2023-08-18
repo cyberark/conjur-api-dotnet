@@ -9,7 +9,7 @@
     <Company>CyberArk Software Ltd.</Company>
     <Product>Conjur .NET API</Product>
     <Copyright>%28c%29 CyberArk Software Ltd.</Copyright>
-    <AssemblyVersion>2.1.%2a</AssemblyVersion>
+    <AssemblyVersion>3.0.0</AssemblyVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>bin\Debug</OutputPath>

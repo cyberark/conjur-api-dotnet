@@ -1,19 +1,17 @@
 #!/bin/sh -xe
 
 cp -a /src /build
+git config --global --add safe.directory /build
 cd /build
 git clean -fdx || :
 
-cp -a /packages .
-nuget restore
+dotnet restore
 
 # test
-xbuild
-nunit-console test/test.csproj
+dotnet build
+dotnet test --logger:"junit;LogFileName=/build/TestResults.xml"
 
 # build
-msbuild api-dotnet.sln /t:build /p:Configuration="Release" /p:Platform="Any CPU" /p:SkipInvalidConfigurations=true /m \
-  /p:BuildInParallel=true /p:AllowUntrustedCertificate=False /p:CreatePackageOnPublish=False /p:DeployOnBuild=False \
-   /p:GenerateVSPropsFile=True /p:NodeReuse=False /p:RunCodeAnalysis=AsConfigured /p:ToolPlatform=Auto /p:Verbosity=Normal
+dotnet build api-dotnet.sln --configuration Release
 
 docker/nuget.sh

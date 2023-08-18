@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.0.0] - 2023-09-22
+### Changed
+- Target .NET 6+. If you're using .NET Framework, continue using v2.1.1.
+  [cyberark/conjur-api-dotnet#89](https://github.com/cyberark/conjur-api-dotnet/pull/89)
+
 ## [2.1.1] - 2022-03-14
 ### Fixed
 - Fix mime type "text/plain"

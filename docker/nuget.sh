@@ -1,12 +1,13 @@
+#!/bin/sh -xe
+
 mkdir nugetPackages
 
-version=`ikdasm -assembly conjur-api/bin/Release/conjur-api.dll | grep -E Version | sed -n -r 's@^Version:\s+([[:digit:]]+\.[[:digit:]]+)\..*@\1@p'`
-nuget pack conjur-api/conjur-api.nuspec -Properties configuration="Release" -Properties platform="Any CPU" \
-          -OutputDirectory ./nugetPackages -Version "${version:-0.0}.${build_name}" -Verbosity detailed
+version=`cat conjur-api/conjur-api.csproj | grep '<AssemblyVersion>' | cut -d ">" -f 2 | cut -d "<" -f 1`
+dotnet pack -o ./nugetPackages --version-suffix "${version:-0.0}.${build_name}"
 
-nuget sources add -Name "conjur-api-dotnet" -Source "https://conjurinc.jfrog.io/artifactory/api/nuget/conjur-api-dotnet" \
-     -UserName $WRITE_ARTIFACTORY_USERNAME -Password $WRITE_ARTIFACTORY_PASSWORD -Verbosity detailed
+dotnet nuget add source "https://conjurinc.jfrog.io/artifactory/api/nuget/conjur-api-dotnet" --name "conjur-api-dotnet" \
+     --username $WRITE_ARTIFACTORY_USERNAME --password $WRITE_ARTIFACTORY_PASSWORD --store-password-in-clear-text
 
-nuget push ./nugetPackages/* -Source "conjur-api-dotnet" -Verbosity detailed
+dotnet nuget push ./nugetPackages/* --source "conjur-api-dotnet"
 
 rm -rf nugetPackages

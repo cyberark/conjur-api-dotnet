@@ -39,6 +39,8 @@ namespace Conjur.Test
                 Assert.AreEqual("text/plain", request.Content.Headers.ContentType.MediaType);
                 using (StreamReader sr = new StreamReader(request.Content.ReadAsStream()))
                 {
+                    // Read from the beginning of the request content
+                    sr.BaseStream.Seek(0, SeekOrigin.Begin);
                     Assert.AreEqual(testValue, sr.ReadToEnd());
                 }
             };
