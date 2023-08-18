@@ -7,6 +7,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 
@@ -36,15 +37,18 @@ namespace Conjur
         }
 
         /// <summary>
-        /// Read the response of a WebRequest.
+        /// Read the response of an HttpResponseMessage.
         /// </summary>
         /// <returns>The contents of the response.</returns>
         /// <param name="request">Request to read from.</param>
-        internal static string Read(this WebRequest request)
+        internal static string Read(this HttpResponseMessage response)
         {
+            response.EnsureSuccessStatusCode();
+
             using (StreamReader reader
-                = new StreamReader (request.GetResponse ().GetResponseStream ())) {
-                return reader.ReadToEnd ();
+                = new StreamReader(response.Content.ReadAsStream()))
+            {
+                return reader.ReadToEnd();
             }
         }
 

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 
@@ -46,9 +47,9 @@ namespace Conjur.Test
         {
             Mocker.Mock(new Uri("test:///info"), "{ \"account\": \"test-account\" }");
             Client.Authenticator = new MockAuthenticator();
-            WebRequest testRequest = Client.AuthenticatedRequest("info");
+            var testRequest = Client.AuthenticatedRequest("info");
             Assert.AreEqual("Token token=\"dG9rZW4=\"", // "token" base64ed
-                testRequest.Headers["Authorization"]);
+                testRequest.Headers.GetValues("Authorization").Single());
 
             Client.Authenticator = null;
             Assert.Throws<InvalidOperationException>(() =>

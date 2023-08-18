@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Runtime.Serialization;
 using System.Text;
 using NUnit.Framework;
@@ -30,13 +32,15 @@ namespace Conjur.Test
         {
             char[] testValue = { 't', 'e', 's', 't', 'V', 'a', 'l', 'u', 'e' };
 
-            MockRequest v = Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foobar"), "");
-            v.Verifier = (WebRequest wr) =>
+            var v = Mocker.Mock(new Uri("test:///secrets/" + TestAccount + "/variable/foobar"), "");
+            v.Verifier = request =>
             {
-                MockRequest req = wr as WebMocker.MockRequest;
-                Assert.AreEqual(WebRequestMethods.Http.Post, wr.Method);
-                Assert.AreEqual("text/plain", wr.ContentType);
-                Assert.AreEqual(testValue, req.Body);
+                Assert.AreEqual(HttpMethod.Post, request.Method);
+                Assert.AreEqual("text/plain", request.Content.Headers.ContentType.MediaType);
+                using (StreamReader sr = new StreamReader(request.Content.ReadAsStream()))
+                {
+                    Assert.AreEqual(testValue, sr.ReadToEnd());
+                }
             };
             Client.Variable("foobar").AddSecret(Encoding.UTF8.GetBytes(testValue));
         }

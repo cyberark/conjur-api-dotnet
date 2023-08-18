@@ -7,6 +7,7 @@
 
 using System;
 using System.Net;
+using System.Net.Http;
 
 namespace Conjur
 {
@@ -20,7 +21,7 @@ namespace Conjur
         /// </summary>
         /// <param name="message">Descriptive error message.</param>
         /// <param name="exception">Wrapped exception.</param>
-        public UnauthorizedException(string message, WebException exception)
+        public UnauthorizedException(string message, HttpRequestException exception)
             : base(message, exception)
         {
         }

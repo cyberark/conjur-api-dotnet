@@ -7,6 +7,7 @@
 
 using System;
 using System.Net;
+using System.Net.Http;
 
 namespace Conjur
 {
@@ -23,19 +24,19 @@ namespace Conjur
 
         public Host CreateHost(string name)
         {
-            WebRequest request = this.client.Request("host_factories/hosts?id="
+            HttpRequestMessage request = this.client.Request("host_factories/hosts?id="
                               + Uri.EscapeDataString(name));
-            request.Headers["Authorization"] = "Token token=\"" + this.token + "\"";
-            request.Method = "POST";
+            request.Headers.Add("Authorization", "Token token=\"" + this.token + "\"");
+            request.Method = HttpMethod.Post;
 
             try
             {
-                return JsonSerializer<Host>.Read(request);
+                var response = client.httpClient.Send(request);
+                return JsonSerializer<Host>.Read(response);
             }
-            catch (WebException e)
+            catch (HttpRequestException e)
             {
-                HttpWebResponse hr = e.Response as HttpWebResponse;
-                if (hr != null && hr.StatusCode == HttpStatusCode.Unauthorized) {
+                if (e.StatusCode == HttpStatusCode.Unauthorized) {
                     throw new UnauthorizedException("Invalid host factory token", e);
                 } else {
                     throw;
