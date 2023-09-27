@@ -7,6 +7,7 @@
 
 using System;
 using System.Net;
+using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -21,6 +22,7 @@ namespace Conjur
     {
         private readonly string account;
         private readonly string actingAs;
+        internal HttpClient httpClient;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="T:Conjur.Client"/> class.
@@ -34,11 +36,14 @@ namespace Conjur
             this.TrustedCertificates = new X509Certificate2Collection();
             ServicePointManager.ServerCertificateValidationCallback =
                 new RemoteCertificateValidationCallback(this.ValidateCertificate);
+            this.httpClient = new HttpClient();
+            this.httpClient.Timeout = TimeSpan.FromMilliseconds(ApiConfigurationManager.GetInstance().HttpRequestTimeout);
         }
 
         internal Client(Client other, string role) : this(other.ApplianceUri.AbsoluteUri, other.account)
         {
             this.actingAs = role;
+            this.httpClient = other.httpClient;
             this.Authenticator = other.Authenticator;
         }
 
@@ -112,37 +117,37 @@ namespace Conjur
         /// where user name is for example "bob" or "host/jenkins".</param>
         public string LogIn(NetworkCredential credential)
         {
-            WebRequest webRequest = this.Request($"authn/{this.account}/login");
+            var request = this.Request($"authn/{this.account}/login");
 
-            // there seems to be no sane way to force WebRequest to authenticate
+            // there seems to be no sane way to force HttpRequestMessage to authenticate
             // properly by itself, so generate the header manually
             string auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(credential.UserName + ":" + credential.Password));
-            webRequest.Headers["Authorization"] = "Basic " + auth;
-            string apiKey = webRequest.Read();
+            request.Headers.Add("Authorization", "Basic " + auth);
+            string apiKey = httpClient.Send(request).Read();
 
             this.Credential = new NetworkCredential(credential.UserName, apiKey);
             return apiKey;
         }
 
         /// <summary>
-        /// Create a WebRequest for the specified path.
+        /// Create an HttpRequestMessage for the specified path.
         /// </summary>
         /// <param name="path">Path, NOT including the leading slash.</param>
-        /// <returns>A WebRequest for the specified appliance path.</returns>
-        public WebRequest Request(string path)
+        /// <returns>An HttpRequestMessage for the specified appliance path.</returns>
+        public HttpRequestMessage Request(string path)
         {
-            WebRequest reqest = WebRequest.Create(this.ApplianceUri + path);
-            reqest.Timeout = ApiConfigurationManager.GetInstance().HttpRequestTimeout;
-            return reqest;
+            HttpRequestMessage httpRequestMessage = new HttpRequestMessage();
+            httpRequestMessage.RequestUri = new Uri(this.ApplianceUri + path);
+            return httpRequestMessage;
         }
 
         /// <summary>
-        /// Create an authenticated WebRequest for the specified path.
+        /// Create an authenticated HttpRequestMessage for the specified path.
         /// </summary>
         /// <param name="path">Path, NOT including the leading slash.</param>
-        /// <returns>A WebRequest for the specified appliance path, with
+        /// <returns>An HttpRequestMessage for the specified appliance path, with
         /// authorization header set using <see cref="Authenticator"/>.</returns>
-        public WebRequest AuthenticatedRequest(string path)
+        public HttpRequestMessage AuthenticatedRequest(string path)
         {
             if (this.actingAs != null)
             {
@@ -196,7 +201,7 @@ namespace Conjur
             }
         }
 
-        private WebRequest ApplyAuthentication(WebRequest webRequest)
+        private HttpRequestMessage ApplyAuthentication(HttpRequestMessage request)
         {
             if (this.Authenticator == null)
             {
@@ -205,8 +210,8 @@ namespace Conjur
 
             string token = Convert.ToBase64String(Encoding.UTF8.GetBytes(this.Authenticator.GetToken()));
 
-            webRequest.Headers["Authorization"] = "Token token=\"" + token + "\"";
-            return webRequest;
+            request.Headers.Add("Authorization", "Token token=\"" + token + "\"");
+            return request;
         }
     }
 }

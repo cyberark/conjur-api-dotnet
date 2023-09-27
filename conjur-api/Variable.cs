@@ -9,6 +9,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 
 namespace Conjur
@@ -40,7 +42,9 @@ namespace Conjur
         /// <returns>The value.</returns>
         public string GetValue()
         {
-            return this.Client.AuthenticatedRequest(this.path).Read();
+            var request = this.Client.AuthenticatedRequest(this.path);
+            var response = this.Client.httpClient.Send(request);
+            return response.Read();
         }
 
         [Obsolete ("This function is obsolete, it is recommended to use AddSecret(byte[] val) method instead")]
@@ -55,21 +59,21 @@ namespace Conjur
         /// <param name="val">Secret value.</param>
         public void AddSecret(byte[] val)
         {
-            WebRequest webRequest = this.Client.AuthenticatedRequest(this.path);
-            webRequest.Method = WebRequestMethods.Http.Post;
-            if (webRequest is HttpWebRequest)
-            {
-                (webRequest as HttpWebRequest).AllowWriteStreamBuffering = false;
-            }
+            var request = this.Client.AuthenticatedRequest(this.path);
+            request.Method = HttpMethod.Post;
 
-            webRequest.ContentType = "text/plain";
-            webRequest.ContentLength = val.Length;
-            using (Stream requestStream = webRequest.GetRequestStream())
+            using (Stream memoryStream = new MemoryStream())
             {
-                requestStream.Write(val, 0, val.Length);
-                using (webRequest.GetResponse())
+                memoryStream.Write(val, 0, val.Length);
+
+                using (var stream = new StreamContent(memoryStream))
                 {
-                    // Intentional do not care about response content
+                    stream.Headers.ContentLength = val.Length;
+                    stream.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
+                    request.Content = stream;
+
+                    var response = Client.httpClient.Send(request);
+                    response.EnsureSuccessStatusCode();
                 }
             }
          }

@@ -7,6 +7,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 
 namespace Conjur
 {
@@ -35,17 +36,24 @@ namespace Conjur
         /// <returns>Policy creation response as a stream.</returns>
         public Stream LoadPolicy(Stream policyContent, string method = WebRequestMethods.Http.Post)
         {
-            WebRequest loadPolicyRequest = Client.AuthenticatedRequest(this.path);
-            loadPolicyRequest.Method = method;
-            loadPolicyRequest.ContentLength = policyContent.Length;
+            var loadPolicyRequest = Client.AuthenticatedRequest(this.path);
+            loadPolicyRequest.Method = new HttpMethod(method);
 
             policyContent.Seek(0, SeekOrigin.Begin);
 
-            using (Stream reqStream = loadPolicyRequest.GetRequestStream())
+            using (Stream memoryStream = new MemoryStream())
             {
-                policyContent.CopyTo(reqStream);
-                WebResponse loadPolicyResponse = loadPolicyRequest.GetResponse();
-                return loadPolicyResponse.GetResponseStream();
+                policyContent.CopyTo(memoryStream);
+
+                using (var stream = new StreamContent(memoryStream))
+                {
+                    stream.Headers.ContentLength = policyContent.Length;
+                    loadPolicyRequest.Content = stream;
+
+                    var response = Client.httpClient.Send(loadPolicyRequest);
+                    response.EnsureSuccessStatusCode();
+                    return response.Content.ReadAsStream();
+                }
             }
         }
     }

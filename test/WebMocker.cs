@@ -1,24 +1,25 @@
 ﻿using System;
 using System.Net;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
-using System.Reflection;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Conjur.Test
 {
-    public class WebMocker: IWebRequestCreate
+    public class WebMocker
     {
-        private readonly IDictionary<Uri, MockRequest> responses = 
-            new Dictionary<Uri, MockRequest>();
+        private readonly IDictionary<Uri, MockResponse> responses =
+            new Dictionary<Uri, MockResponse>();
 
         public WebMocker()
         {
         }
 
-        public MockRequest Mock(Uri uri, string content)
+        public MockResponse Mock(Uri uri, string content, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
-            return responses[uri] = new MockRequest(uri, content);
+            return responses[uri] = new MockResponse(content, statusCode);
         }
 
         public void Clear()
@@ -26,174 +27,56 @@ namespace Conjur.Test
             responses.Clear();
         }
 
-        #region IWebRequestCreate implementation
-
-        public WebRequest Create(Uri uri)
+        public HttpClient GetMockHttpClient()
         {
-            if (!responses.ContainsKey(uri)) {
-                throw new KeyNotFoundException(uri.ToString());
-            }
-
-            return responses[uri];
+            return new HttpClient(new MockHttpMessageHandler(responses));
         }
 
-        #endregion
-
-        public class MockRequest : WebRequest
+        public class MockResponse
         {
-            private readonly string content;
-            private string method = "GET";
-            private ICredentials credentials;
-            private readonly Uri uri;
-            private MemoryStream requestStream;
+            public string Content { get; }
+            public HttpStatusCode StatusCode { get; }
+            public Action<HttpRequestMessage> Verifier { get; set; }
 
-            public override WebHeaderCollection Headers { get; set; }
-
-            public override string ContentType { get; set; }
-
-            public override long ContentLength { get; set; }
-
-            public override int Timeout { get; set; }
-
-            public override Uri RequestUri => uri;
-
-            public override string Method {
-                get
-                {
-                    return this.method;
-                }
-                set
-                {
-                    this.method = value;
-                }
-            }
-
-            public override bool PreAuthenticate {
-                get
-                {
-                   return base.PreAuthenticate;
-                }
-                set
-                {
-                    base.PreAuthenticate = value;
-                }
-            }
-
-            public override ICredentials Credentials {
-                get
-                {
-                    return credentials;
-                }
-                set
-                {
-                    credentials = value;
-                }
-            }
-
-            public Action<WebRequest> Verifier;
-
-            public MockRequest(Uri uri, string content)
+            public MockResponse(string content, HttpStatusCode statusCode)
             {
-                this.uri = uri;
-                this.content = content;
-                Headers = new WebHeaderCollection();
-            }
-
-            public override WebResponse GetResponse()
-            {
-                Verifier?.Invoke (this);
-                return new MockResponse(this.content);
-            }
-
-            public override Stream GetRequestStream()
-            {
-                return requestStream = new MemoryStream();
-            }
-
-            public string Body => Encoding.UTF8.GetString (requestStream.ToArray ());
-        }
-
-        public class MockResponse : WebResponse
-        {
-            private readonly string content;
-
-            public MockResponse(string content)
-            {
-                this.content = content;
-            }
-
-            public override Stream GetResponseStream ()
-            {
-                return new MemoryStream(Encoding.UTF8.GetBytes(content));
-            }
-
-            public override void Close()
-            {
-                // noop
+                this.Content = content;
+                this.StatusCode = statusCode;
             }
         }
 
-        public class MockResponseException : WebException
+        private class MockHttpMessageHandler : HttpMessageHandler
         {
-            public HttpStatusCode Code;
+            private readonly IDictionary<Uri, MockResponse> _responses;
 
-            public MockResponseException(HttpStatusCode code, string message)
-                : base(Message(code, message), null, 
-                       WebExceptionStatus.ProtocolError, Response(code, message))
+            public MockHttpMessageHandler(IDictionary<Uri, MockResponse> responses)
             {
-                this.Code = code;
+                _responses = responses;
             }
 
-            private static new string Message(HttpStatusCode code, string message)
+            protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)
             {
-                return "The remote server returned an error: (" + (int)code + ") "
-                + message;
-            }
-
-            private static new HttpWebResponse Response(HttpStatusCode code, string description)
-            {
-                // HACK: there is no public way of creating an HttpWebResponse, but
-                // we use it to get to the status code. So synthesize one using
-                // reflection that's just good enough.
-                object[] cargs =
-                    { 
-                        null, // uri
-                        null, // method
-                        new WebConnectionData()
-                            .Set("StatusCode", code)
-                            .Set("StatusDescription", description)
-                            .Unwrap(),
-                        null // CookieContainer
-                    };
-                return Activator.CreateInstance(typeof(HttpWebResponse), 
-                    BindingFlags.NonPublic | BindingFlags.Instance,
-                    null, cargs, null) as HttpWebResponse;
-            }
-
-            private class WebConnectionData
-            {
-                private readonly object data;
-                private readonly Type type;
-
-                public WebConnectionData()
+                if (!_responses.TryGetValue(request.RequestUri, out MockResponse response))
                 {
-                    this.data = Activator.CreateInstance("System", "System.Net.WebConnectionData").Unwrap();
-                    this.type = this.data.GetType();
-                    Set("Headers", new WebHeaderCollection());
+                    throw new KeyNotFoundException(request.RequestUri.ToString());
                 }
 
-                public WebConnectionData Set(string field, object value)
-                {
-                    type.GetField(field).SetValue(data, value);
-                    return this;
-                }
+                response.Verifier?.Invoke(request);
 
-                public object Unwrap()
+                var httpResponseMessage = new HttpResponseMessage(response.StatusCode)
                 {
-                    return data;
-                }
+                    Content = new StringContent(response.Content),
+                    RequestMessage = request
+                };
+
+                return httpResponseMessage;
             }
 
+            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                return Task.FromResult(Send(request, cancellationToken));
+            }
         }
+
     }
 }

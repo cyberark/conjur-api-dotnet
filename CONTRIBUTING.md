@@ -11,9 +11,8 @@ For general contribution and community guidelines, please see the [community rep
 
 ## Development
 
-- Visual Studio 2015
-- Use C#6 syntax
-   - C#7 syntax is not supported
+NOTE: Updates to `docker/tag` should be committed. This is in order that the Jenkins runner will know that it needs
+to rebuild the docker image used for building the project.
 
 ## Testing
 

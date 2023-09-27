@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
 
 namespace Conjur
 {
@@ -77,19 +78,19 @@ namespace Conjur
         /// <param name="privilege">Privilege to check.</param>
         public bool Check(string privilege)
         {
-            WebRequest req = this.Client.AuthenticatedRequest(this.ResourcePath
+            var req = this.Client.AuthenticatedRequest(this.ResourcePath
                           + "/?check=true&privilege=" + Uri.EscapeDataString(privilege));
-            req.Method = "HEAD";
+            req.Method = HttpMethod.Head;
 
             try
             {
-                req.GetResponse().Close();
+                var response = this.Client.httpClient.Send(req);
+                response.EnsureSuccessStatusCode();
                 return true;
             }
-            catch (WebException exn)
+            catch (HttpRequestException exn)
             {
-                HttpWebResponse hr = exn.Response as HttpWebResponse;
-                if (hr != null && hr.StatusCode == HttpStatusCode.Forbidden) {
+                if (exn.StatusCode == HttpStatusCode.Forbidden) {
                     return false;
                 }
 
@@ -106,7 +107,7 @@ namespace Conjur
                 string pathListResourceQuery = $"resources/{client.GetAccountName()}/{kind}?offset={offset}&limit={limit}"
                     + ((query != null) ? $"&search={query}" : string.Empty);
 
-                resultList = JsonSerializer<List<TResult>>.Read(client.AuthenticatedRequest(pathListResourceQuery));
+                resultList = JsonSerializer<List<TResult>>.Read(client.httpClient.Send(client.AuthenticatedRequest(pathListResourceQuery)));
                 foreach (TResult searchResult in resultList)
                 {
                     yield return newT(searchResult);
@@ -119,7 +120,7 @@ namespace Conjur
         internal static uint CountResources(Client client, string kind, string query = null)
         {
             string pathCountResourceQuery = $"resources/{client.GetAccountName()}/{kind}?count=true" + ((query != null) ? $"&search={query}" : string.Empty);
-            CountResult countJsonObj = JsonSerializer<CountResult>.Read(client.AuthenticatedRequest(pathCountResourceQuery));
+            CountResult countJsonObj = JsonSerializer<CountResult>.Read(client.httpClient.Send(client.AuthenticatedRequest(pathCountResourceQuery)));
             return Convert.ToUInt32(countJsonObj.Count);
         }
 

@@ -5,7 +5,9 @@
 // JSON utilities.
 // </summary>
 
+using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Runtime.Serialization.Json;
 
 namespace Conjur
@@ -17,9 +19,12 @@ namespace Conjur
         private static readonly DataContractJsonSerializer Instance =
             new DataContractJsonSerializer(typeof(T));
 
-        public static T Read(WebRequest request)
+        public static T Read(HttpResponseMessage response)
         {
-            using (System.IO.Stream stream = request.GetResponse().GetResponseStream()) {
+            response.EnsureSuccessStatusCode();
+
+            using (Stream stream = response.Content.ReadAsStream())
+            {
                 return Instance.ReadObject(stream) as T;
             }
         }

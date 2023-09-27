@@ -12,11 +12,6 @@ namespace Conjur.Test
         protected readonly string LoginName = "admin";
         protected static readonly WebMocker Mocker = new WebMocker();
 
-        static Base()
-        {
-            WebRequest.RegisterPrefix("test", Mocker);
-        }
-
         [SetUp]
         protected void ClearMocker()
         {
@@ -27,6 +22,7 @@ namespace Conjur.Test
         protected Base()
         {
             Client = new Client("test:///", TestAccount);
+            Client.httpClient = Mocker.GetMockHttpClient();
         }
     }
 }

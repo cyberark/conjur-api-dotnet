@@ -16,6 +16,8 @@ docker run -v $PWD:/src:ro --cidfile=$CIDFILE  -e build_name=$1 -e WRITE_ARTIFAC
 
 CID=`cat $CIDFILE`
 
-docker cp $CID:"/build/TestResult.xml" .
+docker cp $CID:"/build/TestResults.xml" .
 mkdir -p bin
-docker cp $CID:"/build/conjur-api/bin/Release/conjur-api.dll" bin/conjur-api.dll
+docker cp $CID:"/build/conjur-api/bin/Release/net6.0/conjur-api.dll" bin/conjur-api.dll
+
+cat TestResults.xml

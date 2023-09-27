@@ -1,11 +1,11 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "conjur-api", "conjur-api\conjur-api.csproj", "{17D848FC-457D-49F0-B9A3-D87920AA8A8A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "conjur-api", "conjur-api\conjur-api.csproj", "{17D848FC-457D-49F0-B9A3-D87920AA8A8A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test", "test\test.csproj", "{334DEF97-4AA5-4B7B-B388-03362E0356CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "test", "test\test.csproj", "{334DEF97-4AA5-4B7B-B388-03362E0356CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "example", "example\example.csproj", "{0F8B5E2E-2270-47BE-8B31-3F2AA012AFB9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "example", "example\example.csproj", "{0F8B5E2E-2270-47BE-8B31-3F2AA012AFB9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

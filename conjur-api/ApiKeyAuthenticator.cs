@@ -8,6 +8,8 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -58,12 +60,10 @@ namespace Conjur
             {
                 if (this.token == null)
                 {
-                    HttpWebRequest request = WebRequest.CreateHttp(this.uri);
-                    request.Timeout = ApiConfigurationManager.GetInstance().HttpRequestTimeout;
-                    request.Method = WebRequestMethods.Http.Post;
-                    request.ContentLength = credential.SecurePassword.Length;
-                    request.AllowWriteStreamBuffering = false;
-
+                    HttpClient httpClient = new HttpClient();
+                    httpClient.Timeout = TimeSpan.FromMilliseconds(ApiConfigurationManager.GetInstance().HttpRequestTimeout);
+                    HttpRequestMessage httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, this.uri);
+                    
                     IntPtr bstr = IntPtr.Zero;
                     byte[] bArr = new byte[credential.SecurePassword.Length];
                     try
@@ -73,10 +73,20 @@ namespace Conjur
                         {
                             bArr[i] = Marshal.ReadByte(bstr, i * 2);
                         }
-                        using (Stream stream = request.GetRequestStream())
+                        using (Stream memoryStream = new MemoryStream())
                         {
-                            stream.Write(bArr, 0, bArr.Length);
-                            Interlocked.Exchange(ref this.token, request.Read());
+                            memoryStream.Write(bArr, 0, bArr.Length);
+
+                            using (var stream = new StreamContent(memoryStream))
+                            {
+                                stream.Headers.ContentLength = credential.SecurePassword.Length;
+                                httpRequestMessage.Content = stream;
+
+                                var response = httpClient.Send(httpRequestMessage);
+                                response.EnsureSuccessStatusCode();
+
+                                Interlocked.Exchange(ref this.token, response.Read());
+                            }
                             this.StartTokenTimer(TimeSpan.FromMilliseconds(ApiConfigurationManager.GetInstance().TokenRefreshTimeout));
                         }
                     }
