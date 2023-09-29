@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Target .NET 6+. If you're using .NET Framework, continue using v2.1.1.
   [cyberark/conjur-api-dotnet#89](https://github.com/cyberark/conjur-api-dotnet/pull/89)
+- Support for AWS authentication
+  [cyberark/conjur-api-dotnet#90](https://github.com/cyberark/conjur-api-dotnet/pull/90)
 
 ## [2.1.1] - 2022-03-14
 ### Fixed

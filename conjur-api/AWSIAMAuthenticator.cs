@@ -5,33 +5,18 @@
 //     AWS IAM authenticator.
 // </summary>
 
+using Amazon;
+using Amazon.SecurityToken.Model;
+using Aws4RequestSigner;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Text;
-using System.Text.Json;
 using System.Text.Json.Serialization;
-
-// https://www.nuget.org/packages/AWSSDK.SecurityToken -- needed for STS
-// dotnet add package AWSSDK.SecurityToken --version 3.7.201.16
-using Amazon;
-using Amazon.Runtime;
-using Amazon.SecurityToken;
-using Amazon.SecurityToken.Model;
-using Amazon.Runtime.Internal.Auth;
-using Amazon.Runtime.Internal.Util;
-
-// https://www.nuget.org/packages/Aws4RequestSigner -- simplify signing of the request
-// dotnet add package Aws4RequestSigner --version 1.0.3
-using Aws4RequestSigner;
+using System.Threading.Tasks;
 
 namespace Conjur
 {
@@ -40,15 +25,13 @@ namespace Conjur
     /// </summary>
     public class AWSIAMAuthenticator : IAuthenticator
     {
-        private string token = string.Empty;
         private string conjurIdentity = string.Empty;
         private string conjurAccount = string.Empty;
         private string conjurAuthenticator = string.Empty;
         private Uri conjurApiUri;
         private string conjurAWSRegion = string.Empty; // AWS Region where Conjur is running (default is "us-east-1")
         private string conjurIAMRole = string.Empty;
-
-        public bool Debug = false;
+        internal HttpClient httpClient;
 
         public AWSIAMAuthenticator(string conjurUri, string conjurAccount, string Identity, string Authenticator, string roleArn = "", string ConjurAWSRegion = "us-east-1")
         {
@@ -58,6 +41,7 @@ namespace Conjur
             this.conjurAuthenticator = Authenticator;
             this.conjurIAMRole = roleArn;
             this.conjurAWSRegion = ConjurAWSRegion;
+            this.httpClient = new HttpClient();
         }
 
         #region IAuthenticator implementation
@@ -73,13 +57,7 @@ namespace Conjur
             HttpRequestMessage signedRequest = CreateSignedRequest(stsCreds);
             ConjurAWSIAMAuth conjAuth = CreateConjurAWSIAMAuth(signedRequest);
 
-            if (this.Debug)
-            {
-                this.RenderCurlCommand(conjAuth);
-            }
-
-            string conjToken = GetConjurToken(conjAuth);
-            return conjToken;
+            return GetConjurToken(conjAuth);
         }
         #endregion
 
@@ -88,12 +66,17 @@ namespace Conjur
             var region = RegionEndpoint.GetBySystemName(this.conjurAWSRegion);
             var stsClient = new Amazon.SecurityToken.AmazonSecurityTokenServiceClient(region);
 
-            if (this.Debug)
-            {
-                var callerIdRequest = new GetCallerIdentityRequest();
-                var caller = FetchCallerIdentityAsync(stsClient, callerIdRequest).Result;
-                Console.WriteLine("ARN: {0}", caller.Arn);
-            }
+            // TODO: Handle case where we're running on an EC2 instance that has the assigned role equal to the role
+            // used to authenticate to Conjur. Then we don't need to assume a different role and we already have
+            // the session token we need.
+            // For now this can be handled by assuming the same role and allowing the AssumeRole permission for the role
+            // for itself.
+
+            // TODO: Handle case where we're running on an EC2 instance that has the assigned role equal to the role
+            // used to authenticate to Conjur. Then we don't need to assume a different role and we already have
+            // the session token we need.
+            // For now this can be handled by assuming the same role and allowing the AssumeRole permission for the role
+            // for itself.
 
             if (!String.IsNullOrEmpty(this.conjurIAMRole))
             {
@@ -108,13 +91,6 @@ namespace Conjur
                 try
                 {
                     assumeRoleRes = FetchAssumeRoleAsync(stsClient, assumeRoleReq).Result;
-                    if (this.Debug)
-                    {
-                        var callerIdRequest2 = new GetCallerIdentityRequest();
-                        var caller2 = FetchCallerIdentityAsync(stsClient, callerIdRequest2).Result;
-                        Console.WriteLine("ARN: {0}", caller2.Arn);
-                    }
-
                 }
                 catch (Exception e)
                 {
@@ -126,7 +102,7 @@ namespace Conjur
 
             var getSessionTokenRequest = new GetSessionTokenRequest
             {
-                DurationSeconds = 120 // 2 minutes
+                DurationSeconds = 900 // AWS SDK minimum value
             };
 
             GetSessionTokenResponse sessionTokenResponse = FetchTokenAsync(stsClient, getSessionTokenRequest).Result;
@@ -224,19 +200,13 @@ namespace Conjur
         public string GetConjurToken(ConjurAWSIAMAuth conjAuth)
         {
             string url = this.GetConjurAuthenticateUrl();
-
-            var handler = new HttpClientHandler()
-            {
-                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-            };
-
-            var client = new HttpClient(handler);
+            
             HttpRequestMessage httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, url)
             {
                 Content = JsonContent.Create(conjAuth)
             };
             httpRequestMessage.Headers.AcceptEncoding.TryParseAdd("base64");
-            HttpResponseMessage response = client.Send(httpRequestMessage);
+            HttpResponseMessage response = httpClient.Send(httpRequestMessage);
 
             using var reader = new StreamReader(response.Content.ReadAsStream());
             var stringBase64Response = reader.ReadToEnd();
