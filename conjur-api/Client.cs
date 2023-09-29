@@ -22,6 +22,7 @@ namespace Conjur
     {
         private readonly string account;
         private readonly string actingAs;
+        private bool disableCertCheck = false;
         internal HttpClient httpClient;
 
         /// <summary>
@@ -34,9 +35,11 @@ namespace Conjur
             this.account = account;
             this.ApplianceUri = NormalizeBaseUri(applianceUri);
             this.TrustedCertificates = new X509Certificate2Collection();
-            ServicePointManager.ServerCertificateValidationCallback =
-                new RemoteCertificateValidationCallback(this.ValidateCertificate);
-            this.httpClient = new HttpClient();
+
+            var httpClientHandler = new HttpClientHandler();
+            httpClientHandler.ServerCertificateCustomValidationCallback = this.ValidateCertificate;
+
+            this.httpClient = new HttpClient(httpClientHandler);
             this.httpClient.Timeout = TimeSpan.FromMilliseconds(ApiConfigurationManager.GetInstance().HttpRequestTimeout);
         }
 
@@ -45,6 +48,26 @@ namespace Conjur
             this.actingAs = role;
             this.httpClient = other.httpClient;
             this.Authenticator = other.Authenticator;
+        }
+
+        /// <summary>
+        /// Disables SSL Cert check. Can be used when Conjur is configured with self-signed cert.
+        /// </summary>
+        /// <remarks>
+        /// Warning: this is a security risk and should be used only for testing purposes.
+        /// </remarks>
+        public void DisableCertCheck()
+        {
+            this.disableCertCheck = true;
+        }
+
+        /// <summary>
+        /// Enables SSL Cert check. This is already the default. This method is only necessary
+        /// if <see cref="DisableCertCheck"/> was called before.
+        /// </summary>
+        public void EnableCertCheck()
+        {
+            this.disableCertCheck = false;
         }
 
         /// <summary>
@@ -67,11 +90,13 @@ namespace Conjur
         /// </summary>
         /// <value>The credential of user name and API key, where user name is
         /// for example "bob" or "host/jenkins".</value>
-        public NetworkCredential Credential {
-            set {
-                this.Authenticator = new ApiKeyAuthenticator (
-                  new Uri (this.ApplianceUri + "authn"),
-                  this.GetAccountName (),
+        public NetworkCredential Credential
+        {
+            set
+            {
+                this.Authenticator = new ApiKeyAuthenticator(
+                  new Uri(this.ApplianceUri + "authn"),
+                  this.GetAccountName(),
                   value);
             }
         }
@@ -190,14 +215,18 @@ namespace Conjur
             X509Chain chain,
             SslPolicyErrors sslPolicyErrors)
         {
+            if (this.disableCertCheck)
+            {
+                return true;
+            }
             switch (sslPolicyErrors)
             {
-            case SslPolicyErrors.RemoteCertificateChainErrors:
-                return chain.VerifyWithExtraRoots(certificate, this.TrustedCertificates);
-            case SslPolicyErrors.None:
-                return true;
-            default:
-                return false;
+                case SslPolicyErrors.RemoteCertificateChainErrors:
+                    return chain.VerifyWithExtraRoots(certificate, this.TrustedCertificates);
+                case SslPolicyErrors.None:
+                    return true;
+                default:
+                    return false;
             }
         }
 
