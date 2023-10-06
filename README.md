@@ -31,6 +31,8 @@ questions, please contact us on [Discourse](https://discuss.cyberarkcommons.org/
 
 For Conjur Enterprise V4, use the [V4 branch](https://github.com/cyberark/conjur-api-dotnet/tree/v4)
 
+- When using the **AWS Authenticator**, Conjur Enterprise v13+ or Conjur Cloud (Conjur OSS was not tested)
+
 ## Building
 
 This sample was built and tested with Visual Studio 2015.
@@ -62,6 +64,13 @@ Optionally, to build in a Docker container, it is recommended to use Mono and xb
 - Add Conjur root certificate to system trust store
    - `certPath` = Path to cert
 
+#### `void client.DisableCertCheck()`
+- Disable SSL Cert check -- used when Conjur is configured with self-signed cert. Do not use in production.
+
+#### `void client.EnableCertCheck()`
+- Enable SSL Cert check -- Default is to perform cert check; this method is used if there is a need to disable and enable the cert check.
+
+
 #### `client.Credential = new NetworkCredential(string userName, string apiKey)`
 - To login with an API key, use it directly
    - `userName` - Username of user to login as
@@ -79,6 +88,14 @@ Optionally, to build in a Docker container, it is recommended to use Mono and xb
 - Creates a host using a host factory token
    - `name` - Name of the host to create
    - `hostFactoryToken` - Host factory token
+
+#### `client.Authenticator = new Conjur.AWSIAMAuthenticator(Conjur.Client client, string Identity, string Authenticator, string roleArn = "", string ConjurAWSRegion = "us-east-1")`
+- **REQUIREMENTS**: Conjur Enterprise v13+ or Conjur Cloud (Conjur OSS was not tested)
+- Configure the client to use the AWS IAM Authenticator
+  - Client must be instantiated with these attributes before instantiating the AWS authenticator:
+    - `ApplianceUri`
+    - `Account`
+    - Example: `var client = new Conjur.Client(conjurApiUri, conjurAccount);`
 
 ### `Policy`
 
@@ -112,7 +129,7 @@ Optionally, to build in a Docker container, it is recommended to use Mono and xb
 
 #### Example Code
 
-```sh
+```csharp
     // Instantiate a Conjur Client object.
     //  parameter: URI - conjur appliance URI
     //  parameter: ACCOUNT - conjur account name
@@ -161,7 +178,7 @@ To run the sample in Visual Studio, set the `example` project as the Startup
  Project.  To do so, in 
 the Solution Explorer right click over `example` and select `Set as Startup Project`.
 
-```sh
+```txt
 Usage: Example  <applianceURL>
                 <applianceCertificatePath>
                 <accountName>
@@ -191,7 +208,47 @@ the Conjur CLI command `conjur hostfactory create` and
  `conjur hostfactory token create`. Take the token returned from that call 
 and pass it as the hostFactoryToken parameter to this example.
 
+#### Example Code with AWS Authenticator
 
+This example code shows how to configure and use the AWS authenticator.
+
+Note:  The IAM role may need to have the `AssumeRole` permissions
+
+```csharp
+// Assuming the conjur api dotnet code is `git clone`d, then 
+// add a reference to it in your project:
+// dotnet add conjapp.csproj reference ../conjur-api-dotnet/conjur-api/
+using Conjur;
+
+namespace ConjurApp
+{
+    internal class Program
+    {
+        public static void Main()
+        {
+            string roleArnToAssume = "arn:aws:iam::12345:role/MyIAMRole";
+            string variableId = "data/vault/myapplication/mypasswordtype/password";
+
+            string conjurApiUri = "https://conjur.example/api";
+            string conjurAccount = "conjur";
+            string conjurIdentity = "host/data/myhost/12345/MyIAMRole";
+            string conjurAuthenticator = "authn-iam/myauthenticatorname";
+
+            Conjur.Client conjurClient = new Conjur.Client(conjurApiUri, conjurAccount);
+
+            conjurClient.Authenticator = new Conjur.AWSIAMAuthenticator(
+                conjurClient,
+                conjurIdentity,
+                conjurAuthenticator,
+                roleArnToAssume);
+
+            Conjur.Variable conjurVariable = conjurClient.Variable(variableId);
+            var value = conjurVariable.GetValue();
+            Console.WriteLine("Variable - {0} = {1}", variableId, value);
+        }
+    }
+}
+```
 
 ## Contributing
 
