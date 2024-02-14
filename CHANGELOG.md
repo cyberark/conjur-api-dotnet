@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [3.0.0] - 2023-09-22
+## [3.0.0] - 2024-02-14
 ### Changed
 - Target .NET 6+. If you're using .NET Framework, continue using v2.1.1.
   [cyberark/conjur-api-dotnet#89](https://github.com/cyberark/conjur-api-dotnet/pull/89)
@@ -53,8 +53,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - `Variable.AddValue()` method for adding variable values.
 
-[Unreleased]: https://github.com/cyberark/conjur-api-dotnet/compare/v2.1.1...HEAD
-[2.1.0]: https://github.com/cyberark/conjur-api-dotnet/compare/v2.1.0...v2.1.1
+[Unreleased]: https://github.com/cyberark/conjur-api-dotnet/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/cyberark/conjur-api-dotnet/compare/v2.1.1...v3.0.0
+[2.1.1]: https://github.com/cyberark/conjur-api-dotnet/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/cyberark/conjur-api-dotnet/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/cyberark/conjur-api-dotnet/compare/v1.4.0...v2.0.0
 [1.4.0]: https://github.com/cyberark/conjur-api-dotnet/compare/v1.3.0...v1.4.0
