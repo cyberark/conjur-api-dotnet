@@ -76,6 +76,7 @@ namespace Conjur
                         using (Stream memoryStream = new MemoryStream())
                         {
                             memoryStream.Write(bArr, 0, bArr.Length);
+                            memoryStream.Seek(0, SeekOrigin.Begin);
 
                             using (var stream = new StreamContent(memoryStream))
                             {
