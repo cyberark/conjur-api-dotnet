@@ -1,4 +1,5 @@
-#!/bin/sh -xe
+#!/usr/bin/env bash
+set -euox pipefail
 
 BIN=/conjur-api.dll
 

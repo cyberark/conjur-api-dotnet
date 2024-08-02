@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.0.2] - 2024-08-02
+
+### Changed
+- Automated release process
+
 ## [3.0.1] - 2024-02-27
 ### Fixed
 - Fix broken API Key authentication
@@ -57,7 +62,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - `Variable.AddValue()` method for adding variable values.
 
-[Unreleased]: https://github.com/cyberark/conjur-api-dotnet/compare/v3.0.1...HEAD
+[Unreleased]: https://github.com/cyberark/conjur-api-dotnet/compare/v3.0.2...HEAD
+[3.0.2]: https://github.com/cyberark/conjur-api-dotnet/compare/v3.0.1...v3.0.2
 [3.0.1]: https://github.com/cyberark/conjur-api-dotnet/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/cyberark/conjur-api-dotnet/compare/v2.1.1...v3.0.0
 [2.1.1]: https://github.com/cyberark/conjur-api-dotnet/compare/v2.1.0...v2.1.1
