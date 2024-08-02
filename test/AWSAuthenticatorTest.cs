@@ -9,6 +9,8 @@ namespace Conjur.Test
     public class AWSAuthenticatorTest : Base
     {
         [Test]
+        // Uncomment the [Ignore] attribute to skip this test when not running in AWS
+        // [Ignore("This test requires an AWS environment")]
         public void AuthenticateTest()
         {
             string conjurIdentity = "somehost";

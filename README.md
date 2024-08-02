@@ -1,6 +1,6 @@
 # Conjur API for .NET
 
-Programmatic .NET access to [Conjur](https://conjur.org) (for both Conjur Open Source and Enterprise/DAP versions).
+Programmatic .NET access to [Conjur](https://conjur.org) (for both Conjur Open Source and Enterprise).
 This .NET SDK allows developers to build new apps in .NET that communicate with Conjur by
 invoking our Conjur API to perform operations on stored data (add, retrieve, etc)
 

@@ -1,6 +1,24 @@
 #!/usr/bin/env groovy
 @Library("product-pipelines-shared-library") _
 
+// Automated release, promotion and dependencies
+properties([
+  // Include the automated release parameters for the build
+  release.addParams(),
+  // Dependencies of the project that should trigger builds
+  dependencies([])
+])
+
+// Performs release promotion.  No other stages will be run
+if (params.MODE == "PROMOTE") {
+  release.promote(params.VERSION_TO_PROMOTE) { sourceVersion, targetVersion, assetDirectory ->
+
+  }
+  // Copy Github Enterprise release to Github
+  release.copyEnterpriseRelease(params.VERSION_TO_PROMOTE)
+  return
+}
+
 pipeline {
   agent { label 'conjur-enterprise-common-agent' }
 
@@ -13,7 +31,27 @@ pipeline {
     cron(getDailyCronString())
   }
 
+  environment {
+    // Sets the MODE to the specified or autocalculated value as appropriate
+    MODE = release.canonicalizeMode()
+  }
+
   stages {
+    // Aborts any builds triggered by another project that wouldn't include any changes
+    stage ("Skip build if triggering job didn't create a release") {
+      when {
+        expression {
+          MODE == "SKIP"
+        }
+      }
+      steps {
+        script {
+          currentBuild.result = 'ABORTED'
+          error("Aborting build because this build was triggered from upstream, but no release was built")
+        }
+      }
+    }
+
     stage('Scan for internal URLs') {
       steps {
         script {
@@ -22,10 +60,13 @@ pipeline {
       }
     }
 
-    stage('Get InfraPool Agent') {
+    stage('Get InfraPool ExecutorV2 Agent') {
       steps {
         script {
-          INFRAPOOL_EXECUTORV2_AGENT_0 = getInfraPoolAgent.connected(type: "ExecutorV2", quantity: 1, duration: 1)[0]
+          // Request ExecutorV2 agents for 1 hour(s)
+          INFRAPOOL_EXECUTORV2_AGENTS = getInfraPoolAgent(type: "ExecutorV2", quantity: 1, duration: 1)
+          INFRAPOOL_EXECUTORV2_AGENT_0 = INFRAPOOL_EXECUTORV2_AGENTS[0]
+          infrapool = infraPoolConnect(INFRAPOOL_EXECUTORV2_AGENT_0, {})
         }
       }
     }
@@ -33,7 +74,16 @@ pipeline {
     stage('Validate') {
       parallel {
         stage('Changelog') {
-          steps { parseChangelog(INFRAPOOL_EXECUTORV2_AGENT_0) }
+          steps { parseChangelog(infrapool) }
+        }
+      }
+    }
+
+    // Generates a VERSION file based on the current build number and latest version in CHANGELOG.md
+    stage('Validate Changelog and set version') {
+      steps {
+        script {
+          updateVersion(infrapool, "CHANGELOG.md", "${BUILD_NUMBER}")
         }
       }
     }
@@ -41,7 +91,7 @@ pipeline {
     stage('Prepare build environment') {
       steps {
         script {
-          INFRAPOOL_EXECUTORV2_AGENT_0.agentSh '''
+          infrapool.agentSh '''
             # make sure the build env is up to date
             make -C docker
 
@@ -59,12 +109,29 @@ pipeline {
     stage('Build and test package') {
       steps {
         script {
-          BUILD_NAME = "${env.BUILD_NUMBER}-${env.BRANCH_NAME.replace('/','-')}"
-          INFRAPOOL_EXECUTORV2_AGENT_0.agentSh "summon -e pipeline ./build.sh ${BUILD_NAME}"
-          INFRAPOOL_EXECUTORV2_AGENT_0.agentStash name: 'test-results', includes: '*.xml'
+          infrapool.agentSh "summon -e pipeline ./build.sh"
+          infrapool.agentStash name: 'test-results', includes: '*.xml'
           unstash 'test-results'
           junit 'TestResults.xml'
-          INFRAPOOL_EXECUTORV2_AGENT_0.agentArchiveArtifacts artifacts: 'bin/*', fingerprint: true
+          infrapool.agentArchiveArtifacts artifacts: 'bin/*', fingerprint: true
+        }
+      }
+    }
+
+    stage('Release') {
+      when {
+        expression {
+          MODE == "RELEASE"
+        }
+      }
+      steps {
+        script {
+          release(infrapool) { billOfMaterialsDirectory, assetDirectory, toolsDirectory ->
+            // Publish release artifacts to all the appropriate locations
+
+            // Copy any artifacts to assetDirectory to attach them to the Github release
+            infrapool.agentSh "cp -r bin/* ${assetDirectory}"
+          }
         }
       }
     }
