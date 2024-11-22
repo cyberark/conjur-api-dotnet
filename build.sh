@@ -19,7 +19,14 @@ if [ ! -f "$PWD/VERSION" ]; then
 fi
 
 CIDFILE=$(mktemp -u)
-docker run -v "$PWD":/src:ro --cidfile="$CIDFILE" -e WRITE_ARTIFACTORY_USERNAME -e WRITE_ARTIFACTORY_PASSWORD -e WRITE_ARTIFACTORY_URL "$TAG"
+docker run \
+  -v "$PWD":/src:ro \
+  --cidfile="$CIDFILE" \
+  -e WRITE_ARTIFACTORY_USERNAME \
+  -e WRITE_ARTIFACTORY_PASSWORD \
+  -e WRITE_ARTIFACTORY_URL \
+  -e RUN_AWS_TESTS \
+  "$TAG"
 
 CID=$(cat "$CIDFILE")
 
