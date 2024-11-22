@@ -3,13 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Text;
+using System.Net.Http;
 
 namespace Conjur.Test
 {
     public class ClientTest : Base
-    { 
+    {
 
         [Test]
         public void TestInfo()
@@ -17,30 +16,28 @@ namespace Conjur.Test
             Assert.AreEqual(TestAccount, Client.GetAccountName());
         }
 
-        // TODO: This test has been commented out and will be fixed in Issue #45 (https://github.com/cyberark/conjur-api-dotnet/issues/45)
-        //[Test]
-        //public void TestLogin()
-        //{
-        //    Mocker.Mock(new Uri("test:///authn/" + TestAccount + "/login"), "api-key").Verifier =
-        //        (WebRequest wr) =>
-        //    Assert.AreEqual("Basic YWRtaW46c2VjcmV0", wr.Headers["Authorization"]);
+        [Test]
+        public void TestLogin()
+        {
+            Mocker.Mock(new Uri("test:///authn/" + TestAccount + "/login"), "api-key").Verifier =
+                (HttpRequestMessage requestMessage) =>
+            Assert.AreEqual("Basic YWRtaW46c2VjcmV0", requestMessage.Headers.GetValues("Authorization").SingleOrDefault());
 
-        //    var apiKey = Client.LogIn("admin", "secret");
-        //    Assert.AreEqual("api-key", apiKey);
-        //    VerifyAuthenticator (Client.Authenticator);
-        //}
+            var apiKey = Client.LogIn("admin", "secret");
+            Assert.AreEqual("api-key", apiKey);
+            VerifyAuthenticator(Client.Authenticator);
+        }
 
-        //private void VerifyAuthenticator(IAuthenticator authenticator)
-        //{
-        //    Mocker.Mock(new Uri("test:///authn/" + TestAccount + "/" + LoginName + "/authenticate"), "token")
-        //        .Verifier = (WebRequest wr) =>
-        //        {
-        //            var req = wr as WebMocker.MockRequest;
-        //            Assert.AreEqual("POST", wr.Method);
-        //            Assert.AreEqual("api-key", req.Body);
-        //        };
-        //    Assert.AreEqual("token", authenticator.GetToken());
-        //}
+        private void VerifyAuthenticator(IAuthenticator authenticator)
+        {
+            Mocker.Mock(new Uri("test:///authn/" + TestAccount + "/" + LoginName + "/authenticate"), "token")
+                .Verifier = (HttpRequestMessage requestMessage) =>
+                {
+                    Assert.AreEqual(HttpMethod.Post, requestMessage.Method);
+                    Assert.AreEqual("api-key", requestMessage.Content.ReadAsStringAsync().Result);
+                };
+            Assert.AreEqual("token", authenticator.GetToken());
+        }
 
         [Test]
         public void TestAuthenticatedRequest()
@@ -68,7 +65,7 @@ namespace Conjur.Test
 
             Client.Authenticator = new MockAuthenticator();
 
-            IEnumerator<Variable> actingAsClientVars = Client.ActingAs(role).ListVariables(null,1000,0).GetEnumerator();
+            IEnumerator<Variable> actingAsClientVars = Client.ActingAs(role).ListVariables(null, 1000, 0).GetEnumerator();
             IEnumerator<Variable> plainClientVars = Client.ListVariables(null, 1000, 0).GetEnumerator();
 
             Assert.AreEqual(true, actingAsClientVars.MoveNext());
@@ -102,10 +99,10 @@ namespace Conjur.Test
                     {
                         StreamReader reader = new StreamReader(policyResStream);
                         Assert.AreEqual(policyResponseText, reader.ReadToEnd());
-                    } 
-                    catch 
+                    }
+                    catch
                     {
-                        Assert.Fail("Failure in policy load response");    
+                        Assert.Fail("Failure in policy load response");
                     }
                 }
             }

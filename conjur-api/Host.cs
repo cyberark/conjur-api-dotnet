@@ -18,12 +18,12 @@ namespace Conjur
     public class Host
     {
         // these data members are assigned by a deserializer
-        #pragma warning disable 169
+        #pragma warning disable 169, 0649
         [DataMember]
         private string id;
         [DataMember]
         private string api_key;
-        #pragma warning restore 169
+        #pragma warning restore 169, 0649
 
         private NetworkCredential credential;
 

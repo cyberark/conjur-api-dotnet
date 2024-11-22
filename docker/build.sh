@@ -29,4 +29,10 @@ dotnet test --logger:"junit;LogFileName=/build/TestResults.xml"
 VERSION=$(project_version)
 dotnet build api-dotnet.sln --configuration Release /p:AssemblyVersion="$VERSION"
 
+# publish
+if [ -z "${WRITE_ARTIFACTORY_URL:-}" ]; then
+  echo "WRITE_ARTIFACTORY_URL is not set, skipping nuget push"
+  exit 0
+fi
+
 docker/nuget.sh "$VERSION"

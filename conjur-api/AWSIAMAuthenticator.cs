@@ -72,12 +72,6 @@ namespace Conjur
             // For now this can be handled by assuming the same role and allowing the AssumeRole permission for the role
             // for itself.
 
-            // TODO: Handle case where we're running on an EC2 instance that has the assigned role equal to the role
-            // used to authenticate to Conjur. Then we don't need to assume a different role and we already have
-            // the session token we need.
-            // For now this can be handled by assuming the same role and allowing the AssumeRole permission for the role
-            // for itself.
-
             if (!String.IsNullOrEmpty(this.conjurIAMRole))
             {
                 var assumeRoleReq = new AssumeRoleRequest()

@@ -97,7 +97,8 @@ namespace Conjur
                 this.Authenticator = new ApiKeyAuthenticator(
                   new Uri(this.ApplianceUri + "authn"),
                   this.GetAccountName(),
-                  value);
+                  value,
+                  this.httpClient);
             }
         }
 
