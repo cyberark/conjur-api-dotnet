@@ -35,7 +35,7 @@ namespace Conjur.Test
         public void TestTokenThreadSafe()
         {
             int authenticationCount = 0;
-            Action<HttpRequestMessage> verifier = (HttpRequestMessage requestMessage) =>
+            var verifier = (HttpRequestMessage requestMessage) =>
             {
                 ApiKeyVerifier(requestMessage);
                 Thread.Sleep(10);

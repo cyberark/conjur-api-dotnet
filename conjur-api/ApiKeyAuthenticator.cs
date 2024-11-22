@@ -9,7 +9,6 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -26,7 +25,7 @@ namespace Conjur
 
         private string token = null;
         private Timer timer = null;
-        private HttpClient httpClient;
+        private readonly HttpClient httpClient;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Conjur.ApiKeyAuthenticator"/> class.
