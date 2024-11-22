@@ -26,6 +26,7 @@ namespace Conjur
 
         private string token = null;
         private Timer timer = null;
+        private HttpClient httpClient;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Conjur.ApiKeyAuthenticator"/> class.
@@ -35,10 +36,11 @@ namespace Conjur
         /// <param name="account">The name of the Conjur organization account.</param>
         /// <param name="credential">User name and API key to use, where
         /// username is for example "bob" or "host/jenkins".</param>
-        public ApiKeyAuthenticator(Uri authnUri, string account, NetworkCredential credential)
+        public ApiKeyAuthenticator(Uri authnUri, string account, NetworkCredential credential, HttpClient httpClient = null)
         {
             this.credential = credential;
             this.uri = new Uri($"{authnUri}/{Uri.EscapeDataString(account)}/{Uri.EscapeDataString(credential.UserName)}/authenticate");
+            this.httpClient = httpClient ?? new HttpClient();
         }
 
         #region IAuthenticator implementation
@@ -60,8 +62,6 @@ namespace Conjur
             {
                 if (this.token == null)
                 {
-                    HttpClient httpClient = new HttpClient();
-                    httpClient.Timeout = TimeSpan.FromMilliseconds(ApiConfigurationManager.GetInstance().HttpRequestTimeout);
                     HttpRequestMessage httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, this.uri);
                     
                     IntPtr bstr = IntPtr.Zero;
@@ -83,7 +83,7 @@ namespace Conjur
                                 stream.Headers.ContentLength = credential.SecurePassword.Length;
                                 httpRequestMessage.Content = stream;
 
-                                var response = httpClient.Send(httpRequestMessage);
+                                var response = this.httpClient.Send(httpRequestMessage);
                                 response.EnsureSuccessStatusCode();
 
                                 Interlocked.Exchange(ref this.token, response.Read());

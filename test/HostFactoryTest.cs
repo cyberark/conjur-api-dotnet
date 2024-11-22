@@ -23,7 +23,6 @@ namespace Conjur.Test
                 .Verifier = (HttpRequestMessage requestMessage) =>
             {
                 Assert.AreEqual(HttpMethod.Post, requestMessage.Method);
-                Console.WriteLine(requestMessage.Headers.GetValues("Authorization").SingleOrDefault());
                 if (requestMessage.Headers.GetValues("Authorization").SingleOrDefault() != "Token token=\"host-factory-token\"")
                     throw new UnauthorizedException("Unauthorized", new HttpRequestException("Unauthorized"));
             };
