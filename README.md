@@ -28,7 +28,7 @@ questions, please contact us on [Discourse](https://discuss.cyberarkcommons.org/
 ## Requirements
 
 - Conjur Enterprise v10+ or Conjur Open Source v1+
-
+- .NET 6.0 or later
 - When using the **AWS Authenticator**, Conjur Enterprise v13+ or Conjur Cloud (Conjur OSS was not tested)
 
 ## Building
