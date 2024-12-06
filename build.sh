@@ -31,6 +31,7 @@ docker run \
 CID=$(cat "$CIDFILE")
 
 docker cp "$CID":"/build/TestResults.xml" .
+docker cp "$CID":"/build/Coverage.xml" .
 mkdir -p bin
 docker cp "$CID":"/build/conjur-api/bin/Release/net6.0/conjur-api.dll" bin/conjur-api.dll
 

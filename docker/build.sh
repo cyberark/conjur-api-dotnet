@@ -24,6 +24,8 @@ dotnet restore
 # test
 dotnet build
 dotnet test --logger:"junit;LogFileName=/build/TestResults.xml"
+dotnet test --collect:"Code Coverage;Format=Cobertura" --results-directory:"/build/TestResults"
+cp /build/TestResults/*/*.cobertura.xml /build/Coverage.xml
 
 # build
 VERSION=$(project_version)
