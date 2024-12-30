@@ -42,6 +42,7 @@ Thumbs.db
 *.dotCover
 StyleCop.Cache
 TestResult.xml
+Coverage.xml
 *.lock
 *.ide
 *.ide-shm
