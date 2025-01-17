@@ -212,7 +212,9 @@ Usage: Example  <applianceURL>
 
 `applianceCertificatePath`: the path and name of the Conjur appliance
  certificate. The easiest way to get the certifiate is to use the Conjur
-CLI command `conjur init -u conjur.myorg.com -f .conjurrc`. The certificate can be taken from any system you have run the Conjur CLI from.
+CLI command `conjur init -u <applianceURL> -a <accountName>` which will save the cert to
+`~/conjur-server.pem`. The certificate can be taken from any system you have
+run the Conjur CLI from.
 
 `accountName`: The name of the account in Conjur.
 
