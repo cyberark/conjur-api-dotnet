@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.0.4] - 2025-01-17
+
+### Fixed
+- Updated CLI command in documentation
+  ([cyberark/conjur-api-dotnet#53](https://github.com/cyberark/conjur-api-dotnet/issues/53))
+- Added .NET version requirements to README
+  ([cyberark/conjur-api-dotnet#62](https://github.com/cyberark/conjur-api-dotnet/issues/62))
+- Added code coverage reporting
+  ([cyberark/conjur-api-dotnet#35](https://github.com/cyberark/conjur-api-dotnet/issues/35))
+
 ## [3.0.3] - 2024-11-22
 
 ### Fixed
@@ -68,7 +78,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - `Variable.AddValue()` method for adding variable values.
 
-[Unreleased]: https://github.com/cyberark/conjur-api-dotnet/compare/v3.0.2...HEAD
+[Unreleased]: https://github.com/cyberark/conjur-api-dotnet/compare/v3.0.4...HEAD
+[3.0.4]: https://github.com/cyberark/conjur-api-dotnet/compare/v3.0.3...v3.0.4
+[3.0.3]: https://github.com/cyberark/conjur-api-dotnet/compare/v3.0.2...v3.0.3
 [3.0.2]: https://github.com/cyberark/conjur-api-dotnet/compare/v3.0.1...v3.0.2
 [3.0.1]: https://github.com/cyberark/conjur-api-dotnet/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/cyberark/conjur-api-dotnet/compare/v2.1.1...v3.0.0
