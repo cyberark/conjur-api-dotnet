@@ -12,6 +12,7 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Reflection;
 
 namespace Conjur
 {
@@ -24,6 +25,137 @@ namespace Conjur
         private readonly string actingAs;
         private bool disableCertCheck = false;
         internal HttpClient httpClient;
+        private static string integrationName = "SecretsManagerDotNet SDK";
+        private static string integrationType = "cybr-secretsmanager";
+        private static string integrationVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+        private static string vendorName = "CyberArk";
+
+        private static string vendorVersion = null;
+        private static string telemetryHeader = null;
+
+        /// <summary>
+        /// Gets or sets the name of the integration. 
+        /// When set, it also resets the cached telemetry header so it can be rebuilt.
+        /// </summary>
+        /// <value>
+        /// The name of the integration.
+        /// </value>
+        public static string IntegrationName
+        {
+            get => integrationName;
+            set
+            {
+                integrationName = value;
+                telemetryHeader = null;  
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the type of the integration. 
+        /// When set, it also resets the cached telemetry header so it can be rebuilt.
+        /// </summary>
+        /// <value>
+        /// The type of the integration.
+        /// </value>
+        public static string IntegrationType
+        {
+            get => integrationType;
+            set
+            {
+                integrationType = value;
+                telemetryHeader = null;  
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the version of the integration.
+        /// When set, it also resets the cached telemetry header so it can be rebuilt.
+        /// </summary>
+        /// <value>
+        /// The version of the integration.
+        /// </value>
+        public static string IntegrationVersion
+        {
+            get => integrationVersion;
+            set
+            {
+                integrationVersion = value;
+                telemetryHeader = null;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the name of the vendor.
+        /// When set, it also resets the cached telemetry header so it can be rebuilt.
+        /// </summary>
+        /// <value>
+        /// The name of the vendor.
+        /// </value>
+        public static string VendorName
+        {
+            get => vendorName;
+            set
+            {
+                vendorName = value;
+                telemetryHeader = null;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the version of the vendor.
+        /// When set, it also resets the cached telemetry header so it can be rebuilt.
+        /// </summary>
+        /// <value>
+        /// The version of the vendor.
+        /// </value>
+        public static string VendorVersion
+        {
+            get => vendorVersion;
+            set
+            {
+                vendorVersion = value;
+                telemetryHeader = null;
+            }
+        }
+
+        /// <summary>
+        /// Constructs and returns the telemetry header string based on the integration and vendor information.
+        /// The header is encoded in Base64 and uses URL-safe characters (`-` and `_`).
+        /// If the telemetry header has been previously generated, it will be cached and reused.
+        /// </summary>
+        /// <returns>
+        /// A Base64 encoded string representing the telemetry header, formatted as a URL-safe string.
+        /// </returns>
+        public static string GetTelemetryHeader(){
+            var sb = new StringBuilder();
+            if( telemetryHeader != null )
+            {
+                return telemetryHeader;
+            }
+            telemetryHeader = "";
+            if( integrationName != null )
+            {
+                sb.Append("in=").Append(integrationName);
+                if (integrationType != null) 
+                {
+                    sb.Append("&it=").Append(integrationType); 
+                }
+                if (integrationVersion != null) 
+                {
+                    sb.Append("&iv=").Append(integrationVersion); 
+                }
+            }
+            if( vendorName != null )
+            {
+                sb.Append("&vn=").Append(vendorName);
+                if (vendorVersion != null) 
+                {
+                    sb.Append("&vv=").Append(vendorVersion); 
+                }
+            }
+            telemetryHeader = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).Replace('+', '-').Replace('/', '_').TrimEnd('=');
+            return telemetryHeader;
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="T:Conjur.Client"/> class.
@@ -40,6 +172,7 @@ namespace Conjur
             httpClientHandler.ServerCertificateCustomValidationCallback = this.ValidateCertificate;
 
             this.httpClient = new HttpClient(httpClientHandler);
+            this.httpClient.DefaultRequestHeaders.Add("x-cybr-telemetry", GetTelemetryHeader());
             this.httpClient.Timeout = TimeSpan.FromMilliseconds(ApiConfigurationManager.GetInstance().HttpRequestTimeout);
         }
 

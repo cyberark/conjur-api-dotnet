@@ -107,5 +107,81 @@ namespace Conjur.Test
                 }
             }
         }
+
+        [Test]
+        public void TestGetTelemetryHeader_WithAllValues()
+        {
+            // Arrange: Set all properties to ensure full header construction
+            string expected = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("in=MyIntegration&it=custom-type&iv=1.0.0&vn=MyVendor&vv=1.0")).Replace('+', '-').Replace('/', '_').TrimEnd('=');
+            Client.IntegrationName = "MyIntegration";
+            Client.IntegrationType = "custom-type";
+            Client.IntegrationVersion = "1.0.0";
+            Client.VendorName = "MyVendor";
+            Client.VendorVersion = "1.0";
+
+            // Act
+            string result = Client.GetTelemetryHeader();
+
+            // Assert
+            Assert.AreEqual(expected, result);
+        }
+
+        [Test]
+        public void TestTelemetryHeaderCaching()
+        {
+            // Arrange: Set initial values and get the telemetry header
+            Client.IntegrationName = "MyIntegration";
+            Client.IntegrationType = "custom-type";
+            Client.IntegrationVersion = "1.0.0";
+            Client.VendorName = "MyVendor";
+            Client.VendorVersion = "1.0";
+            
+            string firstHeader = Client.GetTelemetryHeader();
+
+            // Act: Change a property and check if the header changes
+            Client.IntegrationName = "NewIntegration";
+            string secondHeader = Client.GetTelemetryHeader();
+
+            // Assert: Ensure header changes after a property change
+            Assert.AreNotEqual(firstHeader, secondHeader);
+        }
+
+        [Test]
+        public void TestGetTelemetryHeader_WithNullVendorVersion()
+        {
+            // Arrange: Set properties, leaving vendor version as null
+            Client.IntegrationName = "MyIntegration";
+            Client.IntegrationType = "custom-type";
+            Client.IntegrationVersion = "1.0.0";
+            Client.VendorName = "MyVendor";
+            Client.VendorVersion = null;  // Vendor version is null
+            
+            string expected = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("in=MyIntegration&it=custom-type&iv=1.0.0&vn=MyVendor")).Replace('+', '-').Replace('/', '_').TrimEnd('=');
+            
+            // Act
+            string result = Client.GetTelemetryHeader();
+
+            // Assert
+            Assert.AreEqual(expected, result);
+        }
+
+        [Test]
+        public void TestHttpClientTelemetryHeaderAdded()
+        {
+            // Arrange: Mock the GetTelemetryHeader method to return a fixed value
+            string mockTelemetryHeader = "aW49TXlJbnRlZ3JhdGlvbiZpdD1jdXN0b20tdHlwZSZpdj0xLjAuMCZ2bj1NeVZlbmRvciZ2dj0xLjA";
+            Client.IntegrationName = "MyIntegration";
+            Client.IntegrationType = "custom-type";
+            Client.IntegrationVersion = "1.0.0";
+            Client.VendorName = "MyVendor";
+            Client.VendorVersion = "1.0";
+
+            // Act: Create the Client object (which will add the header)
+            var client = new Client("https://example.com", "test-account");
+
+            // Assert: Verify that the "x-cybr-telemetry" header was added to the HttpClient's DefaultRequestHeaders
+            var headerValue = client.httpClient.DefaultRequestHeaders.GetValues("x-cybr-telemetry").FirstOrDefault();
+            Assert.AreEqual(mockTelemetryHeader, headerValue);
+        }
     }
 }
