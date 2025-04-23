@@ -1,139 +1,170 @@
 ﻿// <copyright file="Resource.cs" company="CyberArk Software Ltd.">
-//     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
+//     Copyright (c) 2025 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>
 //     Base class representing a Conjur resource.
 // </summary>
 
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Http;
+using System.Runtime.CompilerServices;
 
-namespace Conjur
+namespace Conjur;
+
+/// <summary>
+/// Base class representing a Conjur resource.
+/// </summary>
+public class Resource
 {
     /// <summary>
-    /// Base class representing a Conjur resource.
+    /// The Conjur client used to manipulate this resource.
     /// </summary>
-    public class Resource
+    protected readonly Client Client;
+
+    /// <summary>
+    /// Gets resource name.
+    /// </summary>
+    /// <value>The name of the resource.</value>
+    public string Name { get; }
+
+    /// <summary>
+    /// Gets the resource identifier, in format of account:kind:name.
+    /// </summary>
+    /// <value>The identifier.</value>
+    public string Id { get; }
+
+    /// <summary>
+    /// Gets the resource Kind.
+    /// </summary>
+    /// <value>The kind.</value>
+    public string Kind { get; }
+
+    /// <summary>
+    /// Gets the resource path.
+    /// </summary>
+    /// <value>The resource path.</value>
+    protected string ResourcePath { get; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Conjur.Resource"/> class.
+    /// </summary>
+    /// <param name="client">Conjur client used to manipulate this resource.</param>
+    /// <param name="kind">Resource kind.</param>
+    /// <param name="name">Resource name.</param>
+    internal Resource(Client client, string kind, string name)
     {
-        /// <summary>
-        /// The Conjur client used to manipulate this resource.
-        /// </summary>
-        protected readonly Client Client;
+        Client = client;
+        Kind = kind;
+        Name = name;
+        Id = $"{client.AccountName}:{kind}:{Name}";
+        ResourcePath = $"resources/{Uri.EscapeDataString(Client.AccountName)}/{Uri.EscapeDataString(Kind)}/{Uri.EscapeDataString(Name)}";
+    }
 
-        private readonly string kind;
-        private string resourcePath;
+    /// <summary>
+    /// Determines whether the authenticated user holds the specified privilege
+    /// on this resource.
+    /// </summary>
+    /// <returns><c>true</c> if the authenticated user holds the specified
+    /// privilege; otherwise, <c>false</c>.</returns>
+    /// <param name="privilege">Privilege to check.</param>
+    public bool Check(string privilege)
+    {
+        var req = Client.AuthenticatedRequest($"{ResourcePath}/?check=true&privilege={Uri.EscapeDataString(privilege)}");
+        req.Method = HttpMethod.Head;
 
-        /// <summary>
-        /// Gets resource name.
-        /// </summary>
-        /// <value>The name of the resource.</value>
-        public string Name { get; }
-
-        /// <summary>
-        /// Gets the resource identifier, in format of account:kind:name.
-        /// </summary>
-        /// <value>The identifier.</value>
-        public string Id { get; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Conjur.Resource"/> class.
-        /// </summary>
-        /// <param name="client">Conjur client used to manipulate this resource.</param>
-        /// <param name="kind">Resource kind.</param>
-        /// <param name="name">Resource name.</param>
-        internal Resource(Client client, string kind, string name)
+        try
         {
-            this.Client = client;
-            this.kind = kind;
-            this.Name = name;
-            this.Id = $"{client.GetAccountName()}:{kind}:{Name}";
+            var response = Client.Send(req);
+            response.EnsureSuccessStatusCode();
+            return true;
         }
-
-        /// <summary>
-        /// Gets the resource path.
-        /// </summary>
-        /// <value>The resource path.</value>
-        protected string ResourcePath
+        catch (HttpRequestException exn) when (exn.StatusCode == HttpStatusCode.Forbidden)
         {
-            get
-            {
-                if (this.resourcePath == null) {
-                    this.resourcePath = "resources/" +
-                    Uri.EscapeDataString(this.Client.GetAccountName()) + "/" +
-                    Uri.EscapeDataString(this.kind) + "/" + Uri.EscapeDataString(this.Name);
-                }
-
-                return this.resourcePath;
-            }
-        }
-
-        /// <summary>
-        /// Determines whether the authenticated user holds the specified privilege
-        /// on this resource.
-        /// </summary>
-        /// <returns><c>true</c> if the authenticated user holds the specified
-        /// privilege; otherwise, <c>false</c>.</returns>
-        /// <param name="privilege">Privilege to check.</param>
-        public bool Check(string privilege)
-        {
-            var req = this.Client.AuthenticatedRequest(this.ResourcePath
-                          + "/?check=true&privilege=" + Uri.EscapeDataString(privilege));
-            req.Method = HttpMethod.Head;
-
-            try
-            {
-                var response = this.Client.httpClient.Send(req);
-                response.EnsureSuccessStatusCode();
-                return true;
-            }
-            catch (HttpRequestException exn)
-            {
-                if (exn.StatusCode == HttpStatusCode.Forbidden) {
-                    return false;
-                }
-
-                throw;
-            }
-        }
-
-        internal static IEnumerable<T> ListResources<T, TResult>(Client client, string kind, Func<TResult, T> newT,
-         string query = null, uint limit = 10000, uint offset = 0)
-        {
-            List<TResult> resultList;
-            do
-            {
-                string pathListResourceQuery = $"resources/{client.GetAccountName()}/{kind}?offset={offset}&limit={limit}"
-                    + ((query != null) ? $"&search={query}" : string.Empty);
-
-                resultList = JsonSerializer<List<TResult>>.Read(client.httpClient.Send(client.AuthenticatedRequest(pathListResourceQuery)));
-                foreach (TResult searchResult in resultList)
-                {
-                    yield return newT(searchResult);
-                }
-
-                offset += (uint)resultList.Count;
-            } while (resultList.Count > 0 && offset % limit == 0);
-        }
-
-        internal static uint CountResources(Client client, string kind, string query = null)
-        {
-            string pathCountResourceQuery = $"resources/{client.GetAccountName()}/{kind}?count=true" + ((query != null) ? $"&search={query}" : string.Empty);
-            CountResult countJsonObj = JsonSerializer<CountResult>.Read(client.httpClient.Send(client.AuthenticatedRequest(pathCountResourceQuery)));
-            return Convert.ToUInt32(countJsonObj.Count);
-        }
-
-        /// <summary>
-        /// Parse Conjur id following format of acount:kind:name to extract name.
-        /// </summary>
-        /// <returns>Extracted name from id.</returns>
-        /// <param name="id">Conjur Identifier.</param>
-        /// <param name="account">Conjur Account.</param>
-        /// <param name="kind">Conjur resource kind.</param>
-        protected static string IdToName(string id, string account, string kind)
-        {
-            return id.Substring($"{account}:{kind}:".Length);
+            return false;
         }
     }
+
+    /// <summary>
+    /// Determines whether the authenticated user holds the specified privilege
+    /// on this resource.
+    /// </summary>
+    /// <returns><c>true</c> if the authenticated user holds the specified
+    /// privilege; otherwise, <c>false</c>.</returns>
+    /// <param name="privilege">Privilege to check.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+    public async Task<bool> CheckAsync(string privilege, CancellationToken cancellationToken = default)
+    {
+        var req = await Client.AuthenticatedRequestAsync($"{ResourcePath}/?check=true&privilege={Uri.EscapeDataString(privilege)}", cancellationToken);
+        req.Method = HttpMethod.Head;
+
+        try
+        {
+            var response = await Client.SendAsync(req, cancellationToken);
+            response.EnsureSuccessStatusCode();
+            return true;
+        }
+        catch (HttpRequestException exn) when (exn.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return false;
+        }
+    }
+
+    internal static IEnumerable<T> ListResources<T, TResult>(Client client, string kind, Func<TResult, T> map, string query = null, uint limit = 10000, uint offset = 0)
+    {
+        List<TResult> resultList;
+        do
+        {
+            var pathListResourceQuery = $"resources/{client.AccountName}/{kind}?offset={offset}&limit={limit}"
+                                        + ((query is not null) ? $"&search={query}" : string.Empty);
+
+            resultList = JsonSerializer<List<TResult>>.Read(client.Send(client.AuthenticatedRequest(pathListResourceQuery)));
+            foreach (var searchResult in resultList)
+            {
+                yield return map(searchResult);
+            }
+
+            offset += (uint)resultList.Count;
+        } while (resultList.Count > 0 && offset % limit == 0);
+    }
+
+    internal static async IAsyncEnumerable<T> ListResourcesAsync<T, TResult>(Client client, string kind, Func<TResult, T> map, string query = null, uint limit = 10000, uint offset = 0, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        List<TResult> resultList;
+        do
+        {
+            var pathListResourceQuery = $"resources/{client.AccountName}/{kind}?offset={offset}&limit={limit}"
+                                        + (query is not null ? $"&search={query}" : string.Empty);
+
+            var request = await client.AuthenticatedRequestAsync(pathListResourceQuery, cancellationToken);
+            resultList = await JsonSerializer<List<TResult>>.ReadAsync(client, request, cancellationToken);
+            foreach (var searchResult in resultList)
+            {
+                yield return map(searchResult);
+            }
+
+            offset += (uint)resultList.Count;
+        } while (resultList.Count > 0 && offset % limit == 0);
+    }
+
+    internal static uint CountResources(Client client, string kind, string query = null)
+    {
+        var pathCountResourceQuery = $"resources/{client.AccountName}/{kind}?count=true" + ((query != null) ? $"&search={query}" : string.Empty);
+        var countJsonObj = JsonSerializer<CountResult>.Read(client.Send(client.AuthenticatedRequest(pathCountResourceQuery)));
+        return Convert.ToUInt32(countJsonObj.Count);
+    }
+
+    internal static async Task<uint> CountResourcesAsync(Client client, string kind, string query = null, CancellationToken cancellationToken = default)
+    {
+        var pathCountResourceQuery = $"resources/{client.AccountName}/{kind}?count=true" + ((query != null) ? $"&search={query}" : string.Empty);
+        var request = await client.AuthenticatedRequestAsync(pathCountResourceQuery, cancellationToken);
+        var countJsonObj = await JsonSerializer<CountResult>.ReadAsync(client, request, cancellationToken);
+        return countJsonObj.Count;
+    }
+
+    /// <summary>
+    /// Parse Conjur id following format of account:kind:name to extract name.
+    /// </summary>
+    /// <returns>Extracted name from id.</returns>
+    /// <param name="id">Conjur Identifier.</param>
+    /// <param name="account">Conjur Account.</param>
+    /// <param name="kind">Conjur resource kind.</param>
+    protected internal static string IdToName(string id, string account, string kind) => id[(account.Length + kind.Length + 2)..];
 }
