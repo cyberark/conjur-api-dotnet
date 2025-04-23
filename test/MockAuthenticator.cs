@@ -1,10 +1,8 @@
-namespace Conjur.Test
+namespace Conjur.Test;
+
+public class MockAuthenticator : IAuthenticator
 {
-    public class MockAuthenticator : IAuthenticator
-    {
-        public string GetToken()
-        {
-            return "token";
-        }
-    }
+    public string GetToken() => "token";
+
+    public Task<string> GetTokenAsync(CancellationToken cancellationToken) => Task.FromResult("token");
 }

@@ -1,29 +1,13 @@
 ﻿// <copyright file="UnauthorizedException.cs" company="CyberArk Software Ltd.">
-//     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
+//     Copyright (c) 2025 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>
 //     Unauthorized exception.
 // </summary>
 
-using System;
-using System.Net;
-using System.Net.Http;
+namespace Conjur;
 
-namespace Conjur
-{
-    /// <summary>
-    /// Exception raised on bad authorization.
-    /// </summary>
-    public class UnauthorizedException : Exception
-    {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Conjur.UnauthorizedException"/> class.
-        /// </summary>
-        /// <param name="message">Descriptive error message.</param>
-        /// <param name="exception">Wrapped exception.</param>
-        public UnauthorizedException(string message, HttpRequestException exception)
-            : base(message, exception)
-        {
-        }
-    }
-}
+/// <summary>
+/// Exception raised on bad authorization.
+/// </summary>
+public class UnauthorizedException(string message, HttpRequestException exception) : Exception(message, exception);

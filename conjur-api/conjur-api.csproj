@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <OutputType>Library</OutputType>
     <RootNamespace>Conjur</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -10,6 +10,7 @@
     <Product>Conjur .NET API</Product>
     <Copyright>%28c%29 CyberArk Software Ltd.</Copyright>
     <AssemblyVersion>unset</AssemblyVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>bin\Debug</OutputPath>
@@ -27,5 +28,10 @@
     <PackageReference Include="Aws4RequestSigner" Version="1.0.3" />
     <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.201.16" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="System.Net" />
+    <Using Include="System.Net.Http.Json" />
+    <Using Include="System.Text" />
   </ItemGroup>
 </Project>
