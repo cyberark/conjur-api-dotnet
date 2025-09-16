@@ -1,122 +1,184 @@
 // <copyright file="ApiKeyAuthenticator.cs" company="CyberArk Software Ltd.">
-//     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
+//     Copyright (c) 2025 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>
 //     API key authenticator.
 // </summary>
 
-using System;
-using System.IO;
-using System.Net;
-using System.Net.Http;
 using System.Runtime.InteropServices;
-using System.Threading;
 
-namespace Conjur
+namespace Conjur;
+
+/// <summary>
+/// API key authenticator.
+/// </summary>
+public class ApiKeyAuthenticator : IAuthenticator
 {
+    private readonly Uri uri;
+    private readonly NetworkCredential credential;
+    private readonly SemaphoreSlim semaphoreSlim = new(1, 1);
+    private readonly Client client;
+
+    private volatile string token;
+    private Timer timer;
+
     /// <summary>
-    /// API key authenticator.
+    /// Initializes a new instance of the <see cref="Conjur.ApiKeyAuthenticator"/> class.
     /// </summary>
-    public class ApiKeyAuthenticator : IAuthenticator
+    /// <param name="authnUri">Authentication base URI, for example
+    /// "https://example.com/api/authn".</param>
+    /// <param name="account">The name of the Conjur organization account.</param>
+    /// <param name="credential">Username and API key to use, where
+    /// username is for example "bob" or "host/jenkins".</param>
+    /// <param name="client">Client to use</param>
+    public ApiKeyAuthenticator(Uri authnUri, string account, NetworkCredential credential, Client client)
     {
-        private readonly Uri uri;
-        private readonly NetworkCredential credential;
-        private readonly object locker = new object();
+        uri = new Uri($"{authnUri}/{Uri.EscapeDataString(account)}/{Uri.EscapeDataString(credential.UserName)}/authenticate");
+        this.credential = credential;
+        this.client = client;
+    }
 
-        private string token = null;
-        private Timer timer = null;
-        private readonly HttpClient httpClient;
+    #region IAuthenticator implementation
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Conjur.ApiKeyAuthenticator"/> class.
-        /// </summary>
-        /// <param name="authnUri">Authentication base URI, for example
-        /// "https://example.com/api/authn".</param>
-        /// <param name="account">The name of the Conjur organization account.</param>
-        /// <param name="credential">User name and API key to use, where
-        /// username is for example "bob" or "host/jenkins".</param>
-        public ApiKeyAuthenticator(Uri authnUri, string account, NetworkCredential credential, HttpClient httpClient = null)
+    public string GetToken()
+    {
+        var localToken = token;
+        if (localToken is not null)
         {
-            this.credential = credential;
-            this.uri = new Uri($"{authnUri}/{Uri.EscapeDataString(account)}/{Uri.EscapeDataString(credential.UserName)}/authenticate");
-            this.httpClient = httpClient ?? new HttpClient();
+            return localToken;
         }
 
-        #region IAuthenticator implementation
-
-        /// <summary>
-        /// Obtain a Conjur authentication token.
-        /// </summary>
-        /// <returns>Conjur authentication token in verbatim form.
-        /// It needs to be base64-encoded to be used in a web request.</returns>
-        public string GetToken()
+        semaphoreSlim.Wait();
+        try
         {
-            string token = this.token;
-            if (token != null)
+            localToken = token;
+            if (localToken is not null)
             {
-                return token;
+                return localToken;
             }
 
-            lock (this.locker)
+            var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, uri);
+
+            var bStr = IntPtr.Zero;
+            var bArr = new byte[credential.SecurePassword.Length];
+            try
             {
-                if (this.token == null)
+                bStr = Marshal.SecureStringToBSTR(credential.SecurePassword);
+                for (var i = 0; i < credential.SecurePassword.Length; i++)
                 {
-                    HttpRequestMessage httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, this.uri);
-                    
-                    IntPtr bstr = IntPtr.Zero;
-                    byte[] bArr = new byte[credential.SecurePassword.Length];
-                    try
-                    {
-                        bstr = Marshal.SecureStringToBSTR(credential.SecurePassword);
-                        for (int i = 0; i < credential.SecurePassword.Length; i++)
-                        {
-                            bArr[i] = Marshal.ReadByte(bstr, i * 2);
-                        }
-                        using (Stream memoryStream = new MemoryStream())
-                        {
-                            memoryStream.Write(bArr, 0, bArr.Length);
-                            memoryStream.Seek(0, SeekOrigin.Begin);
-
-                            using (var stream = new StreamContent(memoryStream))
-                            {
-                                stream.Headers.ContentLength = credential.SecurePassword.Length;
-                                httpRequestMessage.Content = stream;
-
-                                var response = this.httpClient.Send(httpRequestMessage);
-                                response.EnsureSuccessStatusCode();
-
-                                Interlocked.Exchange(ref this.token, response.Read());
-                            }
-                            this.StartTokenTimer(TimeSpan.FromMilliseconds(ApiConfigurationManager.GetInstance().TokenRefreshTimeout));
-                        }
-                    }
-                    finally
-                    {
-                        if (bstr != IntPtr.Zero)
-                        {
-                            Marshal.ZeroFreeBSTR(bstr);
-                        }
-                        Array.Clear(bArr, 0, bArr.Length);
-                    }
+                    bArr[i] = Marshal.ReadByte(bStr, i * 2);
                 }
+
+                using var memoryStream = new MemoryStream();
+                memoryStream.Write(bArr, 0, bArr.Length);
+                memoryStream.Seek(0, SeekOrigin.Begin);
+
+                using (var stream = new StreamContent(memoryStream))
+                {
+                    stream.Headers.ContentLength = credential.SecurePassword.Length;
+                    httpRequestMessage.Content = stream;
+
+                    localToken = client.Send(httpRequestMessage).Read();
+                    Interlocked.Exchange(ref token, localToken);
+                }
+
+                StartTokenTimer(TimeSpan.FromMilliseconds(ApiConfigurationManager.GetInstance().TokenRefreshTimeout));
             }
-            return this.token;
-        }
-        #endregion
+            finally
+            {
+                if (bStr != IntPtr.Zero)
+                {
+                    Marshal.ZeroFreeBSTR(bStr);
+                }
 
-        internal void StartTokenTimer(TimeSpan timeout)
+                Array.Clear(bArr, 0, bArr.Length);
+            }
+        }
+        finally
         {
-            this.timer = new Timer(this.TimerCallback, null, timeout, Timeout.InfiniteTimeSpan);
+            semaphoreSlim.Release();
         }
 
-        private void TimerCallback(object state)
+        return localToken;
+    }
+
+    public async Task<string> GetTokenAsync(CancellationToken cancellationToken = default)
+    {
+        var localToken = token;
+        if (localToken is not null)
         {
-            // timer is disposable resource but there is no way to dispose it from outside
-            // so each time when token expires we dispose it
-            // it will allow garbage collection of unecessary client and authentificator classes
-            this.timer.Dispose();
-            this.timer = null;
-            Interlocked.Exchange(ref this.token, null);
+            return localToken;
         }
+
+        await semaphoreSlim.WaitAsync(cancellationToken);
+        try
+        {
+            localToken = token;
+            if (localToken is not null)
+            {
+                return localToken;
+            }
+
+            var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, uri);
+
+            var bStr = IntPtr.Zero;
+            var bArr = new byte[credential.SecurePassword.Length];
+            try
+            {
+                bStr = Marshal.SecureStringToBSTR(credential.SecurePassword);
+                for (var i = 0; i < credential.SecurePassword.Length; i++)
+                {
+                    bArr[i] = Marshal.ReadByte(bStr, i * 2);
+                }
+
+                using var memoryStream = new MemoryStream();
+                memoryStream.Write(bArr, 0, bArr.Length);
+                memoryStream.Seek(0, SeekOrigin.Begin);
+
+                using (var stream = new StreamContent(memoryStream))
+                {
+                    stream.Headers.ContentLength = credential.SecurePassword.Length;
+                    httpRequestMessage.Content = stream;
+
+                    localToken = await client.SendAsync(httpRequestMessage, cancellationToken).ReadAsync(cancellationToken);
+                    Interlocked.Exchange(ref token, localToken);
+                }
+
+                StartTokenTimer(TimeSpan.FromMilliseconds(ApiConfigurationManager.GetInstance().TokenRefreshTimeout));
+            }
+            finally
+            {
+                if (bStr != IntPtr.Zero)
+                {
+                    Marshal.ZeroFreeBSTR(bStr);
+                }
+
+                Array.Clear(bArr, 0, bArr.Length);
+            }
+        }
+        finally
+        {
+            semaphoreSlim.Release();
+        }
+
+        return localToken;
+    }
+
+    #endregion
+
+    internal void StartTokenTimer(TimeSpan timeout)
+    {
+        timer = new Timer(TimerCallback, this, timeout, Timeout.InfiniteTimeSpan);
+    }
+
+    private static void TimerCallback(object state)
+    {
+        var authenticator = (ApiKeyAuthenticator)state;
+        // timer is disposable resource but there is no way to dispose it from outside
+        // so each time when token expires we dispose it
+        // will allow garbage collection of necessary client and authenticator classes
+        authenticator.timer.Dispose();
+        authenticator.timer = null;
+        Interlocked.Exchange(ref authenticator.token, null);
     }
 }

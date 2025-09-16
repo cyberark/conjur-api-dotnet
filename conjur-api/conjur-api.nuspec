@@ -8,7 +8,7 @@
     <owners>CyberArk Software Ltd</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>conjur-api-dotnet</description>
-    <copyright>CyberArk Copyright 2020</copyright>
+    <copyright>CyberArk Copyright 2025</copyright>
   </metadata>
   <files>
     <file src="bin/Release/conjur-api.dll" target="lib/net452" />

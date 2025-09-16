@@ -1,47 +1,48 @@
 ﻿// <copyright file="HostFactoryToken.cs" company="CyberArk Software Ltd.">
-//     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
+//     Copyright (c) 2025 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>
 //     Host factory token.
 // </summary>
 
-using System;
-using System.Net;
-using System.Net.Http;
+namespace Conjur;
 
-namespace Conjur
+internal class HostFactoryToken(Client client, string token)
 {
-    internal class HostFactoryToken
+    public Host CreateHost(string name)
     {
-        private readonly string token;
-        private readonly Client client;
+        var request = BuildCreateHostRequest(name);
 
-        public HostFactoryToken(Client client, string token)
+        try
         {
-            this.client = client;
-            this.token = token;
+            var response = client.Send(request);
+            return JsonSerializer<Host>.Read(response);
         }
-
-        public Host CreateHost(string name)
+        catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.Unauthorized)
         {
-            HttpRequestMessage request = this.client.Request("host_factories/hosts?id="
-                              + Uri.EscapeDataString(name));
-            request.Headers.Add("Authorization", "Token token=\"" + this.token + "\"");
-            request.Method = HttpMethod.Post;
-
-            try
-            {
-                var response = client.httpClient.Send(request);
-                return JsonSerializer<Host>.Read(response);
-            }
-            catch (HttpRequestException e)
-            {
-                if (e.StatusCode == HttpStatusCode.Unauthorized) {
-                    throw new UnauthorizedException("Invalid host factory token", e);
-                } else {
-                    throw;
-                }
-            }
+            throw new UnauthorizedException("Invalid host factory token", e);
         }
+    }
+
+    public async Task<Host> CreateHostAsync(string name, CancellationToken cancellationToken)
+    {
+        var request = BuildCreateHostRequest(name);
+
+        try
+        {
+            return await JsonSerializer<Host>.ReadAsync(client, request, cancellationToken);
+        }
+        catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            throw new UnauthorizedException("Invalid host factory token", e);
+        }
+    }
+
+    private HttpRequestMessage BuildCreateHostRequest(string name)
+    {
+        var request = client.Request("host_factories/hosts?id=" + Uri.EscapeDataString(name));
+        request.Headers.Add("Authorization", $"Token token=\"{token}\"");
+        request.Method = HttpMethod.Post;
+        return request;
     }
 }

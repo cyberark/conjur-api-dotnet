@@ -1,5 +1,5 @@
 ﻿// <copyright file="AssemblyInfo.cs" company="CyberArk Software Ltd.">
-//     Copyright (c) 2020 CyberArk Software Ltd. All rights reserved.
+//     Copyright (c) 2025 CyberArk Software Ltd. All rights reserved.
 // </copyright>
 // <summary>
 // Assembly info.
