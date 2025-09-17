@@ -1,8 +1,8 @@
-# Conjur API for .NET
+# CyberArk Secrets Manager API for .NET
 
-Programmatic .NET access to [Conjur](https://conjur.org) (for both Conjur Open Source and Enterprise).
-This .NET SDK allows developers to build new apps in .NET that communicate with Conjur by
-invoking our Conjur API to perform operations on stored data (add, retrieve, etc)
+Programmatic .NET access to CyberArk Secrets Manager and Conjur OSS.
+This .NET SDK allows developers to build new apps in .NET that communicate with Secrets Manager by
+invoking our Secrets Manager API to perform operations on stored data (add, retrieve, etc)
 
 ## Table of Contents
 
@@ -27,9 +27,9 @@ questions, please contact us on [Discourse](https://discuss.cyberarkcommons.org/
 
 ## Requirements
 
-- Conjur Enterprise v10+ or Conjur Open Source v1+
+- CyberArk Secrets Manager, Self-Hosted; CyberArk Secrets Manager, Saas; or Conjur OSS
 - .NET 6.0 or later
-- When using the **AWS Authenticator**, Conjur Enterprise v13+ or Conjur Cloud (Conjur OSS was not tested)
+- When using the **AWS Authenticator**, CyberArk Secrets Manager, Self-Hosted v13+ or CyberArk Secrets Manager, SaaS (Conjur OSS was not tested)
 
 ## Building
 
@@ -38,9 +38,9 @@ questions, please contact us on [Discourse](https://discuss.cyberarkcommons.org/
 To load in Visual Studio, from the Visual Studio File menu select Open > Project/Solution > api-dotnet.sln
 and build the solution. This will create:
 
-- conjur-api.dll: the .NET version of the Conjur API.
-- ConjurTest.dll: test DLL used for automated testing of the Conjur .NET API
-- example.exe: sample application that uses the Conjur API.
+- conjur-api.dll: the .NET version of the Secrets Manager API.
+- ConjurTest.dll: test DLL used for automated testing of the Secrets Manager .NET API
+- example.exe: sample application that uses the Secrets Manager API.
 
 ### Docker
 
@@ -57,24 +57,24 @@ make -C docker
 
 #### `Client Client(uri, account)`
 
-- Create new Conjur instance
-  - `uri` - URI of the Conjur server. Example: `https://myconjur.org.com/api`
-  - `account` - Name of the Conjur account
+- Create new Secrets Manager instance
+  - `uri` - URI of the Secrets Manager server. Example: `https://myconjur.org.com/api`
+  - `account` - Name of the Secrets Manager account
 
 #### `void client.LogIn(string userName, string password)`
 
-- Login to a Conjur user
-  - `userName` - Username of Conjur user to login as
+- Login to a Secrets Manager user
+  - `userName` - Username of Secrets Manager user to login as
   - `password` - Password of user
 
 #### `void client.TrustedCertificates.ImportPem (string certPath)`
 
-- Add Conjur root certificate to system trust store
+- Add Secrets Manager root certificate to system trust store
   - `certPath` = Path to cert
 
 #### `void client.DisableCertCheck()`
 
-- Disable SSL Cert check -- used when Conjur is configured with self-signed cert. Do not use in production.
+- Disable SSL Cert check -- used when Secrets Manager is configured with self-signed cert. Do not use in production.
 
 #### `void client.EnableCertCheck()`
 
@@ -93,7 +93,7 @@ make -C docker
 
 #### `uint client.CountVariables(string query = null)`
 
-- Return count of Conjur variables conforming to the `query` parameter
+- Return count of Secrets Manager variables conforming to the `query` parameter
   - `query` - Additional query parameters (not required)
 
 #### `Host client.CreateHost(string name, string hostFactoryToken)`
@@ -104,7 +104,7 @@ make -C docker
 
 #### `client.Authenticator = new Conjur.AWSIAMAuthenticator(Conjur.Client client, string Identity, string Authenticator, string roleArn = "", string ConjurAWSRegion = "us-east-1")`
 
-- **REQUIREMENTS**: Conjur Enterprise v13+ or Conjur Cloud (Conjur OSS was not tested)
+- **REQUIREMENTS**: CyberArk Secrets Manager, Self-Hosted v13+ or CyberArk Secrets Manager, SaaS (Conjur OSS was not tested)
 - Configure the client to use the AWS IAM Authenticator
   - Client must be instantiated with these attributes before instantiating the AWS authenticator:
     - `ApplianceUri`
@@ -115,12 +115,12 @@ make -C docker
 
 #### `Policy client.Policy(string policyName)`
 
-- Create a Conjur policy object
+- Create a Secrets Manager policy object
   - `policyName` - Name of policy
 
 #### `policy.LoadPolicy(Stream policyContent)`
 
-- Load policy into Conjur
+- Load policy into Secrets Manager
   - `policyContent` - The policy
 
 ### `Variable`
@@ -210,23 +210,23 @@ Usage: Example  <applianceURL>
 
 `applianceURL`: the applianceURL e.g. `https://conjur.myorg.com/`
 
-`applianceCertificatePath`: the path and name of the Conjur appliance
- certificate. The easiest way to get the certifiate is to use the Conjur
+`applianceCertificatePath`: the path and name of the Secrets Manager appliance
+ certificate. The easiest way to get the certifiate is to use the Secrets Manager
 CLI command `conjur init -u <applianceURL> -a <accountName>` which will save the cert to
 `~/conjur-server.pem`. The certificate can be taken from any system you have
-run the Conjur CLI from.
+run the Secrets Manager CLI from.
 
-`accountName`: The name of the account in Conjur.
+`accountName`: The name of the account in Secrets Manager.
 
-`username`: Username of a user in Conjur. Alternatively can be a hostname.
+`username`: Username of a user in Secrets Manager. Alternatively can be a hostname.
 
-`password`: Password of a user in Conjur. Alternatively can be a host apiKey.
+`password`: Password of a user in Secrets Manager. Alternatively can be a host apiKey.
 
-`variableId`: The name of an existing variable in Conjur that has a value set and for which the `username` has execute permissions.
+`variableId`: The name of an existing variable in Secrets Manager that has a value set and for which the `username` has execute permissions.
 
 `hostFactoryToken`: A host factory token. The easiest way to get a host
  factory token for testing is to add a hostfactory to a layer using
-the Conjur CLI command `conjur hostfactory create` and
+the Secrets Manager CLI command `conjur hostfactory create` and
  `conjur hostfactory token create`. Take the token returned from that call
 and pass it as the hostFactoryToken parameter to this example.
 

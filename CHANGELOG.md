@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.1.1] - 2025-09-17
+
+### Changed
+- Updated documentation to align with Conjur Enterprise name change to Secrets Manager. (CNJR-10974)
+
 ## [3.1.0] - 2025-09-03
 
 ### Added
@@ -85,7 +90,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - `Variable.AddValue()` method for adding variable values.
 
-[Unreleased]: https://github.com/cyberark/conjur-api-dotnet/compare/v3.1.0...HEAD
+[Unreleased]: https://github.com/cyberark/conjur-api-dotnet/compare/v3.1.1...HEAD
+[3.1.1]: https://github.com/cyberark/conjur-api-dotnet/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/cyberark/conjur-api-dotnet/compare/v3.0.4...v3.1.0
 [3.0.4]: https://github.com/cyberark/conjur-api-dotnet/compare/v3.0.3...v3.0.4
 [3.0.3]: https://github.com/cyberark/conjur-api-dotnet/compare/v3.0.2...v3.0.3
