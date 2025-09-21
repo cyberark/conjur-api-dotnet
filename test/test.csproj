@@ -37,4 +37,9 @@
     <Using Include="System.Net.Http.Json" />
     <Using Include="System.Text" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="JWTProvidersTests\jwt.token">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
