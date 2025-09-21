@@ -52,7 +52,7 @@ public static class Extensions
     /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
     internal static async Task<string> ReadAsync(this Task<HttpResponseMessage> responseTask, CancellationToken cancellationToken)
     {
-        var response = await responseTask;
+        using var response = await responseTask;
 
         response.EnsureSuccessStatusCode();
 
