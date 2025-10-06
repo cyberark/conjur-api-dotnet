@@ -16,4 +16,6 @@ public static class Constants
     public const string KIND_POLICY = "policy";
     public const string KIND_VARIABLE = "variable";
     public const string KIND_WEBSERVICE = "webservice";
+    
+    public const string K8S_JWT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/token";
 }
