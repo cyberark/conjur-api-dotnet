@@ -93,13 +93,18 @@ public class JWTAuthenticatorTest : Base
         MockTokenExpiration();
         StartTwoThreads(token2, expectedAuthenticationCount: 2);
 
-        void StartTwoThreads(string theToken, int expectedAuthenticationCount)
+        void StartTwoThreads(string expectedToken, int expectedAuthenticationCount)
         {
-            MockToken(theToken).Verifier = Verifier;
-            var t1 = new Thread(Checker);
-            var t2 = new Thread(Checker);
+            MockToken(expectedToken).Verifier = Verifier;
+            var startSignal = new ManualResetEvent(false);
+            var t1 = new Thread(() => Checker(expectedToken, startSignal));
+            var t2 = new Thread(() => Checker(expectedToken, startSignal));
 
-            t1.Start(token1); t2.Start(token1);
+            t1.Start(); t2.Start();
+
+            // Release both threads simultaneously
+            startSignal.Set();
+
             t1.Join(); t2.Join();
 
             Assert.AreEqual(expectedAuthenticationCount, authenticationCount);
@@ -112,8 +117,9 @@ public class JWTAuthenticatorTest : Base
             Interlocked.Increment(ref authenticationCount);
         }
 
-        void Checker(object expected)
+        void Checker(string expected, ManualResetEvent signal)
         {
+            signal.WaitOne();
             Assert.AreEqual(expected, authenticator.GetToken());
         }
     }
