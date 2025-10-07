@@ -6,10 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [3.1.1] - 2025-10-06
+## [3.2.0] - 2025-10-07
 
 ### Added
 - Support for JWT authentication (CNJR-11283)
+
+## [3.1.1] - 2025-09-17
 
 ### Changed
 - Updated documentation to align with Conjur Enterprise name change to Secrets Manager. (CNJR-10974)
