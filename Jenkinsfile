@@ -111,6 +111,8 @@ pipeline {
                     sourceEncoding: 'ASCII',
                     zoomCoverageChart: false
 
+          codacy action: 'reportCoverage', filePath: "Coverage.xml"
+
           infrapool.agentArchiveArtifacts artifacts: 'bin/*', fingerprint: true
         }
       }
