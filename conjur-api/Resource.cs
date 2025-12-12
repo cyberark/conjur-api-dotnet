@@ -62,8 +62,9 @@ public class Resource
     /// Determines whether the authenticated user holds the specified privilege
     /// on this resource.
     /// </summary>
-    /// <returns><c>true</c> if the authenticated user holds the specified
-    /// privilege; otherwise, <c>false</c>.</returns>
+    /// <returns><c>true</c> if the authenticated user holds the specified privilege;
+    /// otherwise, <c>false</c>.</returns> if the authenticated user does not have the
+    /// permission to perform the operation or does not hold the specified privilege.
     /// <param name="privilege">Privilege to check.</param>
     public bool Check(string privilege)
     {
@@ -76,7 +77,8 @@ public class Resource
             response.EnsureSuccessStatusCode();
             return true;
         }
-        catch (HttpRequestException exn) when (exn.StatusCode == HttpStatusCode.Forbidden)
+        // Ideally, Conjur should never return 403, but we would rather handle it gracefully here just in case.
+        catch (HttpRequestException exn) when (exn.StatusCode == HttpStatusCode.Forbidden || exn.StatusCode == HttpStatusCode.NotFound)
         {
             return false;
         }
@@ -86,8 +88,9 @@ public class Resource
     /// Determines whether the authenticated user holds the specified privilege
     /// on this resource.
     /// </summary>
-    /// <returns><c>true</c> if the authenticated user holds the specified
-    /// privilege; otherwise, <c>false</c>.</returns>
+    /// <returns><c>true</c> if the authenticated user holds the specified privilege;
+    /// otherwise, <c>false</c>.</returns> if the authenticated user does not have the
+    /// permission to perform the operation or does not hold the specified privilege.
     /// <param name="privilege">Privilege to check.</param>
     /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
     public async Task<bool> CheckAsync(string privilege, CancellationToken cancellationToken = default)
@@ -101,7 +104,8 @@ public class Resource
             response.EnsureSuccessStatusCode();
             return true;
         }
-        catch (HttpRequestException exn) when (exn.StatusCode == HttpStatusCode.Forbidden)
+        // Ideally, Conjur should never return 403, but we would rather handle it gracefully here just in case.
+        catch (HttpRequestException exn) when (exn.StatusCode == HttpStatusCode.Forbidden || exn.StatusCode == HttpStatusCode.NotFound)
         {
             return false;
         }
