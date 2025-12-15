@@ -15,13 +15,21 @@ public class ResourceTest : Base
     {
         var resource = Client.Resource(Kind, Name);
 
-        Mocker.Mock(new Uri($"{BaseUri}resources/{TestAccount}/{Kind}/{Name}/?check=true&privilege=fry"), "");
+        Mocker.Mock(new Uri($"{BaseUri}resources/{TestAccount}/{Kind}/{Name}/?check=true&privilege=fry"), "", HttpStatusCode.NoContent);
         Assert.IsTrue(resource.Check("fry"));
         Assert.IsTrue(await resource.CheckAsync("fry"));
 
         Mocker.Mock(new Uri($"{BaseUri}resources/{TestAccount}/{Kind}/{Name}/?check=true&privilege=fry"), "", HttpStatusCode.Forbidden);
         Assert.IsFalse(resource.Check("fry"));
         Assert.IsFalse(await resource.CheckAsync("fry"));
+
+        Mocker.Mock(new Uri($"{BaseUri}resources/{TestAccount}/{Kind}/{Name}/?check=true&privilege=fry"), "", HttpStatusCode.NotFound);
+        Assert.IsFalse(resource.Check("fry"));
+        Assert.IsFalse(await resource.CheckAsync("fry"));
+
+        Mocker.Mock(new Uri($"{BaseUri}resources/{TestAccount}/{Kind}/{Name}/?check=true&privilege=fry"), "", HttpStatusCode.InternalServerError);
+        Assert.Throws<HttpRequestException>(() => resource.Check("fry"));
+        Assert.ThrowsAsync<HttpRequestException>(async () => await resource.CheckAsync("fry"));
     }
 
     [Test]
