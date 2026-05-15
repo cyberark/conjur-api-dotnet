@@ -119,9 +119,6 @@ pipeline {
     }
 
     stage('Run Azure tests') {
-      when {
-        expression { params.TEST_AZURE ?: false }
-      }
       steps {
         script {
           INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh "summon -e azure ./ci/test.sh"
