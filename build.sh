@@ -2,7 +2,7 @@
 set -euo pipefail
 
 finish() {
-  if [ -n "$CIDFILE" ]; then
+  if [ -n "${CIDFILE:-}" ]; then
     CID=$(cat "$CIDFILE")
     docker rm -f "$CID"
     rm -f "$CIDFILE"
@@ -18,20 +18,36 @@ fi
 
 docker build -t dotnet-builder:dev ./docker/
 
+# Resolve Conjur connection: if CONJUR_APPLIANCE_URL is not already set
+# (e.g. by docker-compose or an Azure executor agent), skip integration tests
+# that require a live Conjur.
+if [ -z "${CONJUR_APPLIANCE_URL:-}" ]; then
+  echo "CONJUR_APPLIANCE_URL not set — Azure integration tests will be skipped."
+  RUN_AZURE_TESTS=false
+fi
+
+CONJUR_NETRC_FILE="${CONJUR_NETRC_PATH:-$HOME/.netrc}"
+
 CIDFILE=$(mktemp -u)
-docker run \
-  -v "$PWD":/src:ro \
-  -v "${CONJUR_NETRC_PATH:-$HOME/.netrc}":/root/.netrc:ro \
-  --cidfile="$CIDFILE" \
-  -e RUN_AWS_TESTS \
-  -e RUN_AZURE_TESTS \
-  -e CONJUR_APPLIANCE_URL \
-  -e CONJUR_ACCOUNT \
-  -e AZURE_SUBSCRIPTION_ID \
-  -e AZURE_RESOURCE_GROUP \
-  -e USER_ASSIGNED_IDENTITY \
-  -e USER_ASSIGNED_IDENTITY_CLIENT_ID \
-  dotnet-builder:dev
+
+DOCKER_ARGS=(
+  -v "$PWD":/src:ro
+  --cidfile="$CIDFILE"
+  -e RUN_AWS_TESTS
+  -e "RUN_AZURE_TESTS=${RUN_AZURE_TESTS:-false}"
+  -e CONJUR_APPLIANCE_URL
+  -e CONJUR_ACCOUNT
+  -e AZURE_SUBSCRIPTION_ID
+  -e AZURE_RESOURCE_GROUP
+  -e USER_ASSIGNED_IDENTITY
+  -e USER_ASSIGNED_IDENTITY_CLIENT_ID
+)
+
+if [ -f "${CONJUR_NETRC_FILE}" ]; then
+  DOCKER_ARGS+=(-v "${CONJUR_NETRC_FILE}":/root/.netrc:ro)
+fi
+
+docker run "${DOCKER_ARGS[@]}" dotnet-builder:dev
 
 CID=$(cat "$CIDFILE")
 

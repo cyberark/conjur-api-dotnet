@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+
+  conjur:
+    image: ${REGISTRY_URL:-docker.io}/cyberark/conjur:edge
+    command: server -a conjur
+    environment:
+      DATABASE_URL: postgres://postgres@postgres/postgres
+      CONJUR_DATA_KEY:
+      RAILS_ENV: development
+    depends_on:
+      - postgres
+
+  test:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    depends_on:
+      - conjur
+    volumes:
+      - .:/src:ro
+      - ./output:/build/output
+    environment:
+      CONJUR_DATA_KEY:
+      CONJUR_APPLIANCE_URL: http://conjur
+      CONJUR_ACCOUNT: conjur
+      CONJUR_AUTHN_LOGIN: admin
+      CONJUR_AUTHN_API_KEY:
+      RUN_AWS_TESTS:
+      RUN_AZURE_TESTS:
+      AZURE_SUBSCRIPTION_ID:
+      AZURE_RESOURCE_GROUP:
+      USER_ASSIGNED_IDENTITY:
+      USER_ASSIGNED_IDENTITY_CLIENT_ID:
