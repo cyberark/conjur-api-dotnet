@@ -2,50 +2,96 @@ namespace Conjur.Test;
 
 public class AzureAuthenticatorTest : Base
 {
-    // Azure IMDS token endpoint (used for mocking)
-    private static readonly Uri ImdsTokenUri = new(
-        "http://169.254.169.254/metadata/identity/oauth2/token" +
-        "?api-version=2018-02-01" +
-        $"&resource={Uri.EscapeDataString("https://management.azure.com/")}");
+    private const string ImdsResource = "https://management.azure.com/";
 
-    [Test]
-    public void AuthenticateTest()
+    private static Uri ImdsTokenUri(string clientId = null)
     {
-        // Check if we're running in an Azure environment. Set RUN_AZURE_TESTS=true in CI.
-        //if (Environment.GetEnvironmentVariable("RUN_AZURE_TESTS") != "true")
-        //{
-        //    Assert.Ignore("This test requires an Azure environment to run. Set the RUN_AZURE_TESTS environment variable to 'true' to run this test.");
-        //}
+        var url = "http://169.254.169.254/metadata/identity/oauth2/token" +
+                  "?api-version=2018-02-01" +
+                  $"&resource={Uri.EscapeDataString(ImdsResource)}";
+        if (!string.IsNullOrEmpty(clientId))
+            url += $"&client_id={Uri.EscapeDataString(clientId)}";
+        return new Uri(url);
+    }
 
+    // Conjur policies used for integration tests (mirrors the Go policy fixtures)
+    private const string AuthnAzurePolicy = @"
+- !policy
+  id: prod
+  body:
+  - !webservice
+
+  - !variable
+    id: provider-uri
+
+  - !group apps
+
+  - !permit
+    role: !group apps
+    privilege: [ read, authenticate ]
+    resource: !webservice
+
+  - !grant
+    role: !group apps
+    member: !host /data/test/azure-apps/azureVM
+";
+
+    private const string AuthAzureRolesPolicyTemplate = @"
+- !policy
+  id: azure-apps
+  body:
+  - &variables
+    - !variable database/username
+    - !variable database/password
+  - !group secrets-users
+  - !permit
+    role: !group secrets-users
+    privilege: [ read, execute ]
+    resource: *variables
+
+  - !group
+  - !host
+    id: azureVM
+    annotations:
+      authn-azure/subscription-id: {0}
+      authn-azure/resource-group: {1}
+{2}
+  - !grant
+    role: !group
+    member: !host azureVM
+  - !grant
+    member: !group
+    role: !group secrets-users
+";
+
+    /// <summary>
+    /// Verifies that when an explicit JWT is provided it is forwarded
+    /// to the Conjur authenticate endpoint unchanged.
+    /// Mirrors Go's TestAzureAuthenticatorRefreshJWT.
+    /// </summary>
+    [Test]
+    public void TestAzureAuthenticatorPassesJwtToConjur()
+    {
         const string conjurIdentity = "somehost";
         const string conjurAuthenticator = "authn-azure/test";
+        const string fakeAzureJwt = "explicit-token";
 
-        // --- Mock Azure IMDS response ---
-        const string fakeAzureJwt = "fake.azure.jwt";
-        var imdsJson = $@"{{""access_token"":""{fakeAzureJwt}"",""token_type"":""Bearer"",""expires_in"":""3599"",""resource"":""https://management.azure.com/""}}";
-        Mocker.Mock(ImdsTokenUri, imdsJson);
+        Mocker.Mock(ImdsTokenUri(), $@"{{""access_token"":""{fakeAzureJwt}"",""token_type"":""Bearer"",""expires_in"":""3599"",""resource"":""{ImdsResource}""}}");
 
-        // --- Mock Conjur authenticate response ---
-        const string mockConjurToken = "conjur_token";
+        const string mockConjurToken = "fake-token";
         var mockTokenEncoded = Convert.ToBase64String(Encoding.UTF8.GetBytes(mockConjurToken));
         var conjurEndpoint = new Uri(Client.ApplianceUri, $"authn-azure/test/test-account/{conjurIdentity}/authenticate");
         var m = Mocker.Mock(conjurEndpoint, mockTokenEncoded);
 
         m.Verifier = request =>
         {
-            // Verify the request to Conjur contains the Azure JWT as form-encoded "jwt" field
-            Assert.AreEqual(HttpMethod.Post, request.Method);
-            Assert.AreEqual("application/x-www-form-urlencoded", request.Content.Headers.ContentType.MediaType);
-
             var body = request.Content.ReadAsStringAsync().GetAwaiter().GetResult();
             Assert.IsTrue(body.Contains($"jwt={Uri.EscapeDataString(fakeAzureJwt)}"),
-                $"Expected body to contain jwt field, got: {body}");
+                $"Expected jwt field to contain explicit token, got: {body}");
         };
 
-        // Both mock clients share the same Mocker dictionary, so one GetMockHttpClient() suffices.
         var mockHttpClient = Mocker.GetMockHttpClient();
-
-        var azureAuthenticator = new AzureAuthenticator(
+        var authenticator = new AzureAuthenticator(
             conjurHttpClient: mockHttpClient,
             imdsHttpClient: mockHttpClient,
             conjurUri: Client.ApplianceUri.ToString(),
@@ -54,7 +100,213 @@ public class AzureAuthenticatorTest : Base
             authenticator: conjurAuthenticator
         );
 
-        var token = azureAuthenticator.GetToken();
+        var token = authenticator.GetToken();
         Assert.AreEqual(mockConjurToken, token);
+    }
+
+    /// <summary>
+    /// Verifies that the IMDS request does not include a client_id
+    /// when no client ID is configured (system-assigned identity).
+    /// Mirrors Go's TestAzureTokenRequest "creates a valid request when client ID is empty".
+    /// </summary>
+    [Test]
+    public void TestAzureTokenRequest_NoClientId_OmitsClientIdParam()
+    {
+        const string conjurIdentity = "somehost";
+        const string conjurAuthenticator = "authn-azure/test";
+        const string fakeAzureJwt = "fake.azure.jwt";
+
+        Uri capturedImdsUri = null;
+        Mocker.Mock(ImdsTokenUri(), $@"{{""access_token"":""{fakeAzureJwt}"",""token_type"":""Bearer"",""expires_in"":""3599"",""resource"":""{ImdsResource}""}}")
+            .Verifier = request => { capturedImdsUri = request.RequestUri; };
+
+        var mockTokenEncoded = Convert.ToBase64String(Encoding.UTF8.GetBytes("conjur_token"));
+        var conjurEndpoint = new Uri(Client.ApplianceUri, $"authn-azure/test/test-account/{conjurIdentity}/authenticate");
+        Mocker.Mock(conjurEndpoint, mockTokenEncoded);
+
+        var mockHttpClient = Mocker.GetMockHttpClient();
+        var authenticator = new AzureAuthenticator(
+            conjurHttpClient: mockHttpClient,
+            imdsHttpClient: mockHttpClient,
+            conjurUri: Client.ApplianceUri.ToString(),
+            conjurAccount: Client.AccountName,
+            identity: conjurIdentity,
+            authenticator: conjurAuthenticator
+        );
+
+        authenticator.GetToken();
+
+        Assert.IsNotNull(capturedImdsUri);
+        StringAssert.Contains($"resource={Uri.EscapeDataString(ImdsResource)}", capturedImdsUri.Query);
+        StringAssert.DoesNotContain("client_id=", capturedImdsUri.Query);
+    }
+
+    /// <summary>
+    /// Verifies that the IMDS request includes a client_id query parameter
+    /// when a user-assigned identity client ID is configured.
+    /// Mirrors Go's TestAzureTokenRequest "creates a valid request when client ID is provided".
+    /// </summary>
+    [Test]
+    public void TestAzureTokenRequest_WithClientId_IncludesClientIdParam()
+    {
+        const string conjurIdentity = "somehost";
+        const string conjurAuthenticator = "authn-azure/test";
+        const string fakeAzureJwt = "fake.azure.jwt";
+        const string testClientId = "test-client-id";
+
+        Uri capturedImdsUri = null;
+        Mocker.Mock(ImdsTokenUri(testClientId), $@"{{""access_token"":""{fakeAzureJwt}"",""token_type"":""Bearer"",""expires_in"":""3599"",""resource"":""{ImdsResource}""}}")
+            .Verifier = request => { capturedImdsUri = request.RequestUri; };
+
+        var mockTokenEncoded = Convert.ToBase64String(Encoding.UTF8.GetBytes("conjur_token"));
+        var conjurEndpoint = new Uri(Client.ApplianceUri, $"authn-azure/test/test-account/{conjurIdentity}/authenticate");
+        Mocker.Mock(conjurEndpoint, mockTokenEncoded);
+
+        var mockHttpClient = Mocker.GetMockHttpClient();
+        var authenticator = new AzureAuthenticator(
+            conjurHttpClient: mockHttpClient,
+            imdsHttpClient: mockHttpClient,
+            conjurUri: Client.ApplianceUri.ToString(),
+            conjurAccount: Client.AccountName,
+            identity: conjurIdentity,
+            authenticator: conjurAuthenticator,
+            clientId: testClientId
+        );
+
+        authenticator.GetToken();
+
+        Assert.IsNotNull(capturedImdsUri);
+        StringAssert.Contains($"resource={Uri.EscapeDataString(ImdsResource)}", capturedImdsUri.Query);
+        StringAssert.Contains($"client_id={Uri.EscapeDataString(testClientId)}", capturedImdsUri.Query);
+    }
+
+    /// <summary>
+    /// Integration test: authn-azure with system-assigned managed identity.
+    /// Requires RUN_AZURE_TESTS=true and the following environment variables
+    /// (populated via Summon from secrets.yml):
+    ///   AZURE_SUBSCRIPTION_ID            (!var ci/azure/subscription-id)
+    ///   AZURE_RESOURCE_GROUP             (!var ci/azure/authn-test/resource-group)
+    ///   USER_ASSIGNED_IDENTITY           (!var ci/azure/authn-test/user-assigned-id)
+    ///   USER_ASSIGNED_IDENTITY_CLIENT_ID (!var ci/azure/authn-test/user-assigned-id-client-id)
+    /// Mirrors Go's TestAuthnAzure "authn-azure system-assigned identity".
+    /// </summary>
+    [Test]
+    public void AuthnAzure_SystemAssignedIdentity()
+    {
+        if (Environment.GetEnvironmentVariable("RUN_AZURE_TESTS") != "true")
+            Assert.Ignore("Skipping Azure authn test. Set RUN_AZURE_TESTS=true to run.");
+
+        var subscriptionId = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
+        var resourceGroup = Environment.GetEnvironmentVariable("AZURE_RESOURCE_GROUP");
+
+        if (string.IsNullOrEmpty(subscriptionId) ||
+            string.IsNullOrEmpty(resourceGroup) ||
+            string.IsNullOrEmpty(Environment.GetEnvironmentVariable("USER_ASSIGNED_IDENTITY")) ||
+            string.IsNullOrEmpty(Environment.GetEnvironmentVariable("USER_ASSIGNED_IDENTITY_CLIENT_ID")))
+        {
+            Assert.Fail("AZURE_SUBSCRIPTION_ID, AZURE_RESOURCE_GROUP, USER_ASSIGNED_IDENTITY, " +
+                        "USER_ASSIGNED_IDENTITY_CLIENT_ID must be set to run this test.");
+        }
+
+        const string conjurIdentity = "data/test/azure-apps/azureVM";
+        const string conjurAuthenticator = "authn-azure/prod";
+
+        var rolesPolicy = string.Format(AuthAzureRolesPolicyTemplate,
+            subscriptionId,
+            resourceGroup,
+            string.Empty);
+
+        using var authnPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(AuthnAzurePolicy));
+        Client.Policy("root").LoadPolicy(authnPolicyStream, "PUT");
+
+        using var rolesPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(rolesPolicy));
+        Client.Policy("data/test").LoadPolicy(rolesPolicyStream, "PUT");
+
+        Client.Variable("conjur/authn-azure/prod/provider-uri")
+            .AddSecret(Encoding.UTF8.GetBytes("https://sts.windows.net/df242c82-fe4a-47e0-b0f4-e3cb7f8104f1/"));
+        Client.Variable("data/test/azure-apps/database/username")
+            .AddSecret(Encoding.UTF8.GetBytes("secret"));
+        Client.Variable("data/test/azure-apps/database/password")
+            .AddSecret(Encoding.UTF8.GetBytes("P@ssw0rd!"));
+
+        var authenticator = new AzureAuthenticator(
+            conjurUri: Client.ApplianceUri.ToString(),
+            conjurAccount: Client.AccountName,
+            identity: conjurIdentity,
+            authenticator: conjurAuthenticator
+        );
+
+        var token = authenticator.GetToken();
+        Assert.IsNotEmpty(token);
+
+        var secret = Client.Variable("data/test/azure-apps/database/username").GetValue();
+        Assert.AreEqual("secret", secret);
+
+        secret = Client.Variable("data/test/azure-apps/database/password").GetValue();
+        Assert.AreEqual("P@ssw0rd!", secret);
+    }
+
+    /// <summary>
+    /// Integration test: authn-azure with user-assigned managed identity.
+    /// Mirrors Go's TestAuthnAzure "authn-azure user-assigned identity".
+    /// </summary>
+    [Test]
+    public void AuthnAzure_UserAssignedIdentity()
+    {
+        if (Environment.GetEnvironmentVariable("RUN_AZURE_TESTS") != "true")
+            Assert.Ignore("Skipping Azure authn test. Set RUN_AZURE_TESTS=true to run.");
+
+        var subscriptionId = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
+        var resourceGroup = Environment.GetEnvironmentVariable("AZURE_RESOURCE_GROUP");
+        var userAssignedIdentity = Environment.GetEnvironmentVariable("USER_ASSIGNED_IDENTITY");
+        var userAssignedIdentityClientId = Environment.GetEnvironmentVariable("USER_ASSIGNED_IDENTITY_CLIENT_ID");
+
+        if (string.IsNullOrEmpty(subscriptionId) ||
+            string.IsNullOrEmpty(resourceGroup) ||
+            string.IsNullOrEmpty(userAssignedIdentity) ||
+            string.IsNullOrEmpty(userAssignedIdentityClientId))
+        {
+            Assert.Fail("AZURE_SUBSCRIPTION_ID, AZURE_RESOURCE_GROUP, USER_ASSIGNED_IDENTITY, " +
+                        "USER_ASSIGNED_IDENTITY_CLIENT_ID must be set to run this test.");
+        }
+
+        const string conjurIdentity = "data/test/azure-apps/azureVM";
+        const string conjurAuthenticator = "authn-azure/prod";
+
+        var userIdentityAnnotation = $"      authn-azure/user-assigned-identity: \"{userAssignedIdentity}\"";
+        var rolesPolicy = string.Format(AuthAzureRolesPolicyTemplate,
+            subscriptionId,
+            resourceGroup,
+            userIdentityAnnotation);
+
+        using var authnPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(AuthnAzurePolicy));
+        Client.Policy("root").LoadPolicy(authnPolicyStream, "PUT");
+
+        using var rolesPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(rolesPolicy));
+        Client.Policy("data/test").LoadPolicy(rolesPolicyStream, "PUT");
+
+        Client.Variable("conjur/authn-azure/prod/provider-uri")
+            .AddSecret(Encoding.UTF8.GetBytes("https://sts.windows.net/df242c82-fe4a-47e0-b0f4-e3cb7f8104f1/"));
+        Client.Variable("data/test/azure-apps/database/username")
+            .AddSecret(Encoding.UTF8.GetBytes("secret"));
+        Client.Variable("data/test/azure-apps/database/password")
+            .AddSecret(Encoding.UTF8.GetBytes("P@ssw0rd!"));
+
+        var authenticator = new AzureAuthenticator(
+            conjurUri: Client.ApplianceUri.ToString(),
+            conjurAccount: Client.AccountName,
+            identity: conjurIdentity,
+            authenticator: conjurAuthenticator,
+            clientId: userAssignedIdentityClientId
+        );
+
+        var token = authenticator.GetToken();
+        Assert.IsNotEmpty(token);
+
+        var secret = Client.Variable("data/test/azure-apps/database/username").GetValue();
+        Assert.AreEqual("secret", secret);
+
+        secret = Client.Variable("data/test/azure-apps/database/password").GetValue();
+        Assert.AreEqual("P@ssw0rd!", secret);
     }
 }

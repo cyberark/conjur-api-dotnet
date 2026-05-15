@@ -29,6 +29,7 @@ public class AzureAuthenticator : IAuthenticator
     private readonly string resourceUri;
     private readonly string imdsBaseUrl;
     private readonly string imdsApiVersion;
+    private readonly string clientId;
 
     private bool disableCertCheck;
 
@@ -50,6 +51,7 @@ public class AzureAuthenticator : IAuthenticator
     /// <param name="identity">Conjur host identity (login).</param>
     /// <param name="authenticator">Authenticator path, e.g. "authn-azure/my-service".</param>
     /// <param name="resourceUri">Azure resource URI for which the IMDS token is requested.</param>
+    /// <param name="clientId">Optional client ID for a user-assigned managed identity.</param>
     /// <param name="imdsBaseUrl">Override for the IMDS base URL. Defaults to "http://169.254.169.254".</param>
     /// <param name="imdsApiVersion">Override for the IMDS API version. Defaults to "2018-02-01".</param>
     public AzureAuthenticator(
@@ -60,6 +62,7 @@ public class AzureAuthenticator : IAuthenticator
         string identity,
         string authenticator,
         string resourceUri = "https://management.azure.com/",
+        string clientId = null,
         // Fixed link-local IP reserved for Azure IMDS on all Azure VMs.
         // See: https://learn.microsoft.com/en-us/azure/virtual-machines/instance-metadata-service
         string imdsBaseUrl = "http://169.254.169.254",
@@ -74,6 +77,7 @@ public class AzureAuthenticator : IAuthenticator
         this.identity = identity;
         this.authenticator = authenticator;
         this.resourceUri = resourceUri;
+        this.clientId = clientId;
         this.imdsBaseUrl = imdsBaseUrl;
         this.imdsApiVersion = imdsApiVersion;
     }
@@ -90,6 +94,7 @@ public class AzureAuthenticator : IAuthenticator
     /// <param name="identity">Conjur host identity (login).</param>
     /// <param name="authenticator">Authenticator path, e.g. "authn-azure/my-service".</param>
     /// <param name="resourceUri">Azure resource URI for which the IMDS token is requested.</param>
+    /// <param name="clientId">Optional client ID for a user-assigned managed identity.</param>
     /// <param name="imdsBaseUrl">Override for the IMDS base URL. Defaults to "http://169.254.169.254".</param>
     /// <param name="imdsApiVersion">Override for the IMDS API version. Defaults to "2018-02-01".</param>
     public AzureAuthenticator(
@@ -98,6 +103,7 @@ public class AzureAuthenticator : IAuthenticator
         string identity,
         string authenticator,
         string resourceUri = "https://management.azure.com/",
+        string clientId = null,
         // Fixed link-local IP reserved for Azure IMDS on all Azure VMs.
         // See: https://learn.microsoft.com/en-us/azure/virtual-machines/instance-metadata-service
         string imdsBaseUrl = "http://169.254.169.254",
@@ -110,6 +116,7 @@ public class AzureAuthenticator : IAuthenticator
         this.identity = identity;
         this.authenticator = authenticator;
         this.resourceUri = resourceUri;
+        this.clientId = clientId;
         this.imdsBaseUrl = imdsBaseUrl;
         this.imdsApiVersion = imdsApiVersion;
 
@@ -201,12 +208,16 @@ public class AzureAuthenticator : IAuthenticator
 
     /// <summary>
     /// Fetches the Azure Managed Identity JWT from the Azure Instance Metadata Service (IMDS).
+    /// Appends a client_id query parameter when configured for a user-assigned managed identity.
     /// </summary>
     private async Task<string> GetAzureJwtAsync(CancellationToken cancellationToken)
     {
         var imdsUrl = $"{imdsBaseUrl}{ImdsTokenPath}" +
                       $"?api-version={imdsApiVersion}" +
                       $"&resource={Uri.EscapeDataString(resourceUri)}";
+
+        if (!string.IsNullOrEmpty(clientId))
+            imdsUrl += $"&client_id={Uri.EscapeDataString(clientId)}";
 
         var request = new HttpRequestMessage(HttpMethod.Get, imdsUrl);
         request.Headers.Add("Metadata", "true");
