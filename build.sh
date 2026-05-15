@@ -18,22 +18,36 @@ fi
 
 docker build -t dotnet-builder:dev ./docker/
 
+echo "XXX build.sh: RUN_AZURE_TESTS on entry: ${RUN_AZURE_TESTS:-<not set>}"
+echo "XXX build.sh: CONJUR_APPLIANCE_URL on entry: ${CONJUR_APPLIANCE_URL:-<not set>}"
+echo "XXX build.sh: CONJUR_ACCOUNT on entry: ${CONJUR_ACCOUNT:-<not set>}"
+echo "XXX build.sh: CONJUR_NETRC_PATH on entry: ${CONJUR_NETRC_PATH:-<not set>}"
+
 # Default if not provided by summon/env.
 RUN_AZURE_TESTS="${RUN_AZURE_TESTS:-false}"
+echo "XXX build.sh: RUN_AZURE_TESTS after default: ${RUN_AZURE_TESTS}"
 
 # Only enforce Conjur connection prerequisites when Azure tests are explicitly enabled.
+echo "XXX build.sh: Evaluating Azure test prerequisites — RUN_AZURE_TESTS=${RUN_AZURE_TESTS}, CONJUR_APPLIANCE_URL=${CONJUR_APPLIANCE_URL:-<not set>}, CONJUR_ACCOUNT=${CONJUR_ACCOUNT:-<not set>}"
 if [ "$RUN_AZURE_TESTS" = "true" ]; then
   # Resolve Conjur connection from direct or InfraPool-prefixed vars.
   CONJUR_APPLIANCE_URL="${CONJUR_APPLIANCE_URL:-${INFRAPOOL_CONJUR_APPLIANCE_URL:-}}"
   CONJUR_ACCOUNT="${CONJUR_ACCOUNT:-${INFRAPOOL_CONJUR_ACCOUNT:-}}"
+  echo "XXX build.sh: After InfraPool fallback — CONJUR_APPLIANCE_URL=${CONJUR_APPLIANCE_URL:-<not set>}, CONJUR_ACCOUNT=${CONJUR_ACCOUNT:-<not set>}"
 
   if [ -z "${CONJUR_APPLIANCE_URL}" ] || [ -z "${CONJUR_ACCOUNT}" ]; then
-    echo "RUN_AZURE_TESTS=true but CONJUR_APPLIANCE_URL/CONJUR_ACCOUNT are not set; skipping Azure integration tests."
+    echo "XXX build.sh: CONJUR_APPLIANCE_URL or CONJUR_ACCOUNT is empty — disabling Azure tests."
     RUN_AZURE_TESTS=false
+  else
+    echo "XXX build.sh: Conjur prerequisites met — Azure tests will run."
   fi
+else
+  echo "XXX build.sh: RUN_AZURE_TESTS is not true — Azure tests will be skipped."
 fi
 
 CONJUR_NETRC_FILE="${CONJUR_NETRC_PATH:-$HOME/.netrc}"
+echo "XXX build.sh: CONJUR_NETRC_FILE resolved to: ${CONJUR_NETRC_FILE}"
+echo "XXX build.sh: netrc file exists: $([ -f "${CONJUR_NETRC_FILE}" ] && echo yes || echo no)"
 
 CIDFILE=$(mktemp -u)
 
@@ -54,6 +68,7 @@ if [ -f "${CONJUR_NETRC_FILE}" ]; then
   DOCKER_ARGS+=(-v "${CONJUR_NETRC_FILE}":/root/.netrc:ro)
 fi
 
+echo "XXX build.sh: Launching test container with RUN_AZURE_TESTS=${RUN_AZURE_TESTS}, CONJUR_APPLIANCE_URL=${CONJUR_APPLIANCE_URL:-<not set>}, CONJUR_ACCOUNT=${CONJUR_ACCOUNT:-<not set>}"
 docker run "${DOCKER_ARGS[@]}" dotnet-builder:dev
 
 CID=$(cat "$CIDFILE")
