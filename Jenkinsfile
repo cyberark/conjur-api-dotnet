@@ -124,7 +124,7 @@ pipeline {
       }
       steps {
         script {
-          INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh "summon ./ci/test.sh"
+          INFRAPOOL_AZURE_EXECUTORV2_AGENT_0.agentSh "summon -e azure ./ci/test.sh"
         }
       }
     }

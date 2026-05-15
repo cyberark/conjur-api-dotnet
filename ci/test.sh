@@ -49,10 +49,7 @@ password ${CONJUR_AUTHN_API_KEY}
 EOF
 export CONJUR_NETRC_PATH="$NETRC_FILE"
 
-# Enable Azure integration tests
-export RUN_AZURE_TESTS="true"
-
+# RUN_AZURE_TESTS is injected by summon -e azure from secrets.yml
 # Delegate to build.sh which handles docker run with the correct
-# env vars and netrc mount, now that CONJUR_APPLIANCE_URL,
-# CONJUR_ACCOUNT, CONJUR_NETRC_PATH and RUN_AZURE_TESTS are all set.
+# env vars and netrc mount.
 "$(dirname "$0")/../build.sh"
