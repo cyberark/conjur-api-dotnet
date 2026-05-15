@@ -18,12 +18,19 @@ fi
 
 docker build -t dotnet-builder:dev ./docker/
 
-# Resolve Conjur connection: if CONJUR_APPLIANCE_URL is not already set
-# (e.g. by docker-compose or an Azure executor agent), skip integration tests
-# that require a live Conjur.
-if [ -z "${CONJUR_APPLIANCE_URL:-}" ]; then
-  echo "CONJUR_APPLIANCE_URL not set — Azure integration tests will be skipped."
-  RUN_AZURE_TESTS=false
+# Default if not provided by summon/env.
+RUN_AZURE_TESTS="${RUN_AZURE_TESTS:-false}"
+
+# Only enforce Conjur connection prerequisites when Azure tests are explicitly enabled.
+if [ "$RUN_AZURE_TESTS" = "true" ]; then
+  # Resolve Conjur connection from direct or InfraPool-prefixed vars.
+  CONJUR_APPLIANCE_URL="${CONJUR_APPLIANCE_URL:-${INFRAPOOL_CONJUR_APPLIANCE_URL:-}}"
+  CONJUR_ACCOUNT="${CONJUR_ACCOUNT:-${INFRAPOOL_CONJUR_ACCOUNT:-}}"
+
+  if [ -z "${CONJUR_APPLIANCE_URL}" ] || [ -z "${CONJUR_ACCOUNT}" ]; then
+    echo "RUN_AZURE_TESTS=true but CONJUR_APPLIANCE_URL/CONJUR_ACCOUNT are not set; skipping Azure integration tests."
+    RUN_AZURE_TESTS=false
+  fi
 fi
 
 CONJUR_NETRC_FILE="${CONJUR_NETRC_PATH:-$HOME/.netrc}"
@@ -34,7 +41,7 @@ DOCKER_ARGS=(
   -v "$PWD":/src:ro
   --cidfile="$CIDFILE"
   -e RUN_AWS_TESTS
-  -e "RUN_AZURE_TESTS=${RUN_AZURE_TESTS:-false}"
+  -e "RUN_AZURE_TESTS=${RUN_AZURE_TESTS}"
   -e CONJUR_APPLIANCE_URL
   -e CONJUR_ACCOUNT
   -e AZURE_SUBSCRIPTION_ID
