@@ -14,7 +14,6 @@ public class AzureAuthenticatorTest : Base
         return new Uri(url);
     }
 
-    // Conjur policies used for integration tests (mirrors the Go policy fixtures)
     private const string AuthnAzurePolicy = @"
 - !policy
   id: prod
@@ -63,6 +62,38 @@ public class AzureAuthenticatorTest : Base
     member: !group
     role: !group secrets-users
 ";
+
+    /// <summary>
+    /// Creates a real authenticated Conjur admin client using the netrc file,
+    /// matching the approach used by conjur-api-go via LoadConfig() / NetRCPath.
+    /// Reads CONJUR_APPLIANCE_URL and CONJUR_ACCOUNT from environment variables.
+    /// Credentials are read from the file at CONJUR_NETRC_PATH, or ~/.netrc if
+    /// CONJUR_NETRC_PATH is not set (mounted at /root/.netrc inside the container
+    /// by build.sh).
+    /// </summary>
+    private static Client CreateAdminClient()
+    {
+        var applianceUrl = Environment.GetEnvironmentVariable("CONJUR_APPLIANCE_URL");
+        var account = Environment.GetEnvironmentVariable("CONJUR_ACCOUNT");
+
+        if (string.IsNullOrEmpty(applianceUrl) || string.IsNullOrEmpty(account))
+            Assert.Fail("CONJUR_APPLIANCE_URL and CONJUR_ACCOUNT must be set to run Azure integration tests.");
+
+        var netrcPath = Environment.GetEnvironmentVariable("CONJUR_NETRC_PATH")
+            ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".netrc");
+
+        if (!File.Exists(netrcPath))
+            Assert.Fail($"netrc file not found at '{netrcPath}'. " +
+                        "Ensure the agent's ~/.netrc is mounted into the container by build.sh.");
+
+        var entry = NetrcParser.FindEntry(netrcPath, applianceUrl);
+        if (entry is null || string.IsNullOrEmpty(entry.Login) || string.IsNullOrEmpty(entry.Password))
+            Assert.Fail($"No valid netrc entry found for '{applianceUrl}' in '{netrcPath}'.");
+
+        var client = new Client(applianceUrl, account);
+        client.Credential = new System.Net.NetworkCredential(entry.Login, entry.Password);
+        return client;
+    }
 
     /// <summary>
     /// Verifies that when an explicit JWT is provided it is forwarded
@@ -182,12 +213,6 @@ public class AzureAuthenticatorTest : Base
 
     /// <summary>
     /// Integration test: authn-azure with system-assigned managed identity.
-    /// Requires RUN_AZURE_TESTS=true and the following environment variables
-    /// (populated via Summon from secrets.yml):
-    ///   AZURE_SUBSCRIPTION_ID            (!var ci/azure/subscription-id)
-    ///   AZURE_RESOURCE_GROUP             (!var ci/azure/authn-test/resource-group)
-    ///   USER_ASSIGNED_IDENTITY           (!var ci/azure/authn-test/user-assigned-id)
-    ///   USER_ASSIGNED_IDENTITY_CLIENT_ID (!var ci/azure/authn-test/user-assigned-id-client-id)
     /// Mirrors Go's TestAuthnAzure "authn-azure system-assigned identity".
     /// </summary>
     [Test]
@@ -208,6 +233,8 @@ public class AzureAuthenticatorTest : Base
                         "USER_ASSIGNED_IDENTITY_CLIENT_ID must be set to run this test.");
         }
 
+        var adminClient = CreateAdminClient();
+
         const string conjurIdentity = "data/test/azure-apps/azureVM";
         const string conjurAuthenticator = "authn-azure/prod";
 
@@ -217,21 +244,21 @@ public class AzureAuthenticatorTest : Base
             string.Empty);
 
         using var authnPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(AuthnAzurePolicy));
-        Client.Policy("root").LoadPolicy(authnPolicyStream, "PUT");
+        adminClient.Policy("root").LoadPolicy(authnPolicyStream, "PUT");
 
         using var rolesPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(rolesPolicy));
-        Client.Policy("data/test").LoadPolicy(rolesPolicyStream, "PUT");
+        adminClient.Policy("data/test").LoadPolicy(rolesPolicyStream, "PUT");
 
-        Client.Variable("conjur/authn-azure/prod/provider-uri")
+        adminClient.Variable("conjur/authn-azure/prod/provider-uri")
             .AddSecret(Encoding.UTF8.GetBytes("https://sts.windows.net/df242c82-fe4a-47e0-b0f4-e3cb7f8104f1/"));
-        Client.Variable("data/test/azure-apps/database/username")
+        adminClient.Variable("data/test/azure-apps/database/username")
             .AddSecret(Encoding.UTF8.GetBytes("secret"));
-        Client.Variable("data/test/azure-apps/database/password")
+        adminClient.Variable("data/test/azure-apps/database/password")
             .AddSecret(Encoding.UTF8.GetBytes("P@ssw0rd!"));
 
         var authenticator = new AzureAuthenticator(
-            conjurUri: Client.ApplianceUri.ToString(),
-            conjurAccount: Client.AccountName,
+            conjurUri: adminClient.ApplianceUri.ToString(),
+            conjurAccount: adminClient.AccountName,
             identity: conjurIdentity,
             authenticator: conjurAuthenticator
         );
@@ -239,10 +266,10 @@ public class AzureAuthenticatorTest : Base
         var token = authenticator.GetToken();
         Assert.IsNotEmpty(token);
 
-        var secret = Client.Variable("data/test/azure-apps/database/username").GetValue();
+        var secret = adminClient.Variable("data/test/azure-apps/database/username").GetValue();
         Assert.AreEqual("secret", secret);
 
-        secret = Client.Variable("data/test/azure-apps/database/password").GetValue();
+        secret = adminClient.Variable("data/test/azure-apps/database/password").GetValue();
         Assert.AreEqual("P@ssw0rd!", secret);
     }
 
@@ -270,6 +297,8 @@ public class AzureAuthenticatorTest : Base
                         "USER_ASSIGNED_IDENTITY_CLIENT_ID must be set to run this test.");
         }
 
+        var adminClient = CreateAdminClient();
+
         const string conjurIdentity = "data/test/azure-apps/azureVM";
         const string conjurAuthenticator = "authn-azure/prod";
 
@@ -280,21 +309,21 @@ public class AzureAuthenticatorTest : Base
             userIdentityAnnotation);
 
         using var authnPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(AuthnAzurePolicy));
-        Client.Policy("root").LoadPolicy(authnPolicyStream, "PUT");
+        adminClient.Policy("root").LoadPolicy(authnPolicyStream, "PUT");
 
         using var rolesPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(rolesPolicy));
-        Client.Policy("data/test").LoadPolicy(rolesPolicyStream, "PUT");
+        adminClient.Policy("data/test").LoadPolicy(rolesPolicyStream, "PUT");
 
-        Client.Variable("conjur/authn-azure/prod/provider-uri")
+        adminClient.Variable("conjur/authn-azure/prod/provider-uri")
             .AddSecret(Encoding.UTF8.GetBytes("https://sts.windows.net/df242c82-fe4a-47e0-b0f4-e3cb7f8104f1/"));
-        Client.Variable("data/test/azure-apps/database/username")
+        adminClient.Variable("data/test/azure-apps/database/username")
             .AddSecret(Encoding.UTF8.GetBytes("secret"));
-        Client.Variable("data/test/azure-apps/database/password")
+        adminClient.Variable("data/test/azure-apps/database/password")
             .AddSecret(Encoding.UTF8.GetBytes("P@ssw0rd!"));
 
         var authenticator = new AzureAuthenticator(
-            conjurUri: Client.ApplianceUri.ToString(),
-            conjurAccount: Client.AccountName,
+            conjurUri: adminClient.ApplianceUri.ToString(),
+            conjurAccount: adminClient.AccountName,
             identity: conjurIdentity,
             authenticator: conjurAuthenticator,
             clientId: userAssignedIdentityClientId
@@ -303,10 +332,10 @@ public class AzureAuthenticatorTest : Base
         var token = authenticator.GetToken();
         Assert.IsNotEmpty(token);
 
-        var secret = Client.Variable("data/test/azure-apps/database/username").GetValue();
+        var secret = adminClient.Variable("data/test/azure-apps/database/username").GetValue();
         Assert.AreEqual("secret", secret);
 
-        secret = Client.Variable("data/test/azure-apps/database/password").GetValue();
+        secret = adminClient.Variable("data/test/azure-apps/database/password").GetValue();
         Assert.AreEqual("P@ssw0rd!", secret);
     }
 }

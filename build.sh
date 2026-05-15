@@ -21,9 +21,12 @@ docker build -t dotnet-builder:dev ./docker/
 CIDFILE=$(mktemp -u)
 docker run \
   -v "$PWD":/src:ro \
+  -v "${CONJUR_NETRC_PATH:-$HOME/.netrc}":/root/.netrc:ro \
   --cidfile="$CIDFILE" \
   -e RUN_AWS_TESTS \
   -e RUN_AZURE_TESTS \
+  -e CONJUR_APPLIANCE_URL \
+  -e CONJUR_ACCOUNT \
   -e AZURE_SUBSCRIPTION_ID \
   -e AZURE_RESOURCE_GROUP \
   -e USER_ASSIGNED_IDENTITY \
