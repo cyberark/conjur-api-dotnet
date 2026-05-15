@@ -23,6 +23,11 @@ docker run \
   -v "$PWD":/src:ro \
   --cidfile="$CIDFILE" \
   -e RUN_AWS_TESTS \
+  -e RUN_AZURE_TESTS \
+  -e AZURE_SUBSCRIPTION_ID \
+  -e AZURE_RESOURCE_GROUP \
+  -e USER_ASSIGNED_IDENTITY \
+  -e USER_ASSIGNED_IDENTITY_CLIENT_ID \
   dotnet-builder:dev
 
 CID=$(cat "$CIDFILE")
