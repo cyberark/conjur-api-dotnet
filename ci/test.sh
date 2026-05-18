@@ -86,7 +86,12 @@ echo "XXX RUN_AZURE_TESTS as injected by summon: ${RUN_AZURE_TESTS:-<not set>}"
 # Option 2: run tests via docker compose so the test container is on the same
 # network as the conjur service (the hostname 'conjur' resolves only there).
 echo "XXX ci/test.sh: running test service via docker compose"
-docker compose run --rm test
+for i in 1 2 3; do
+  docker compose run --rm test && break
+  echo "XXX docker compose run failed (attempt $i), retrying..."
+  sleep 5
+  if [ "$i" -eq 3 ]; then exit 1; fi
+done
 rc=$?
 echo "XXX ci/test.sh: docker compose run exit code=$rc"
 exit $rc

@@ -243,11 +243,11 @@ public class AzureAuthenticatorTest : Base
             resourceGroup,
             string.Empty);
 
-        using var authnPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(AuthnAzurePolicy));
-        adminClient.Policy("root").LoadPolicy(authnPolicyStream, "PUT");
-
         using var rolesPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(rolesPolicy));
         adminClient.Policy("data/test").LoadPolicy(rolesPolicyStream, "PUT");
+
+        using var authnPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(AuthnAzurePolicy));
+        adminClient.Policy("root").LoadPolicy(authnPolicyStream, "PUT");
 
         adminClient.Variable("conjur/authn-azure/prod/provider-uri")
             .AddSecret(Encoding.UTF8.GetBytes("https://sts.windows.net/df242c82-fe4a-47e0-b0f4-e3cb7f8104f1/"));
@@ -302,17 +302,18 @@ public class AzureAuthenticatorTest : Base
         const string conjurIdentity = "data/test/azure-apps/azureVM";
         const string conjurAuthenticator = "authn-azure/prod";
 
+        // AuthnAzure_UserAssignedIdentity
         var userIdentityAnnotation = $"      authn-azure/user-assigned-identity: \"{userAssignedIdentity}\"";
         var rolesPolicy = string.Format(AuthAzureRolesPolicyTemplate,
             subscriptionId,
             resourceGroup,
             userIdentityAnnotation);
 
-        using var authnPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(AuthnAzurePolicy));
-        adminClient.Policy("root").LoadPolicy(authnPolicyStream, "PUT");
-
         using var rolesPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(rolesPolicy));
         adminClient.Policy("data/test").LoadPolicy(rolesPolicyStream, "PUT");
+
+        using var authnPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(AuthnAzurePolicy));
+        adminClient.Policy("root").LoadPolicy(authnPolicyStream, "PUT");
 
         adminClient.Variable("conjur/authn-azure/prod/provider-uri")
             .AddSecret(Encoding.UTF8.GetBytes("https://sts.windows.net/df242c82-fe4a-47e0-b0f4-e3cb7f8104f1/"));
