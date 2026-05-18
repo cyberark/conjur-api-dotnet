@@ -35,10 +35,26 @@ for i in $(seq 1 30); do
   sleep 2
 done
 
-# Retrieve admin API key
-echo "XXX Retrieving admin API key from Conjur..."
+# Create the 'conjur' account (creates conjur:user:admin and prints its API key).
+echo "XXX ci/test.sh: Creating Conjur account 'conjur'..."
+ADMIN_OUTPUT="$(docker compose exec -T conjur conjurctl account create conjur 2>&1 || true)"
+echo "XXX ci/test.sh: account create output:"
+echo "$ADMIN_OUTPUT"
+
+CONJUR_AUTHN_API_KEY="$(echo "$ADMIN_OUTPUT" | awk -F': ' '/API key for admin/ {print $2; exit}' | tr -d '\r')"
+
+# If the account already existed (re-run with persisted volumes), fall back to retrieve-key.
+if [ -z "$CONJUR_AUTHN_API_KEY" ]; then
+  echo "XXX ci/test.sh: account may already exist, falling back to retrieve-key"
+  CONJUR_AUTHN_API_KEY="$(docker compose exec -T conjur \
+      conjurctl role retrieve-key conjur:user:admin | tr -d '\r\n')"
+fi
+
+if [ -z "$CONJUR_AUTHN_API_KEY" ]; then
+  echo "XXX ci/test.sh: ERROR could not obtain admin API key"
+  exit 1
+fi
 export CONJUR_AUTHN_API_KEY
-CONJUR_AUTHN_API_KEY=$(docker compose exec -T conjur conjurctl role retrieve-key conjur:user:admin)
 echo "XXX CONJUR_AUTHN_API_KEY set: ${CONJUR_AUTHN_API_KEY:0:4}****** (first 4 chars shown)"
 
 # Set Conjur connection vars to point at the local conjur service
@@ -48,7 +64,7 @@ echo "XXX CONJUR_APPLIANCE_URL set to: ${CONJUR_APPLIANCE_URL}"
 export CONJUR_ACCOUNT="conjur"
 echo "XXX CONJUR_ACCOUNT set to: ${CONJUR_ACCOUNT}"
 
-# Write .netrc with admin credentials, matching conjur-api-go's approach
+# Write .netrc with admin credentials, matching conjur-api-go's approach.
 NETRC_FILE="$(mktemp)"
 cat > "$NETRC_FILE" <<EOF
 machine conjur
@@ -60,38 +76,10 @@ echo "XXX .netrc written to: ${NETRC_FILE} and CONJUR_NETRC_PATH set to: ${CONJU
 
 echo "XXX RUN_AZURE_TESTS as injected by summon: ${RUN_AZURE_TESTS:-<not set>}"
 
-# RUN_AZURE_TESTS is injected by summon -e azure from secrets.yml
-# Delegate to build.sh which handles docker run with the correct
-# env vars and netrc mount.
-echo "XXX Calling build.sh with: CONJUR_APPLIANCE_URL=${CONJUR_APPLIANCE_URL} CONJUR_ACCOUNT=${CONJUR_ACCOUNT} RUN_AZURE_TESTS=${RUN_AZURE_TESTS:-<not set>}"
-"$(dirname "$0")/../build.sh"
-
+# Option 2: run tests via docker compose so the test container is on the same
+# network as the conjur service (the hostname 'conjur' resolves only there).
 echo "XXX ci/test.sh: running test service via docker compose"
 docker compose run --rm test
 rc=$?
 echo "XXX ci/test.sh: docker compose run exit code=$rc"
 exit $rc
-
-echo "XXX ci/test.sh: Creating Conjur account 'conjur'..."
-ADMIN_OUTPUT="$(docker compose exec -T conjur conjurctl account create conjur 2>&1 || true)"
-echo "XXX ci/test.sh: account create output:"
-echo "$ADMIN_OUTPUT"
-
-# Extract admin API key from `conjurctl account create` output.
-# Output format includes a line like:  API key for admin: <key>
-CONJUR_AUTHN_API_KEY="$(echo "$ADMIN_OUTPUT" | awk -F': ' '/API key for admin/ {print $2; exit}')"
-
-# If the account already existed (re-run), create returns an error; fall back to retrieve-key.
-if [ -z "$CONJUR_AUTHN_API_KEY" ]; then
-  echo "XXX ci/test.sh: account may already exist, falling back to retrieve-key"
-  CONJUR_AUTHN_API_KEY="$(docker compose exec -T conjur \
-      conjurctl role retrieve-key conjur:user:admin | tr -d '\r\n')"
-fi
-
-if [ -z "$CONJUR_AUTHN_API_KEY" ]; then
-  echo "XXX ci/test.sh: ERROR could not obtain admin API key"
-  exit 1
-fi
-
-export CONJUR_AUTHN_API_KEY
-echo "XXX CONJUR_AUTHN_API_KEY set: ${CONJUR_AUTHN_API_KEY:0:4}****** (first 4 chars shown)"
