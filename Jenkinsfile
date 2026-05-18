@@ -99,20 +99,20 @@ pipeline {
             unstash 'test-results'
             junit 'TestResults.xml'
 
-            cobertura autoUpdateHealth: false,
-                      autoUpdateStability: false,
-                      coberturaReportFile: 'Coverage.xml',
-                      conditionalCoverageTargets: '60, 0, 0',
-                      failUnhealthy: false,            // <-- relax while debugging
-                      failUnstable: false,
-                      lineCoverageTargets: '70, 0, 0',
-                      maxNumberOfBuilds: 0,
-                      methodCoverageTargets: '60, 0, 0',
-                      onlyStable: false,
-                      sourceEncoding: 'ASCII',
-                      zoomCoverageChart: false
+            //cobertura autoUpdateHealth: false,
+            //          autoUpdateStability: false,
+            //          coberturaReportFile: 'Coverage.xml',
+            //          conditionalCoverageTargets: '60, 0, 0',
+            //          failUnhealthy: false,            // <-- relax while debugging
+            //          failUnstable: false,
+            //          lineCoverageTargets: '70, 0, 0',
+            //          maxNumberOfBuilds: 0,
+            //          methodCoverageTargets: '60, 0, 0',
+            //          onlyStable: false,
+            //          sourceEncoding: 'ASCII',
+            //          zoomCoverageChart: false
 
-            codacy action: 'reportCoverage', filePath: "Coverage.xml"
+            //codacy action: 'reportCoverage', filePath: "Coverage.xml"
             infrapool.agentArchiveArtifacts artifacts: 'bin/*', fingerprint: true
           }
         }
@@ -120,12 +120,25 @@ pipeline {
     }
 
     stage('Run Azure tests') {
-      when { expression { true } }   // explicit, just for clarity
       steps {
         script {
           echo "XXX Jenkinsfile: entering 'Run Azure tests' stage"
-          infrapool.agentSh "summon -e azure ./ci/test.sh"
-          infrapool.agentSh 'grep -q "^azure:" secrets.yml && echo "XXX azure section present" || echo "XXX azure section MISSING"'
+          infrapool.agentSh '''
+            set +e
+            echo "XXX agent: pwd=$(pwd)"
+            echo "XXX agent: whoami=$(whoami)"
+            echo "XXX agent: ls ci/"
+            ls -la ci/ || true
+            echo "XXX agent: which summon=$(command -v summon || echo MISSING)"
+            echo "XXX agent: secrets.yml sections:"
+            grep -E "^[A-Za-z0-9_-]+:" secrets.yml || true
+            chmod +x ci/test.sh || true
+            echo "XXX agent: invoking summon -e azure ./ci/test.sh"
+            summon -e azure ./ci/test.sh
+            rc=$?
+            echo "XXX agent: summon exit code=$rc"
+            exit $rc
+          '''
         }
       }
     }
