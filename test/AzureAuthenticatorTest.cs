@@ -235,8 +235,10 @@ public class AzureAuthenticatorTest : Base
 
         var adminClient = CreateAdminClient();
 
-        const string conjurIdentity = "data/test/azure-apps/azureVM";
-        const string conjurAuthenticator = "authn-azure/prod";
+        //const string conjurIdentity = "data/test/azure-apps/azureVM";
+        //const string conjurAuthenticator = "authn-azure/prod";
+
+        EnsureDataTestPolicyExists(adminClient);
 
         var rolesPolicy = string.Format(AuthAzureRolesPolicyTemplate,
             subscriptionId,
@@ -299,8 +301,10 @@ public class AzureAuthenticatorTest : Base
 
         var adminClient = CreateAdminClient();
 
-        const string conjurIdentity = "data/test/azure-apps/azureVM";
-        const string conjurAuthenticator = "authn-azure/prod";
+        //const string conjurIdentity = "data/test/azure-apps/azureVM";
+        //const string conjurAuthenticator = "authn-azure/prod";
+
+        EnsureDataTestPolicyExists(adminClient);
 
         // AuthnAzure_UserAssignedIdentity
         var userIdentityAnnotation = $"      authn-azure/user-assigned-identity: \"{userAssignedIdentity}\"";
@@ -338,5 +342,19 @@ public class AzureAuthenticatorTest : Base
 
         secret = adminClient.Variable("data/test/azure-apps/database/password").GetValue();
         Assert.AreEqual("P@ssw0rd!", secret);
+    }
+
+    private static void EnsureDataTestPolicyExists(Client adminClient)
+    {
+        const string bootstrapPolicy = @"
+- !policy
+  id: data
+  body:
+  - !policy
+    id: test
+";
+
+        using var bootstrapPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(bootstrapPolicy));
+        adminClient.Policy("root").LoadPolicy(bootstrapPolicyStream, "PUT");
     }
 }
