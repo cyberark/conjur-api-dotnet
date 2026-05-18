@@ -71,8 +71,15 @@ machine conjur
 login admin
 password ${CONJUR_AUTHN_API_KEY}
 EOF
+chmod 600 "$NETRC_FILE"
 export CONJUR_NETRC_PATH="$NETRC_FILE"
-echo "XXX .netrc written to: ${NETRC_FILE} and CONJUR_NETRC_PATH set to: ${CONJUR_NETRC_PATH}"
+export CONJUR_NETRC_FILE="$NETRC_FILE"   # <-- consumed by docker-compose.yml volume mount
+echo "XXX .netrc written to: ${NETRC_FILE}"
+echo "XXX CONJUR_NETRC_PATH=${CONJUR_NETRC_PATH}"
+echo "XXX CONJUR_NETRC_FILE=${CONJUR_NETRC_FILE}"
+ls -l "$NETRC_FILE"
+echo "XXX netrc contents (password masked):"
+sed 's/^password .*/password ******/' "$NETRC_FILE"
 
 echo "XXX RUN_AZURE_TESTS as injected by summon: ${RUN_AZURE_TESTS:-<not set>}"
 
