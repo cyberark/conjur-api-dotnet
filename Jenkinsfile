@@ -121,6 +121,8 @@ pipeline {
     stage('Run Azure tests') {
       steps {
         script {
+          echo "XXX Jenkinsfile: entering 'Run Azure tests' stage"
+          sh 'grep -q "^azure:" secrets.yml && echo "XXX azure section present" || echo "XXX azure section MISSING"'
           infrapool.agentSh "summon -e azure ./ci/test.sh"
         }
       }
