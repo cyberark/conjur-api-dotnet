@@ -33,9 +33,10 @@ public class Policy : Resource
 
         using var memoryStream = new MemoryStream();
         policyContent.CopyTo(memoryStream);
+        memoryStream.Position = 0;
 
         using var stream = new StreamContent(memoryStream);
-        stream.Headers.ContentLength = policyContent.Length;
+        stream.Headers.ContentLength = memoryStream.Length;
         loadPolicyRequest.Content = stream;
 
         var response = Client.Send(loadPolicyRequest);
@@ -60,9 +61,10 @@ public class Policy : Resource
 
         await using var memoryStream = new MemoryStream();
         await policyContent.CopyToAsync(memoryStream, cancellationToken);
+        memoryStream.Position = 0;
 
         using var stream = new StreamContent(memoryStream);
-        stream.Headers.ContentLength = policyContent.Length;
+        stream.Headers.ContentLength = memoryStream.Length;
         loadPolicyRequest.Content = stream;
 
         var response = await Client.SendAsync(loadPolicyRequest, cancellationToken);
