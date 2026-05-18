@@ -65,3 +65,33 @@ echo "XXX RUN_AZURE_TESTS as injected by summon: ${RUN_AZURE_TESTS:-<not set>}"
 # env vars and netrc mount.
 echo "XXX Calling build.sh with: CONJUR_APPLIANCE_URL=${CONJUR_APPLIANCE_URL} CONJUR_ACCOUNT=${CONJUR_ACCOUNT} RUN_AZURE_TESTS=${RUN_AZURE_TESTS:-<not set>}"
 "$(dirname "$0")/../build.sh"
+
+echo "XXX ci/test.sh: running test service via docker compose"
+docker compose run --rm test
+rc=$?
+echo "XXX ci/test.sh: docker compose run exit code=$rc"
+exit $rc
+
+echo "XXX ci/test.sh: Creating Conjur account 'conjur'..."
+ADMIN_OUTPUT="$(docker compose exec -T conjur conjurctl account create conjur 2>&1 || true)"
+echo "XXX ci/test.sh: account create output:"
+echo "$ADMIN_OUTPUT"
+
+# Extract admin API key from `conjurctl account create` output.
+# Output format includes a line like:  API key for admin: <key>
+CONJUR_AUTHN_API_KEY="$(echo "$ADMIN_OUTPUT" | awk -F': ' '/API key for admin/ {print $2; exit}')"
+
+# If the account already existed (re-run), create returns an error; fall back to retrieve-key.
+if [ -z "$CONJUR_AUTHN_API_KEY" ]; then
+  echo "XXX ci/test.sh: account may already exist, falling back to retrieve-key"
+  CONJUR_AUTHN_API_KEY="$(docker compose exec -T conjur \
+      conjurctl role retrieve-key conjur:user:admin | tr -d '\r\n')"
+fi
+
+if [ -z "$CONJUR_AUTHN_API_KEY" ]; then
+  echo "XXX ci/test.sh: ERROR could not obtain admin API key"
+  exit 1
+fi
+
+export CONJUR_AUTHN_API_KEY
+echo "XXX CONJUR_AUTHN_API_KEY set: ${CONJUR_AUTHN_API_KEY:0:4}****** (first 4 chars shown)"

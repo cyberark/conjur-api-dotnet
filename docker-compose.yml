@@ -5,33 +5,34 @@ services:
       POSTGRES_HOST_AUTH_METHOD: trust
 
   conjur:
-    image: ${REGISTRY_URL:-docker.io}/cyberark/conjur:edge
-    command: server -a conjur
+    image: cyberark/conjur:edge
+    command: server
     environment:
       DATABASE_URL: postgres://postgres@postgres/postgres
-      CONJUR_DATA_KEY:
-      RAILS_ENV: development
-    depends_on:
-      - postgres
+      CONJUR_DATA_KEY: ${CONJUR_DATA_KEY}
+      CONJUR_ACCOUNT: conjur
+    depends_on: [postgres]
 
   test:
     build:
       context: .
-      dockerfile: docker/Dockerfile
-    depends_on:
-      - conjur
+      dockerfile: docker/Dockerfile        # the same image build.sh builds today
+    depends_on: [conjur]
+    working_dir: /src
     volumes:
-      - .:/src:ro
-      - ./output:/build/output
+      - .:/src
+      - ${CONJUR_NETRC_FILE:-/dev/null}:/root/.netrc:ro
     environment:
-      CONJUR_DATA_KEY:
-      CONJUR_APPLIANCE_URL: http://conjur
-      CONJUR_ACCOUNT: conjur
-      CONJUR_AUTHN_LOGIN: admin
-      CONJUR_AUTHN_API_KEY:
-      RUN_AWS_TESTS:
-      RUN_AZURE_TESTS:
-      AZURE_SUBSCRIPTION_ID:
-      AZURE_RESOURCE_GROUP:
-      USER_ASSIGNED_IDENTITY:
-      USER_ASSIGNED_IDENTITY_CLIENT_ID:
+      RUN_AZURE_TESTS:        ${RUN_AZURE_TESTS}
+      CONJUR_APPLIANCE_URL:   http://conjur
+      CONJUR_ACCOUNT:         conjur
+      CONJUR_AUTHN_API_KEY:   ${CONJUR_AUTHN_API_KEY:-}
+      CONJUR_NETRC_PATH:      /root/.netrc
+      AZURE_SUBSCRIPTION_ID:           ${AZURE_SUBSCRIPTION_ID}
+      AZURE_RESOURCE_GROUP:            ${AZURE_RESOURCE_GROUP}
+      USER_ASSIGNED_IDENTITY:          ${USER_ASSIGNED_IDENTITY}
+      USER_ASSIGNED_IDENTITY_CLIENT_ID: ${USER_ASSIGNED_IDENTITY_CLIENT_ID}
+    command: >
+      bash -lc "dotnet test test/test.csproj
+                --logger 'trx;LogFileName=TestResults.xml'
+                --results-directory /src"
