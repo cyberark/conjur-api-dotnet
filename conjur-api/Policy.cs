@@ -40,7 +40,13 @@ public class Policy : Resource
         loadPolicyRequest.Content = stream;
 
         var response = Client.Send(loadPolicyRequest);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = response.Content.ReadAsString();
+            throw new HttpRequestException(
+                $"LoadPolicy failed: {(int)response.StatusCode} {response.ReasonPhrase}. " +
+                $"Path='{path}'. Body='{errorBody}'");
+        }
         return response.Content.ReadAsStream();
     }
 
@@ -65,10 +71,17 @@ public class Policy : Resource
 
         using var stream = new StreamContent(memoryStream);
         stream.Headers.ContentLength = memoryStream.Length;
-        loadPolicyRequest.Content = stream;
+        loadPolicyRequest.Content = stream;```
 
         var response = await Client.SendAsync(loadPolicyRequest, cancellationToken);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = response.Content.ReadAsString();
+            throw new HttpRequestException(
+                $"LoadPolicy failed: {(int)response.StatusCode} {response.ReasonPhrase}. " +
+                $"Path='{path}'. Body='{errorBody}'");
+        }
+        return response.Content.ReadAsStream();
         return await response.Content.ReadAsStreamAsync(cancellationToken);
     }
 }

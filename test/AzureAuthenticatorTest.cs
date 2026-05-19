@@ -32,7 +32,7 @@ public class AzureAuthenticatorTest : Base
 
   - !grant
     role: !group apps
-    member: !host /data/test/azure-apps/azureVM
+    member: !host data/test/azure-apps/azureVM
 ";
 
     private const string AuthAzureRolesPolicyTemplate = @"
