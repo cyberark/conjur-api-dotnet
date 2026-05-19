@@ -32,6 +32,12 @@ services:
       AZURE_RESOURCE_GROUP:            ${AZURE_RESOURCE_GROUP}
       USER_ASSIGNED_IDENTITY:          ${USER_ASSIGNED_IDENTITY}
       USER_ASSIGNED_IDENTITY_CLIENT_ID: ${USER_ASSIGNED_IDENTITY_CLIENT_ID}
+      NO_PROXY: "169.254.169.254,localhost,127.0.0.1,conjur"
+      no_proxy: "169.254.169.254,localhost,127.0.0.1,conjur"
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      http_proxy: ""
+      https_proxy: ""
     command: >
       bash -lc "dotnet test test/test.csproj
                 --logger 'trx;LogFileName=TestResults.xml'

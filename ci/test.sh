@@ -95,3 +95,14 @@ done
 rc=$?
 echo "XXX ci/test.sh: docker compose run exit code=$rc"
 exit $rc
+
+echo "XXX IMDS preflight from test container..."
+docker compose run --rm --entrypoint bash test -lc '
+  set -e
+  echo "proxy env:"
+  env | grep -Ei "proxy" || true
+  echo "IMDS call:"
+  curl -sS -i -H Metadata:true \
+    "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com%2F" \
+    | head -n 20
+'

@@ -221,12 +221,22 @@ public class AzureAuthenticator : IAuthenticator
         if (!string.IsNullOrEmpty(clientId))
             imdsUrl += $"&client_id={Uri.EscapeDataString(clientId)}";
 
-        var request = new HttpRequestMessage(HttpMethod.Get, imdsUrl);
+        using var request = new HttpRequestMessage(HttpMethod.Get, imdsUrl);
         request.Headers.Add("Metadata", "true");
 
-        var json = await imdsHttpClient.SendAsync(request, cancellationToken).ReadAsync(cancellationToken);
+        using var response = await imdsHttpClient.SendAsync(request, cancellationToken);
+        var responseBody = response.Content is null
+            ? string.Empty
+            : await response.Content.ReadAsStringAsync(cancellationToken);
 
-        var tokenResponse = System.Text.Json.JsonSerializer.Deserialize<AzureImdsTokenResponse>(json)
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(
+                $"Azure IMDS token request failed: {(int)response.StatusCode} {response.ReasonPhrase}. " +
+                $"Url='{imdsUrl}'. Body='{responseBody}'");
+        }
+
+        var tokenResponse = System.Text.Json.JsonSerializer.Deserialize<AzureImdsTokenResponse>(responseBody)
             ?? throw new InvalidOperationException("Failed to deserialize Azure IMDS token response.");
 
         if (string.IsNullOrEmpty(tokenResponse.AccessToken))
