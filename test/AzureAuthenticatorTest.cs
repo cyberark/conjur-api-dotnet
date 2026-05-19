@@ -246,10 +246,10 @@ public class AzureAuthenticatorTest : Base
             string.Empty);
 
         using var rolesPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(rolesPolicy));
-        adminClient.Policy("data/test").LoadPolicy(rolesPolicyStream, "PUT");
+        adminClient.Policy("data/test").LoadPolicy(rolesPolicyStream, WebRequestMethods.Http.Post);
 
         using var authnPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(AuthnAzurePolicy));
-        adminClient.Policy("root").LoadPolicy(authnPolicyStream, "PUT");
+        adminClient.Policy("root").LoadPolicy(authnPolicyStream, WebRequestMethods.Http.Post);
 
         adminClient.Variable("conjur/authn-azure/prod/provider-uri")
             .AddSecret(Encoding.UTF8.GetBytes("https://sts.windows.net/df242c82-fe4a-47e0-b0f4-e3cb7f8104f1/"));
@@ -314,10 +314,10 @@ public class AzureAuthenticatorTest : Base
             userIdentityAnnotation);
 
         using var rolesPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(rolesPolicy));
-        adminClient.Policy("data/test").LoadPolicy(rolesPolicyStream, "PUT");
+        adminClient.Policy("data/test").LoadPolicy(rolesPolicyStream, WebRequestMethods.Http.Post);
 
         using var authnPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(AuthnAzurePolicy));
-        adminClient.Policy("root").LoadPolicy(authnPolicyStream, "PUT");
+        adminClient.Policy("root").LoadPolicy(authnPolicyStream, WebRequestMethods.Http.Post);
 
         adminClient.Variable("conjur/authn-azure/prod/provider-uri")
             .AddSecret(Encoding.UTF8.GetBytes("https://sts.windows.net/df242c82-fe4a-47e0-b0f4-e3cb7f8104f1/"));
