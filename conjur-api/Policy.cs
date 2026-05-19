@@ -71,7 +71,7 @@ public class Policy : Resource
 
         using var stream = new StreamContent(memoryStream);
         stream.Headers.ContentLength = memoryStream.Length;
-        loadPolicyRequest.Content = stream;```
+        loadPolicyRequest.Content = stream;
 
         var response = await Client.SendAsync(loadPolicyRequest, cancellationToken);
         if (!response.IsSuccessStatusCode)
@@ -81,7 +81,7 @@ public class Policy : Resource
                 $"LoadPolicy failed: {(int)response.StatusCode} {response.ReasonPhrase}. " +
                 $"Path='{path}'. Body='{errorBody}'");
         }
-        return response.Content.ReadAsStream();
+
         return await response.Content.ReadAsStreamAsync(cancellationToken);
     }
 }
