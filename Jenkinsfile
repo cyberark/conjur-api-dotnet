@@ -63,18 +63,17 @@ pipeline {
     }
 
     stage('Get InfraPool ExecutorV2 Agent') {
-      steps {
-        script {
-          // Request ExecutorV2 agents for 1 hour(s)
-          INFRAPOOL_EXECUTORV2_AGENTS = getInfraPoolAgent(type: "ExecutorV2", quantity: 1, duration: 1)
-          INFRAPOOL_EXECUTORV2_AGENT_0 = INFRAPOOL_EXECUTORV2_AGENTS[0]
-          infrapool = infraPoolConnect(INFRAPOOL_EXECUTORV2_AGENT_0, {})
+  steps {
+    script {
+      INFRAPOOL_EXECUTORV2_AGENTS = getInfraPoolAgent(type: "ExecutorV2", quantity: 1, duration: 1)
+      INFRAPOOL_EXECUTORV2_AGENT_0 = INFRAPOOL_EXECUTORV2_AGENTS[0]
+      infrapool = infraPoolConnect(INFRAPOOL_EXECUTORV2_AGENT_0, {})
 
-          // Request additional executors for cloud specific tests
-          INFRAPOOL_AZURE_EXECUTORV2_AGENT_0 = getInfraPoolAgent.connected(type: "AzureExecutorV2", quantity: 1, duration: 1)[0]
-        }
-      }
+      INFRAPOOL_AZURE_EXECUTORV2_AGENT_0 = getInfraPoolAgent.connected(type: "AzureExecutorV2", quantity: 1, duration: 1)[0]
+      azureInfrapool = infraPoolConnect(INFRAPOOL_AZURE_EXECUTORV2_AGENT_0, {})
     }
+  }
+}
 
     stage('Validate') {
       parallel {
@@ -123,28 +122,22 @@ pipeline {
     }
 
     stage('Run Azure tests') {
-      steps {
-        script {
-          echo "XXX Jenkinsfile: entering 'Run Azure tests' stage"
-          infrapool.agentSh '''
-            set +e
-            echo "XXX agent: pwd=$(pwd)"
-            echo "XXX agent: whoami=$(whoami)"
-            echo "XXX agent: ls ci/"
-            ls -la ci/ || true
-            echo "XXX agent: which summon=$(command -v summon || echo MISSING)"
-            echo "XXX agent: secrets.yml sections:"
-            grep -E "^[A-Za-z0-9_-]+:" secrets.yml || true
-            chmod +x ci/test.sh || true
-            echo "XXX agent: invoking summon -e azure ./ci/test.sh"
-            summon -e azure ./ci/test.sh
-            rc=$?
-            echo "XXX agent: summon exit code=$rc"
-            exit $rc
-          '''
-        }
-      }
+  steps {
+    script {
+      echo "XXX Jenkinsfile: entering 'Run Azure tests' stage"
+      azureInfrapool.agentSh '''
+        set +e
+        echo "XXX agent: hostname=$(hostname)"
+        echo "XXX agent: whoami=$(whoami)"
+        echo "XXX agent: invoking summon -e azure ./ci/test.sh"
+        summon -e azure ./ci/test.sh
+        rc=$?
+        echo "XXX agent: summon exit code=$rc"
+        exit $rc
+      '''
     }
+  }
+}
 
     stage('Release') {
       when {

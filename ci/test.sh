@@ -85,6 +85,23 @@ echo "XXX RUN_AZURE_TESTS as injected by summon: ${RUN_AZURE_TESTS:-<not set>}"
 
 # Option 2: run tests via docker compose so the test container is on the same
 # network as the conjur service (the hostname 'conjur' resolves only there).
+echo "XXX IMDS preflight from test container..."
+docker compose run --rm --entrypoint bash test -lc '
+  set -e
+  echo "proxy env:"
+  env | grep -Ei "proxy" || true
+
+  echo "system-assigned IMDS call:"
+  curl -sS -i --noproxy "*" -H Metadata:true \
+    "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com%2F" | head -n 30
+
+  if [ -n "${USER_ASSIGNED_IDENTITY_CLIENT_ID:-}" ]; then
+    echo "user-assigned IMDS call:"
+    curl -sS -i --noproxy "*" -H Metadata:true \
+      "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com%2F&client_id=${USER_ASSIGNED_IDENTITY_CLIENT_ID}" | head -n 30
+  fi
+'
+
 echo "XXX ci/test.sh: running test service via docker compose"
 for i in 1 2 3; do
   docker compose run --rm test && break
@@ -95,14 +112,3 @@ done
 rc=$?
 echo "XXX ci/test.sh: docker compose run exit code=$rc"
 exit $rc
-
-echo "XXX IMDS preflight from test container..."
-docker compose run --rm --entrypoint bash test -lc '
-  set -e
-  echo "proxy env:"
-  env | grep -Ei "proxy" || true
-  echo "IMDS call:"
-  curl -sS -i -H Metadata:true \
-    "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com%2F" \
-    | head -n 20
-'
