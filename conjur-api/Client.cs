@@ -177,6 +177,37 @@ public partial class Client
     }
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="T:Conjur.Client"/> class with mTLS support.
+    /// </summary>
+    /// <param name="applianceUri">Appliance URI.</param>
+    /// <param name="account">Conjur account.</param>
+    /// <param name="clientCertificate">Client certificate for mTLS.</param>
+    public Client(string applianceUri, string account, X509Certificate2 clientCertificate)
+    {
+        AccountName = account;
+        ApplianceUri = NormalizeBaseUri(applianceUri);
+        TrustedCertificates = [];
+
+        var httpClientHandler = new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = ValidateCertificate
+        };
+
+        // Add the client certificate for mTLS
+        if (clientCertificate != null)
+        {
+            httpClientHandler.ClientCertificateOptions = ClientCertificateOption.Manual;
+            httpClientHandler.ClientCertificates.Add(clientCertificate);
+        }
+
+        httpClient = new HttpClient(httpClientHandler)
+        {
+            Timeout = TimeSpan.FromMilliseconds(ApiConfigurationManager.GetInstance().HttpRequestTimeout)
+        };
+        httpClient.DefaultRequestHeaders.Add("x-cybr-telemetry", GetTelemetryHeader());
+    }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="T:Conjur.Client"/> class.
     /// </summary>
     /// <param name="httpClient">HTTP client to use for requests.</param>
@@ -404,6 +435,90 @@ public partial class Client
 
     [GeneratedRegex("//+")]
     private static partial Regex MultipleSlashesPattern();
+
+    /// <summary>
+    /// Loads a client certificate from file paths (PEM format).
+    /// </summary>
+    /// <param name="certPath">Path to the PEM-encoded client certificate file.</param>
+    /// <param name="keyPath">Path to the PEM-encoded private key file (optional if cert contains both).</param>
+    /// <returns>X509Certificate2 containing the certificate and private key.</returns>
+    public static X509Certificate2 LoadClientCertificateFromFiles(string certPath, string keyPath = null)
+    {
+        if (string.IsNullOrEmpty(certPath))
+        {
+            throw new ArgumentNullException(nameof(certPath));
+        }
+
+        var certData = File.ReadAllBytes(certPath);
+        byte[] keyData = null;
+
+        if (!string.IsNullOrEmpty(keyPath))
+        {
+            keyData = File.ReadAllBytes(keyPath);
+        }
+
+        return LoadClientCertificateFromPem(certData, keyData);
+    }
+
+    /// <summary>
+    /// Loads a client certificate from PEM-encoded strings.
+    /// </summary>
+    /// <param name="certPem">PEM-encoded certificate data.</param>
+    /// <param name="keyPem">PEM-encoded private key data (optional if cert contains both).</param>
+    /// <returns>X509Certificate2 containing the certificate and private key.</returns>
+    public static X509Certificate2 LoadClientCertificateFromPem(byte[] certPem, byte[] keyPem = null)
+    {
+        if (certPem == null || certPem.Length == 0)
+        {
+            throw new ArgumentNullException(nameof(certPem));
+        }
+
+        try
+        {
+            var certStr = Encoding.UTF8.GetString(certPem);
+            string keyStr = null;
+
+            if (keyPem != null && keyPem.Length > 0)
+            {
+                keyStr = Encoding.UTF8.GetString(keyPem);
+                // Use X509Certificate2.CreateFromPem for .NET 6+
+                return X509Certificate2.CreateFromPem(certStr, keyStr);
+            }
+            else
+            {
+                // Certificate might contain the private key
+                return X509Certificate2.CreateFromPem(certStr);
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Failed to load client certificate from PEM data", ex);
+        }
+    }
+
+    /// <summary>
+    /// Loads a client certificate from PEM-encoded strings.
+    /// </summary>
+    /// <param name="certPem">PEM-encoded certificate data as string.</param>
+    /// <param name="keyPem">PEM-encoded private key data as string (optional).</param>
+    /// <returns>X509Certificate2 containing the certificate and private key.</returns>
+    public static X509Certificate2 LoadClientCertificateFromPem(string certPem, string keyPem = null)
+    {
+        if (string.IsNullOrEmpty(certPem))
+        {
+            throw new ArgumentNullException(nameof(certPem));
+        }
+
+        var certBytes = Encoding.UTF8.GetBytes(certPem);
+        byte[] keyBytes = null;
+
+        if (!string.IsNullOrEmpty(keyPem))
+        {
+            keyBytes = Encoding.UTF8.GetBytes(keyPem);
+        }
+
+        return LoadClientCertificateFromPem(certBytes, keyBytes);
+    }
 
     /// <summary>
     /// Validates the Conjur appliance certificate.
