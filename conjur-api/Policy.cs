@@ -42,7 +42,10 @@ public class Policy : Resource
         var response = Client.Send(loadPolicyRequest);
         if (!response.IsSuccessStatusCode)
         {
-            var errorBody = response.Content.ReadAsString();
+            var errorBody = response.Content is null
+                ? string.Empty
+                : response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
             throw new HttpRequestException(
                 $"LoadPolicy failed: {(int)response.StatusCode} {response.ReasonPhrase}. " +
                 $"Path='{path}'. Body='{errorBody}'");
@@ -76,7 +79,10 @@ public class Policy : Resource
         var response = await Client.SendAsync(loadPolicyRequest, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            var errorBody = response.Content.ReadAsString();
+            var errorBody = response.Content is null
+                ? string.Empty
+                : await response.Content.ReadAsStringAsync(cancellationToken);
+
             throw new HttpRequestException(
                 $"LoadPolicy failed: {(int)response.StatusCode} {response.ReasonPhrase}. " +
                 $"Path='{path}'. Body='{errorBody}'");
