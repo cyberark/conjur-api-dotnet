@@ -224,13 +224,9 @@ public class AzureAuthenticatorTest : Base
         var subscriptionId = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
         var resourceGroup = Environment.GetEnvironmentVariable("AZURE_RESOURCE_GROUP");
 
-        if (string.IsNullOrEmpty(subscriptionId) ||
-            string.IsNullOrEmpty(resourceGroup) ||
-            string.IsNullOrEmpty(Environment.GetEnvironmentVariable("USER_ASSIGNED_IDENTITY")) ||
-            string.IsNullOrEmpty(Environment.GetEnvironmentVariable("USER_ASSIGNED_IDENTITY_CLIENT_ID")))
+        if (string.IsNullOrEmpty(subscriptionId) || string.IsNullOrEmpty(resourceGroup))
         {
-            Assert.Fail("AZURE_SUBSCRIPTION_ID, AZURE_RESOURCE_GROUP, USER_ASSIGNED_IDENTITY, " +
-                        "USER_ASSIGNED_IDENTITY_CLIENT_ID must be set to run this test.");
+            Assert.Fail("AZURE_SUBSCRIPTION_ID and AZURE_RESOURCE_GROUP must be set to run this test.");
         }
 
         var adminClient = CreateAdminClient();
@@ -302,8 +298,7 @@ public class AzureAuthenticatorTest : Base
             string.IsNullOrEmpty(userAssignedIdentity) ||
             string.IsNullOrEmpty(userAssignedIdentityClientId))
         {
-            Assert.Fail("AZURE_SUBSCRIPTION_ID, AZURE_RESOURCE_GROUP, USER_ASSIGNED_IDENTITY, " +
-                        "USER_ASSIGNED_IDENTITY_CLIENT_ID must be set to run this test.");
+            Assert.Ignore("Skipping user-assigned Azure test. USER_ASSIGNED_IDENTITY and USER_ASSIGNED_IDENTITY_CLIENT_ID must be set.");
         }
 
         var adminClient = CreateAdminClient();
