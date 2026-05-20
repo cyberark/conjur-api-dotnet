@@ -11,6 +11,7 @@ services:
       DATABASE_URL: postgres://postgres@postgres/postgres
       CONJUR_DATA_KEY: ${CONJUR_DATA_KEY}
       CONJUR_ACCOUNT: conjur
+      CONJUR_AUTHENTICATORS: authn,authn-azure/prod
     depends_on: [postgres]
 
   test:

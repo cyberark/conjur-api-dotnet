@@ -103,12 +103,18 @@ docker compose run --rm --entrypoint bash test -lc '
 '
 
 echo "XXX ci/test.sh: running test service via docker compose"
-for i in 1 2 3; do
-  docker compose run --rm test && break
-  echo "XXX docker compose run failed (attempt $i), retrying..."
-  sleep 5
-  if [ "$i" -eq 3 ]; then exit 1; fi
-done
+set +e
+docker compose run --rm test
 rc=$?
+set -e
+
+if [ "$rc" -ne 0 ]; then
+  echo "XXX ci/test.sh: test container failed with rc=$rc"
+  echo "XXX ci/test.sh: dumping Conjur logs..."
+  docker compose logs --no-color --timestamps --tail=200 conjur || true
+  echo "XXX ci/test.sh: dumping Postgres logs..."
+  docker compose logs --no-color --timestamps postgres || true
+fi
+
 echo "XXX ci/test.sh: docker compose run exit code=$rc"
 exit $rc
