@@ -8,7 +8,7 @@ public abstract class Base
     protected readonly Client Client;
     protected readonly string TestAccount = "test-account";
     protected readonly string LoginName = "admin";
-    protected static readonly WebMocker Mocker = new();
+    protected readonly WebMocker Mocker = new();
 
     [SetUp]
     protected void ClearMocker()

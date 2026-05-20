@@ -1,5 +1,6 @@
 ﻿namespace Conjur.Test;
 
+[NonParallelizable]
 public class AuthenticatorTest : Base
 {
     // file deepcode ignore NoHardcodedCredentials/test: This is a test file
