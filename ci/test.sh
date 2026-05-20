@@ -81,11 +81,25 @@ ls -l "$NETRC_FILE"
 echo "XXX netrc contents (password masked):"
 sed 's/^password .*/password ******/' "$NETRC_FILE"
 
+# Existing fallbacks
 export RUN_AZURE_TESTS="${RUN_AZURE_TESTS:-true}"
 export AZURE_SUBSCRIPTION_ID="${AZURE_SUBSCRIPTION_ID:-${INFRAPOOL_AZURE_SUBSCRIPTION_ID:-}}"
 export AZURE_RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-${INFRAPOOL_AZURE_RESOURCE_GROUP:-}}"
 export USER_ASSIGNED_IDENTITY="${USER_ASSIGNED_IDENTITY:-${INFRAPOOL_USER_ASSIGNED_IDENTITY:-}}"
 export USER_ASSIGNED_IDENTITY_CLIENT_ID="${USER_ASSIGNED_IDENTITY_CLIENT_ID:-${INFRAPOOL_USER_ASSIGNED_IDENTITY_CLIENT_ID:-}}"
+
+# New: IMDS fallback when still missing
+if [ -z "${AZURE_SUBSCRIPTION_ID}" ]; then
+  AZURE_SUBSCRIPTION_ID="$(curl -fsS --noproxy "*" -H Metadata:true \
+    "http://169.254.169.254/metadata/instance/compute/subscriptionId?api-version=2021-02-01&format=text" || true)"
+  export AZURE_SUBSCRIPTION_ID
+fi
+
+if [ -z "${AZURE_RESOURCE_GROUP}" ]; then
+  AZURE_RESOURCE_GROUP="$(curl -fsS --noproxy "*" -H Metadata:true \
+    "http://169.254.169.254/metadata/instance/compute/resourceGroupName?api-version=2021-02-01&format=text" || true)"
+  export AZURE_RESOURCE_GROUP
+fi
 
 echo "XXX AZURE_SUBSCRIPTION_ID=${AZURE_SUBSCRIPTION_ID:+set}"
 echo "XXX AZURE_RESOURCE_GROUP=${AZURE_RESOURCE_GROUP:+set}"
