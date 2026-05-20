@@ -130,8 +130,8 @@ pipeline {
         set +e
         echo "XXX agent: hostname=$(hostname)"
         echo "XXX agent: whoami=$(whoami)"
-        echo "XXX agent: invoking summon -e azure ./ci/test.sh"
-        summon -e azure ./ci/test.sh
+        echo "XXX agent: invoking summon -e azure bash ./ci/test.sh"
+        summon -e azure bash ./ci/test.sh
         rc=$?
         echo "XXX agent: summon exit code=$rc"
         exit $rc
