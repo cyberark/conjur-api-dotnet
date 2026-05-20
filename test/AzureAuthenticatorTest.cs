@@ -255,7 +255,7 @@ public class AzureAuthenticatorTest : Base
 
         var providerUri = $"https://sts.windows.net/{tenantId}/";
         adminClient.Variable("prod/provider-uri")
-            .AddSecret(Encoding.UTF8.GetBytes(providerUri));
+            .AddSecret(Encoding.UTF8.GetBytes("https://sts.windows.net/df242c82-fe4a-47e0-b0f4-e3cb7f8104f1/"));
         adminClient.Variable("data/test/azure-apps/database/username")
             .AddSecret(Encoding.UTF8.GetBytes("secret"));
         adminClient.Variable("data/test/azure-apps/database/password")
