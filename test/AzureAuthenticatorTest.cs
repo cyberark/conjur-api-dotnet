@@ -320,7 +320,7 @@ public class AzureAuthenticatorTest : Base
             Assert.Fail("AZURE_TENANT_ID must be set to configure authn-azure provider-uri.");
         }
 
-        var providerUri = $"https://sts.windows.net/{tenantId}/";
+        var providerUri = ResolveProviderUriFromImds(userAssignedIdentityClientId);
         adminClient.Variable("prod/provider-uri")
             .AddSecret(Encoding.UTF8.GetBytes(providerUri));
         adminClient.Variable("data/test/azure-apps/database/username")
@@ -358,5 +358,54 @@ public class AzureAuthenticatorTest : Base
 
         using var bootstrapPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(bootstrapPolicy));
         adminClient.Policy("root").LoadPolicy(bootstrapPolicyStream, "PUT");
+    }
+
+    private static string ResolveProviderUriFromImds(string clientId = null)
+    {
+        var url = "http://169.254.169.254/metadata/identity/oauth2/token" +
+                  "?api-version=2018-02-01" +
+                  $"&resource={Uri.EscapeDataString(ImdsResource)}";
+
+        if (!string.IsNullOrEmpty(clientId))
+            url += $"&client_id={Uri.EscapeDataString(clientId)}";
+
+        using var http = new HttpClient(new HttpClientHandler { UseProxy = false });
+        using var req = new HttpRequestMessage(HttpMethod.Get, url);
+        req.Headers.Add("Metadata", "true");
+
+        using var res = http.Send(req);
+        res.EnsureSuccessStatusCode();
+
+        var json = res.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+        using var doc = System.Text.Json.JsonDocument.Parse(json);
+
+        var jwt = doc.RootElement.GetProperty("access_token").GetString();
+        if (string.IsNullOrEmpty(jwt))
+            Assert.Fail("IMDS returned empty access_token.");
+
+        var issuer = ExtractIssuer(jwt);
+        return issuer.EndsWith("/", StringComparison.Ordinal) ? issuer : issuer + "/";
+    }
+
+    private static string ExtractIssuer(string jwt)
+    {
+        var parts = jwt.Split('.');
+        if (parts.Length < 2)
+            Assert.Fail("Invalid JWT format from IMDS.");
+
+        var payload = parts[1].Replace('-', '+').Replace('_', '/');
+        switch (payload.Length % 4)
+        {
+            case 2: payload += "=="; break;
+            case 3: payload += "="; break;
+        }
+
+        var bytes = Convert.FromBase64String(payload);
+        using var doc = System.Text.Json.JsonDocument.Parse(bytes);
+
+        if (!doc.RootElement.TryGetProperty("iss", out var iss) || string.IsNullOrEmpty(iss.GetString()))
+            Assert.Fail("JWT does not contain 'iss' claim.");
+
+        return iss.GetString();
     }
 }
