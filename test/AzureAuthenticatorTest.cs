@@ -16,7 +16,7 @@ public class AzureAuthenticatorTest : Base
 
     private const string AuthnAzurePolicy = @"
 - !policy
-  id: prod
+  id: authn-azure/prod
   body:
   - !webservice
 
@@ -247,7 +247,7 @@ public class AzureAuthenticatorTest : Base
         using var authnPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(AuthnAzurePolicy));
         adminClient.Policy("root").LoadPolicy(authnPolicyStream, WebRequestMethods.Http.Post);
 
-        adminClient.Variable("prod/provider-uri")
+        adminClient.Variable("authn-azure/prod/provider-uri")
             .AddSecret(Encoding.UTF8.GetBytes("https://sts.windows.net/df242c82-fe4a-47e0-b0f4-e3cb7f8104f1/"));
         adminClient.Variable("data/test/azure-apps/database/username")
             .AddSecret(Encoding.UTF8.GetBytes("secret"));
@@ -321,7 +321,7 @@ public class AzureAuthenticatorTest : Base
         }
 
         var providerUri = ResolveProviderUriFromImds(userAssignedIdentityClientId);
-        adminClient.Variable("prod/provider-uri")
+        adminClient.Variable("authn-azure/prod/provider-uri")
             .AddSecret(Encoding.UTF8.GetBytes(providerUri));
         adminClient.Variable("data/test/azure-apps/database/username")
             .AddSecret(Encoding.UTF8.GetBytes("secret"));
