@@ -72,8 +72,9 @@ login admin
 password ${CONJUR_AUTHN_API_KEY}
 EOF
 chmod 600 "$NETRC_FILE"
+
 export CONJUR_NETRC_PATH="$NETRC_FILE"
-export CONJUR_NETRC_FILE="$NETRC_FILE"   # <-- consumed by docker-compose.yml volume mount
+export CONJUR_NETRC_FILE="$NETRC_FILE"
 echo "XXX .netrc written to: ${NETRC_FILE}"
 echo "XXX CONJUR_NETRC_PATH=${CONJUR_NETRC_PATH}"
 echo "XXX CONJUR_NETRC_FILE=${CONJUR_NETRC_FILE}"
@@ -81,14 +82,14 @@ ls -l "$NETRC_FILE"
 echo "XXX netrc contents (password masked):"
 sed 's/^password .*/password ******/' "$NETRC_FILE"
 
-# Existing fallbacks
+# Azure test env (Go-parity: do not require summon for these)
 export RUN_AZURE_TESTS="${RUN_AZURE_TESTS:-true}"
 export AZURE_SUBSCRIPTION_ID="${AZURE_SUBSCRIPTION_ID:-${INFRAPOOL_AZURE_SUBSCRIPTION_ID:-}}"
 export AZURE_RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-${INFRAPOOL_AZURE_RESOURCE_GROUP:-}}"
 export USER_ASSIGNED_IDENTITY="${USER_ASSIGNED_IDENTITY:-${INFRAPOOL_USER_ASSIGNED_IDENTITY:-}}"
 export USER_ASSIGNED_IDENTITY_CLIENT_ID="${USER_ASSIGNED_IDENTITY_CLIENT_ID:-${INFRAPOOL_USER_ASSIGNED_IDENTITY_CLIENT_ID:-}}"
 
-# New: IMDS fallback when still missing
+# IMDS fallback for required system-assigned test vars
 if [ -z "${AZURE_SUBSCRIPTION_ID}" ]; then
   AZURE_SUBSCRIPTION_ID="$(curl -fsS --noproxy "*" -H Metadata:true \
     "http://169.254.169.254/metadata/instance/compute/subscriptionId?api-version=2021-02-01&format=text" || true)"
@@ -105,11 +106,13 @@ echo "XXX AZURE_SUBSCRIPTION_ID=${AZURE_SUBSCRIPTION_ID:+set}"
 echo "XXX AZURE_RESOURCE_GROUP=${AZURE_RESOURCE_GROUP:+set}"
 echo "XXX USER_ASSIGNED_IDENTITY=${USER_ASSIGNED_IDENTITY:+set}"
 echo "XXX USER_ASSIGNED_IDENTITY_CLIENT_ID=${USER_ASSIGNED_IDENTITY_CLIENT_ID:+set}"
+echo "XXX RUN_AZURE_TESTS=${RUN_AZURE_TESTS}"
 
-echo "XXX RUN_AZURE_TESTS as injected by summon: ${RUN_AZURE_TESTS:-<not set>}"
+if [ -z "${AZURE_SUBSCRIPTION_ID}" ] || [ -z "${AZURE_RESOURCE_GROUP}" ]; then
+  echo "XXX ERROR: AZURE_SUBSCRIPTION_ID/AZURE_RESOURCE_GROUP are still empty."
+  exit 1
+fi
 
-# Option 2: run tests via docker compose so the test container is on the same
-# network as the conjur service (the hostname 'conjur' resolves only there).
 echo "XXX IMDS preflight from test container..."
 docker compose run --rm --entrypoint bash test -lc '
   set -e
@@ -138,7 +141,7 @@ if [ "$rc" -ne 0 ]; then
   echo "XXX ci/test.sh: dumping Conjur logs..."
   docker compose logs --no-color --timestamps --tail=200 conjur || true
   echo "XXX ci/test.sh: dumping Postgres logs..."
-  docker compose logs --no-color --timestamps postgres || true
+  docker compose logs --no-color --timestamps --tail=200 postgres || true
 fi
 
 echo "XXX ci/test.sh: docker compose run exit code=$rc"

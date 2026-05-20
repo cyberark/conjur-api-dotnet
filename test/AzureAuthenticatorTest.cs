@@ -247,13 +247,6 @@ public class AzureAuthenticatorTest : Base
         using var authnPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(AuthnAzurePolicy));
         adminClient.Policy("root").LoadPolicy(authnPolicyStream, WebRequestMethods.Http.Post);
 
-        var tenantId = Environment.GetEnvironmentVariable("AZURE_TENANT_ID");
-        if (string.IsNullOrEmpty(tenantId))
-        {
-            Assert.Fail("AZURE_TENANT_ID must be set to configure authn-azure provider-uri.");
-        }
-
-        var providerUri = $"https://sts.windows.net/{tenantId}/";
         adminClient.Variable("prod/provider-uri")
             .AddSecret(Encoding.UTF8.GetBytes("https://sts.windows.net/df242c82-fe4a-47e0-b0f4-e3cb7f8104f1/"));
         adminClient.Variable("data/test/azure-apps/database/username")
