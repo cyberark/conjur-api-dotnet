@@ -235,6 +235,7 @@ public class AzureAuthenticatorTest : Base
         const string conjurAuthenticator = "authn-azure/prod";
 
         EnsureDataTestPolicyExists(adminClient);
+        EnsureAuthnAzurePolicyExists(adminClient);
 
         var rolesPolicy = string.Format(AuthAzureRolesPolicyTemplate,
             subscriptionId,
@@ -300,6 +301,7 @@ public class AzureAuthenticatorTest : Base
         const string conjurAuthenticator = "authn-azure/prod";
 
         EnsureDataTestPolicyExists(adminClient);
+        EnsureAuthnAzurePolicyExists(adminClient);
 
         // AuthnAzure_UserAssignedIdentity
         var userIdentityAnnotation = $"      authn-azure/user-assigned-identity: \"{userAssignedIdentity}\"";
@@ -352,6 +354,19 @@ public class AzureAuthenticatorTest : Base
 
         using var bootstrapPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(bootstrapPolicy));
         adminClient.Policy("root").LoadPolicy(bootstrapPolicyStream, "PUT");
+    }
+
+    private static void EnsureAuthnAzurePolicyExists(Client adminClient)
+    {
+        const string bootstrapAuthnAzurePolicy = @"
+- !policy
+  id: conjur
+  body:
+  - !policy
+    id: authn-azure
+";
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(bootstrapAuthnAzurePolicy));
+        adminClient.Policy("root").LoadPolicy(stream, WebRequestMethods.Http.Post);
     }
 
     private static string ResolveProviderUriFromImds(string clientId = null)
