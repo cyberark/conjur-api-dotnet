@@ -231,7 +231,7 @@ public class AzureAuthenticatorTest : Base
 
         var adminClient = CreateAdminClient();
 
-        const string conjurIdentity = "data/test/azure-apps/azureVM";
+        const string conjurIdentity = "host/data/test/azure-apps/azureVM";
         const string conjurAuthenticator = "authn-azure/prod";
 
         EnsureDataTestPolicyExists(adminClient);
@@ -296,7 +296,7 @@ public class AzureAuthenticatorTest : Base
 
         var adminClient = CreateAdminClient();
 
-        const string conjurIdentity = "data/test/azure-apps/azureVM";
+        const string conjurIdentity = "host/data/test/azure-apps/azureVM";
         const string conjurAuthenticator = "authn-azure/prod";
 
         EnsureDataTestPolicyExists(adminClient);
