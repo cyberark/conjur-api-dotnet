@@ -16,7 +16,7 @@ public class AzureAuthenticatorTest : Base
 
     private const string AuthnAzurePolicy = @"
 - !policy
-  id: authn-azure/prod
+  id: prod
   body:
   - !webservice
 
@@ -245,9 +245,9 @@ public class AzureAuthenticatorTest : Base
         adminClient.Policy("data/test").LoadPolicy(rolesPolicyStream, WebRequestMethods.Http.Post);
 
         using var authnPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(AuthnAzurePolicy));
-        adminClient.Policy("root").LoadPolicy(authnPolicyStream, WebRequestMethods.Http.Post);
+        adminClient.Policy("conjur/authn-azure").LoadPolicy(authnPolicyStream, WebRequestMethods.Http.Post);
 
-        adminClient.Variable("authn-azure/prod/provider-uri")
+        adminClient.Variable("conjur/authn-azure/prod/provider-uri")
             .AddSecret(Encoding.UTF8.GetBytes("https://sts.windows.net/df242c82-fe4a-47e0-b0f4-e3cb7f8104f1/"));
         adminClient.Variable("data/test/azure-apps/database/username")
             .AddSecret(Encoding.UTF8.GetBytes("secret"));
@@ -312,16 +312,10 @@ public class AzureAuthenticatorTest : Base
         adminClient.Policy("data/test").LoadPolicy(rolesPolicyStream, WebRequestMethods.Http.Post);
 
         using var authnPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(AuthnAzurePolicy));
-        adminClient.Policy("root").LoadPolicy(authnPolicyStream, WebRequestMethods.Http.Post);
-
-        var tenantId = Environment.GetEnvironmentVariable("AZURE_TENANT_ID");
-        if (string.IsNullOrEmpty(tenantId))
-        {
-            Assert.Fail("AZURE_TENANT_ID must be set to configure authn-azure provider-uri.");
-        }
+        adminClient.Policy("conjur/authn-azure").LoadPolicy(authnPolicyStream, WebRequestMethods.Http.Post);
 
         var providerUri = ResolveProviderUriFromImds(userAssignedIdentityClientId);
-        adminClient.Variable("authn-azure/prod/provider-uri")
+        adminClient.Variable("conjur/authn-azure/prod/provider-uri")
             .AddSecret(Encoding.UTF8.GetBytes(providerUri));
         adminClient.Variable("data/test/azure-apps/database/username")
             .AddSecret(Encoding.UTF8.GetBytes("secret"));
