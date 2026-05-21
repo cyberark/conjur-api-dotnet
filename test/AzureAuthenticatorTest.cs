@@ -221,6 +221,8 @@ public class AzureAuthenticatorTest : Base
         if (Environment.GetEnvironmentVariable("RUN_AZURE_TESTS") != "true")
             Assert.Ignore("Skipping Azure authn test. Set RUN_AZURE_TESTS=true to run.");
 
+        TestContext.Progress.WriteLine("Azure test: starting AuthnAzure_SystemAssignedIdentity");
+
         var subscriptionId = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
         var resourceGroup = Environment.GetEnvironmentVariable("AZURE_RESOURCE_GROUP");
 
@@ -270,6 +272,8 @@ public class AzureAuthenticatorTest : Base
 
         secret = adminClient.Variable("data/test/azure-apps/database/password").GetValue();
         Assert.AreEqual("P@ssw0rd!", secret);
+
+        TestContext.Progress.WriteLine("Azure test: AuthnAzure_SystemAssignedIdentity PASSED");
     }
 
     /// <summary>
@@ -290,13 +294,24 @@ public class AzureAuthenticatorTest : Base
         // Fallback: discover user-assigned identity metadata from IMDS when env vars are missing.
         TryResolveUserAssignedIdentityFromImds(ref userAssignedIdentity, ref userAssignedIdentityClientId);
 
-        if (string.IsNullOrEmpty(subscriptionId) ||
-            string.IsNullOrEmpty(resourceGroup) ||
-            string.IsNullOrEmpty(userAssignedIdentity) ||
-            string.IsNullOrEmpty(userAssignedIdentityClientId))
+        var missing = new List<string>();
+        if (string.IsNullOrEmpty(subscriptionId)) missing.Add("AZURE_SUBSCRIPTION_ID");
+        if (string.IsNullOrEmpty(resourceGroup)) missing.Add("AZURE_RESOURCE_GROUP");
+        if (string.IsNullOrEmpty(userAssignedIdentity)) missing.Add("USER_ASSIGNED_IDENTITY");
+        if (string.IsNullOrEmpty(userAssignedIdentityClientId)) missing.Add("USER_ASSIGNED_IDENTITY_CLIENT_ID");
+
+        if (missing.Count > 0)
         {
-            Assert.Ignore("Skipping user-assigned Azure test. USER_ASSIGNED_IDENTITY and USER_ASSIGNED_IDENTITY_CLIENT_ID must be set or discoverable from IMDS.");
+            TestContext.Progress.WriteLine(
+                $"Azure test: skipping AuthnAzure_UserAssignedIdentity; missing: {string.Join(", ", missing)}. " +
+                $"Resolved values => subscription:{!string.IsNullOrEmpty(subscriptionId)}, " +
+                $"resourceGroup:{!string.IsNullOrEmpty(resourceGroup)}, " +
+                $"userAssignedIdentity:{!string.IsNullOrEmpty(userAssignedIdentity)}, " +
+                $"userAssignedIdentityClientId:{!string.IsNullOrEmpty(userAssignedIdentityClientId)}");
+            Assert.Ignore("Skipping user-assigned Azure test. Required values are missing.");
         }
+
+        TestContext.Progress.WriteLine("Azure test: starting AuthnAzure_UserAssignedIdentity");
 
         var adminClient = CreateAdminClient();
 
@@ -307,10 +322,7 @@ public class AzureAuthenticatorTest : Base
         EnsureAuthnAzurePolicyExists(adminClient);
 
         var userIdentityAnnotation = $"      authn-azure/user-assigned-identity: \"{userAssignedIdentity}\"";
-        var rolesPolicy = string.Format(AuthAzureRolesPolicyTemplate,
-            subscriptionId,
-            resourceGroup,
-            userIdentityAnnotation);
+        var rolesPolicy = string.Format(AuthAzureRolesPolicyTemplate, subscriptionId, resourceGroup, userIdentityAnnotation);
 
         using var rolesPolicyStream = new MemoryStream(Encoding.UTF8.GetBytes(rolesPolicy));
         adminClient.Policy("data/test").LoadPolicy(rolesPolicyStream, WebRequestMethods.Http.Post);
@@ -342,6 +354,8 @@ public class AzureAuthenticatorTest : Base
 
         secret = adminClient.Variable("data/test/azure-apps/database/password").GetValue();
         Assert.AreEqual("P@ssw0rd!", secret);
+
+        TestContext.Progress.WriteLine("Azure test: AuthnAzure_UserAssignedIdentity PASSED");
     }
 
     private static void EnsureDataTestPolicyExists(Client adminClient)
