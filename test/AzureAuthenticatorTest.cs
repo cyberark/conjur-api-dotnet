@@ -221,7 +221,7 @@ public class AzureAuthenticatorTest : Base
         if (Environment.GetEnvironmentVariable("RUN_AZURE_TESTS") != "true")
             Assert.Ignore("Skipping Azure authn test. Set RUN_AZURE_TESTS=true to run.");
 
-        TestContext.Progress.WriteLine("Azure test: starting AuthnAzure_SystemAssignedIdentity");
+        Console.WriteLine("Azure test: starting AuthnAzure_SystemAssignedIdentity");
 
         var subscriptionId = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
         var resourceGroup = Environment.GetEnvironmentVariable("AZURE_RESOURCE_GROUP");
@@ -273,7 +273,7 @@ public class AzureAuthenticatorTest : Base
         secret = adminClient.Variable("data/test/azure-apps/database/password").GetValue();
         Assert.AreEqual("P@ssw0rd!", secret);
 
-        TestContext.Progress.WriteLine("Azure test: AuthnAzure_SystemAssignedIdentity PASSED");
+        Console.WriteLine("Azure test: AuthnAzure_SystemAssignedIdentity PASSED");
     }
 
     /// <summary>
@@ -302,7 +302,7 @@ public class AzureAuthenticatorTest : Base
 
         if (missing.Count > 0)
         {
-            TestContext.Progress.WriteLine(
+            Console.WriteLine(
                 $"Azure test: skipping AuthnAzure_UserAssignedIdentity; missing: {string.Join(", ", missing)}. " +
                 $"Resolved values => subscription:{!string.IsNullOrEmpty(subscriptionId)}, " +
                 $"resourceGroup:{!string.IsNullOrEmpty(resourceGroup)}, " +
@@ -311,7 +311,7 @@ public class AzureAuthenticatorTest : Base
             Assert.Ignore("Skipping user-assigned Azure test. Required values are missing.");
         }
 
-        TestContext.Progress.WriteLine("Azure test: starting AuthnAzure_UserAssignedIdentity");
+        Console.WriteLine("Azure test: starting AuthnAzure_UserAssignedIdentity");
 
         var adminClient = CreateAdminClient();
 
@@ -355,7 +355,7 @@ public class AzureAuthenticatorTest : Base
         secret = adminClient.Variable("data/test/azure-apps/database/password").GetValue();
         Assert.AreEqual("P@ssw0rd!", secret);
 
-        TestContext.Progress.WriteLine("Azure test: AuthnAzure_UserAssignedIdentity PASSED");
+        Console.WriteLine("Azure test: AuthnAzure_UserAssignedIdentity PASSED");
     }
 
     private static void EnsureDataTestPolicyExists(Client adminClient)
