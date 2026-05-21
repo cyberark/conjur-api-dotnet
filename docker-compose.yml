@@ -43,7 +43,11 @@ services:
       - dotnet
       - test
       - test/test.csproj
+      - --filter
+      - FullyQualifiedName~AzureAuthenticatorTest
       - --logger
       - trx;LogFileName=TestResults.xml
+      - --logger
+      - console;verbosity=detailed
       - --results-directory
       - /src
