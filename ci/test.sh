@@ -132,7 +132,12 @@ docker compose run --rm --entrypoint bash test -lc '
 
 echo "XXX ci/test.sh: running test service via docker compose"
 set +e
-docker compose run --rm test
+docker compose run --rm test || {
+  rc=$?
+  echo "XXX docker compose failed rc=$rc"
+  docker compose run --rm --entrypoint sh test -c 'command -v dotnet; dotnet --info' || true
+  exit $rc
+}
 rc=$?
 set -e
 

@@ -39,7 +39,11 @@ services:
       HTTPS_PROXY: ""
       http_proxy: ""
       https_proxy: ""
-    command: >
-      bash -lc "dotnet test test/test.csproj
-                --logger 'trx;LogFileName=TestResults.xml'
-                --results-directory /src"
+    command:
+      - dotnet
+      - test
+      - test/test.csproj
+      - --logger
+      - trx;LogFileName=TestResults.xml
+      - --results-directory
+      - /src
