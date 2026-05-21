@@ -287,12 +287,15 @@ public class AzureAuthenticatorTest : Base
         var userAssignedIdentity = Environment.GetEnvironmentVariable("USER_ASSIGNED_IDENTITY");
         var userAssignedIdentityClientId = Environment.GetEnvironmentVariable("USER_ASSIGNED_IDENTITY_CLIENT_ID");
 
+        // Fallback: discover user-assigned identity metadata from IMDS when env vars are missing.
+        TryResolveUserAssignedIdentityFromImds(ref userAssignedIdentity, ref userAssignedIdentityClientId);
+
         if (string.IsNullOrEmpty(subscriptionId) ||
             string.IsNullOrEmpty(resourceGroup) ||
             string.IsNullOrEmpty(userAssignedIdentity) ||
             string.IsNullOrEmpty(userAssignedIdentityClientId))
         {
-            Assert.Ignore("Skipping user-assigned Azure test. USER_ASSIGNED_IDENTITY and USER_ASSIGNED_IDENTITY_CLIENT_ID must be set.");
+            Assert.Ignore("Skipping user-assigned Azure test. USER_ASSIGNED_IDENTITY and USER_ASSIGNED_IDENTITY_CLIENT_ID must be set or discoverable from IMDS.");
         }
 
         var adminClient = CreateAdminClient();
@@ -303,7 +306,6 @@ public class AzureAuthenticatorTest : Base
         EnsureDataTestPolicyExists(adminClient);
         EnsureAuthnAzurePolicyExists(adminClient);
 
-        // AuthnAzure_UserAssignedIdentity
         var userIdentityAnnotation = $"      authn-azure/user-assigned-identity: \"{userAssignedIdentity}\"";
         var rolesPolicy = string.Format(AuthAzureRolesPolicyTemplate,
             subscriptionId,
@@ -416,5 +418,55 @@ public class AzureAuthenticatorTest : Base
             Assert.Fail("JWT does not contain 'iss' claim.");
 
         return iss.GetString();
+    }
+
+    private static void TryResolveUserAssignedIdentityFromImds(ref string userAssignedIdentity, ref string userAssignedIdentityClientId)
+    {
+        if (!string.IsNullOrEmpty(userAssignedIdentity) && !string.IsNullOrEmpty(userAssignedIdentityClientId))
+            return;
+
+        try
+        {
+            using var http = new HttpClient(new HttpClientHandler { UseProxy = false });
+            using var req = new HttpRequestMessage(
+                HttpMethod.Get,
+                "http://169.254.169.254/metadata/identity/info?api-version=2019-11-01");
+            req.Headers.Add("Metadata", "true");
+
+            using var res = http.Send(req);
+            if (!res.IsSuccessStatusCode)
+                return;
+
+            var json = res.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+
+            if (!doc.RootElement.TryGetProperty("identity", out var identityRoot))
+                return;
+
+            if (!identityRoot.TryGetProperty("userAssignedIdentities", out var userAssignedIdentities) ||
+                userAssignedIdentities.ValueKind != System.Text.Json.JsonValueKind.Object)
+                return;
+
+            using var enumerator = userAssignedIdentities.EnumerateObject();
+            if (!enumerator.MoveNext())
+                return;
+
+            var firstIdentity = enumerator.Current;
+
+            if (string.IsNullOrEmpty(userAssignedIdentity))
+                userAssignedIdentity = firstIdentity.Name;
+
+            if (string.IsNullOrEmpty(userAssignedIdentityClientId) &&
+                firstIdentity.Value.TryGetProperty("clientId", out var clientIdProp))
+            {
+                var discoveredClientId = clientIdProp.GetString();
+                if (!string.IsNullOrEmpty(discoveredClientId))
+                    userAssignedIdentityClientId = discoveredClientId;
+            }
+        }
+        catch
+        {
+            // Best-effort fallback only; caller decides skip/fail policy.
+        }
     }
 }
