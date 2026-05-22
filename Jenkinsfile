@@ -73,9 +73,11 @@ pipeline {
       INFRAPOOL_EXECUTORV2_AGENT_0 = INFRAPOOL_EXECUTORV2_AGENTS[0]
       infrapool = infraPoolConnect(INFRAPOOL_EXECUTORV2_AGENT_0, {})
 
-      INFRAPOOL_AZURE_EXECUTORV2_AGENTS = getInfraPoolAgent(type: "AzureExecutorV2", quantity: 1, duration: 1)
-      INFRAPOOL_AZURE_EXECUTORV2_AGENT_0 = INFRAPOOL_AZURE_EXECUTORV2_AGENTS[0]
-      azureInfrapool = infraPoolConnect(INFRAPOOL_AZURE_EXECUTORV2_AGENT_0, {})
+      if(params.RUN_AZURE_TESTS) {
+        INFRAPOOL_AZURE_EXECUTORV2_AGENTS = getInfraPoolAgent(type: "AzureExecutorV2", quantity: 1, duration: 1)
+        INFRAPOOL_AZURE_EXECUTORV2_AGENT_0 = INFRAPOOL_AZURE_EXECUTORV2_AGENTS[0]
+        azureInfrapool = infraPoolConnect(INFRAPOOL_AZURE_EXECUTORV2_AGENT_0, {})
+      }
     }
   }
 }
