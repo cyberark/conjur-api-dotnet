@@ -38,6 +38,10 @@ pipeline {
     parameterizedCron(getWeeklyCronString("H(1-5)","%MODE=RELEASE"))
   }
 
+  parameters {
+    booleanParam(name: 'RUN_AZURE_TESTS', defaultValue: false, description: 'Run integration tests against Azure')
+  }
+
   stages {
     // Aborts any builds triggered by another project that wouldn't include any changes
     stage ("Skip build if triggering job didn't create a release") {

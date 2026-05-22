@@ -103,6 +103,9 @@ public class AzureAuthenticatorTest : Base
     [Test]
     public void TestAzureAuthenticatorPassesJwtToConjur()
     {
+        if (Environment.GetEnvironmentVariable("RUN_AZURE_TESTS") != "true")
+            Assert.Ignore("Skipping Azure authn test. Set RUN_AZURE_TESTS=true to run.");
+
         const string conjurIdentity = "somehost";
         const string conjurAuthenticator = "authn-azure/test";
         const string fakeAzureJwt = "explicit-token";
@@ -143,6 +146,9 @@ public class AzureAuthenticatorTest : Base
     [Test]
     public void TestAzureTokenRequest_NoClientId_OmitsClientIdParam()
     {
+        if (Environment.GetEnvironmentVariable("RUN_AZURE_TESTS") != "true")
+            Assert.Ignore("Skipping Azure authn test. Set RUN_AZURE_TESTS=true to run.");
+
         const string conjurIdentity = "somehost";
         const string conjurAuthenticator = "authn-azure/test";
         const string fakeAzureJwt = "fake.azure.jwt";
@@ -180,6 +186,9 @@ public class AzureAuthenticatorTest : Base
     [Test]
     public void TestAzureTokenRequest_WithClientId_IncludesClientIdParam()
     {
+        if (Environment.GetEnvironmentVariable("RUN_AZURE_TESTS") != "true")
+            Assert.Ignore("Skipping Azure authn test. Set RUN_AZURE_TESTS=true to run.");
+
         const string conjurIdentity = "somehost";
         const string conjurAuthenticator = "authn-azure/test";
         const string fakeAzureJwt = "fake.azure.jwt";
