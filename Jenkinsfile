@@ -127,22 +127,25 @@ pipeline {
     }
 
     stage('Run Azure tests') {
-  steps {
-    script {
-      echo "XXX Jenkinsfile: entering 'Run Azure tests' stage"
-      azureInfrapool.agentSh '''
-        set +e
-        echo "XXX agent: hostname=$(hostname)"
-        echo "XXX agent: whoami=$(whoami)"
-        echo "XXX agent: invoking summon -e azure bash ./ci/test.sh"
-        summon -e azure bash ./ci/test.sh
-        rc=$?
-        echo "XXX agent: test.sh exit code=$rc"
-        exit $rc
-      '''
+      when {
+        expression { params.RUN_AZURE_TESTS }
+      }
+      steps {
+        script {
+          echo "XXX Jenkinsfile: entering 'Run Azure tests' stage"
+          azureInfrapool.agentSh '''
+            set +e
+            echo "XXX agent: hostname=$(hostname)"
+            echo "XXX agent: whoami=$(whoami)"
+            echo "XXX agent: invoking summon -e azure bash ./ci/test.sh"
+            summon -e azure bash ./ci/test.sh
+            rc=$?
+            echo "XXX agent: test.sh exit code=$rc"
+            exit $rc
+          '''
+        }
+      }
     }
-  }
-}
 
     stage('Release') {
       when {

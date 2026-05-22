@@ -82,40 +82,20 @@ ls -l "$NETRC_FILE"
 echo "XXX netrc contents (password masked):"
 sed 's/^password .*/password ******/' "$NETRC_FILE"
 
-# Azure test env (Go-parity: do not require summon for these)
+# Azure test env (Go parity: values must come from summon -e azure)
 export RUN_AZURE_TESTS="${RUN_AZURE_TESTS:-true}"
-export AZURE_SUBSCRIPTION_ID="${AZURE_SUBSCRIPTION_ID:-${INFRAPOOL_AZURE_SUBSCRIPTION_ID:-}}"
-export AZURE_RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-${INFRAPOOL_AZURE_RESOURCE_GROUP:-}}"
-export USER_ASSIGNED_IDENTITY="${USER_ASSIGNED_IDENTITY:-${INFRAPOOL_USER_ASSIGNED_IDENTITY:-}}"
-export USER_ASSIGNED_IDENTITY_CLIENT_ID="${USER_ASSIGNED_IDENTITY_CLIENT_ID:-${INFRAPOOL_USER_ASSIGNED_IDENTITY_CLIENT_ID:-}}"
 
-# IMDS fallback for required system-assigned test vars
-if [ -z "${AZURE_SUBSCRIPTION_ID}" ]; then
-  AZURE_SUBSCRIPTION_ID="$(curl -fsS --noproxy "*" -H Metadata:true \
-    "http://169.254.169.254/metadata/instance/compute/subscriptionId?api-version=2021-02-01&format=text" || true)"
-  export AZURE_SUBSCRIPTION_ID
-fi
+# Required vars for Azure tests
+: "${AZURE_SUBSCRIPTION_ID:?AZURE_SUBSCRIPTION_ID is required}"
+: "${AZURE_RESOURCE_GROUP:?AZURE_RESOURCE_GROUP is required}"
+: "${USER_ASSIGNED_IDENTITY:?USER_ASSIGNED_IDENTITY is required}"
+: "${USER_ASSIGNED_IDENTITY_CLIENT_ID:?USER_ASSIGNED_IDENTITY_CLIENT_ID is required}"
 
-if [ -z "${AZURE_RESOURCE_GROUP}" ]; then
-  AZURE_RESOURCE_GROUP="$(curl -fsS --noproxy "*" -H Metadata:true \
-    "http://169.254.169.254/metadata/instance/compute/resourceGroupName?api-version=2021-02-01&format=text" || true)"
-  export AZURE_RESOURCE_GROUP
-fi
-
-echo "XXX AZURE_SUBSCRIPTION_ID=${AZURE_SUBSCRIPTION_ID:+set}"
-echo "XXX AZURE_RESOURCE_GROUP=${AZURE_RESOURCE_GROUP:+set}"
-echo "XXX USER_ASSIGNED_IDENTITY=${USER_ASSIGNED_IDENTITY:+set}"
-echo "XXX USER_ASSIGNED_IDENTITY_CLIENT_ID=${USER_ASSIGNED_IDENTITY_CLIENT_ID:+set}"
+echo "XXX AZURE_SUBSCRIPTION_ID=set"
+echo "XXX AZURE_RESOURCE_GROUP=set"
+echo "XXX USER_ASSIGNED_IDENTITY=set"
+echo "XXX USER_ASSIGNED_IDENTITY_CLIENT_ID=set"
 echo "XXX RUN_AZURE_TESTS=${RUN_AZURE_TESTS}"
-
-if [ -z "${USER_ASSIGNED_IDENTITY:-}" ] || [ -z "${USER_ASSIGNED_IDENTITY_CLIENT_ID:-}" ]; then
-  echo "XXX ERROR: USER_ASSIGNED_IDENTITY / USER_ASSIGNED_IDENTITY_CLIENT_ID missing. Azure user-assigned test cannot run."
-  exit 1
-fi
-
-if [ -z "${AZURE_SUBSCRIPTION_ID}" ] || [ -z "${AZURE_RESOURCE_GROUP}" ]; then
-  echo "XXX ERROR: AZURE_SUBSCRIPTION_ID/AZURE_RESOURCE_GROUP are still empty."
-  exit 1
 fi
 
 echo "XXX IMDS preflight from test container..."

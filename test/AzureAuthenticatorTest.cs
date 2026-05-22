@@ -300,25 +300,33 @@ public class AzureAuthenticatorTest : Base
         var userAssignedIdentity = Environment.GetEnvironmentVariable("USER_ASSIGNED_IDENTITY");
         var userAssignedIdentityClientId = Environment.GetEnvironmentVariable("USER_ASSIGNED_IDENTITY_CLIENT_ID");
 
-        // Fallback: discover user-assigned identity metadata from IMDS when env vars are missing.
-        TryResolveUserAssignedIdentityFromImds(ref userAssignedIdentity, ref userAssignedIdentityClientId);
-
-        var missing = new List<string>();
-        if (string.IsNullOrEmpty(subscriptionId)) missing.Add("AZURE_SUBSCRIPTION_ID");
-        if (string.IsNullOrEmpty(resourceGroup)) missing.Add("AZURE_RESOURCE_GROUP");
-        if (string.IsNullOrEmpty(userAssignedIdentity)) missing.Add("USER_ASSIGNED_IDENTITY");
-        if (string.IsNullOrEmpty(userAssignedIdentityClientId)) missing.Add("USER_ASSIGNED_IDENTITY_CLIENT_ID");
-
-        if (missing.Count > 0)
+        if (string.IsNullOrEmpty(subscriptionId) ||
+            string.IsNullOrEmpty(resourceGroup) ||
+            string.IsNullOrEmpty(userAssignedIdentity) ||
+            string.IsNullOrEmpty(userAssignedIdentityClientId))
         {
-            Console.WriteLine(
-                $"Azure test: skipping AuthnAzure_UserAssignedIdentity; missing: {string.Join(", ", missing)}. " +
-                $"Resolved values => subscription:{!string.IsNullOrEmpty(subscriptionId)}, " +
-                $"resourceGroup:{!string.IsNullOrEmpty(resourceGroup)}, " +
-                $"userAssignedIdentity:{!string.IsNullOrEmpty(userAssignedIdentity)}, " +
-                $"userAssignedIdentityClientId:{!string.IsNullOrEmpty(userAssignedIdentityClientId)}");
-            Assert.Ignore("Skipping user-assigned Azure test. Required values are missing.");
+            Assert.Fail("AZURE_SUBSCRIPTION_ID, AZURE_RESOURCE_GROUP, USER_ASSIGNED_IDENTITY, USER_ASSIGNED_IDENTITY_CLIENT_ID must be set to run user-assigned Azure test.");
         }
+
+        // Fallback: discover user-assigned identity metadata from IMDS when env vars are missing.
+        //TryResolveUserAssignedIdentityFromImds(ref userAssignedIdentity, ref userAssignedIdentityClientId);
+
+        //var missing = new List<string>();
+        //if (string.IsNullOrEmpty(subscriptionId)) missing.Add("AZURE_SUBSCRIPTION_ID");
+        //if (string.IsNullOrEmpty(resourceGroup)) missing.Add("AZURE_RESOURCE_GROUP");
+        //if (string.IsNullOrEmpty(userAssignedIdentity)) missing.Add("USER_ASSIGNED_IDENTITY");
+        //if (string.IsNullOrEmpty(userAssignedIdentityClientId)) missing.Add("USER_ASSIGNED_IDENTITY_CLIENT_ID");
+
+        //if (missing.Count > 0)
+        //{
+        //    Console.WriteLine(
+        //        $"Azure test: skipping AuthnAzure_UserAssignedIdentity; missing: {string.Join(", ", missing)}. " +
+        //        $"Resolved values => subscription:{!string.IsNullOrEmpty(subscriptionId)}, " +
+        //        $"resourceGroup:{!string.IsNullOrEmpty(resourceGroup)}, " +
+        //        $"userAssignedIdentity:{!string.IsNullOrEmpty(userAssignedIdentity)}, " +
+        //        $"userAssignedIdentityClientId:{!string.IsNullOrEmpty(userAssignedIdentityClientId)}");
+        //    Assert.Ignore("Skipping user-assigned Azure test. Required values are missing.");
+        //}
 
         Console.WriteLine("Azure test: starting AuthnAzure_UserAssignedIdentity");
 
