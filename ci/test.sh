@@ -96,7 +96,6 @@ echo "XXX AZURE_RESOURCE_GROUP=set"
 echo "XXX USER_ASSIGNED_IDENTITY=set"
 echo "XXX USER_ASSIGNED_IDENTITY_CLIENT_ID=set"
 echo "XXX RUN_AZURE_TESTS=${RUN_AZURE_TESTS}"
-fi
 
 echo "XXX IMDS preflight from test container..."
 docker compose run --rm --entrypoint bash test -lc '
