@@ -73,7 +73,17 @@ docker run "${DOCKER_ARGS[@]}" dotnet-builder:dev
 
 CID=$(cat "$CIDFILE")
 
-docker cp "$CID":"/build/TestResults.xml" .
+# Prefer canonical path, fallback to discovered junit file
+if ! docker cp "$CID":"/build/TestResults.xml" .; then
+  echo "XXX build.sh: /build/TestResults.xml not found, attempting fallback search..."
+  docker cp "$CID":"/build/TestResults" ./TestResultsDir
+  found="$(find ./TestResultsDir -type f -name '*.xml' | head -n 1 || true)"
+  if [ -z "$found" ]; then
+    echo "XXX build.sh: no test result xml found"
+    exit 1
+  fi
+  cp "$found" ./TestResults.xml
+fi
 docker cp "$CID":"/build/Coverage.xml" .
 mkdir -p bin
 docker cp "$CID":"/build/conjur-api/bin/Release/net8.0/conjur-api.dll" bin/conjur-api.dll
