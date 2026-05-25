@@ -31,7 +31,7 @@ public class AzureAuthenticator : IAuthenticator
     private readonly string resourceUri;
     private readonly string imdsBaseUrl;
     private readonly string imdsApiVersion;
-    private readonly string clientId;
+    private readonly string? clientId;
 
     private bool disableCertCheck;
 
@@ -64,7 +64,7 @@ public class AzureAuthenticator : IAuthenticator
         string identity,
         string authenticator,
         string resourceUri = "https://management.azure.com/",
-        string clientId = null,
+        string? clientId = null,
         // Fixed link-local IP reserved for Azure IMDS on all Azure VMs.
         // See: https://learn.microsoft.com/en-us/azure/virtual-machines/instance-metadata-service
         string imdsBaseUrl = "http://169.254.169.254",
@@ -105,7 +105,7 @@ public class AzureAuthenticator : IAuthenticator
         string identity,
         string authenticator,
         string resourceUri = "https://management.azure.com/",
-        string clientId = null,
+        string? clientId = null,
         // Fixed link-local IP reserved for Azure IMDS on all Azure VMs.
         // See: https://learn.microsoft.com/en-us/azure/virtual-machines/instance-metadata-service
         string imdsBaseUrl = "http://169.254.169.254",
@@ -275,14 +275,14 @@ public class AzureAuthenticator : IAuthenticator
 public class AzureImdsTokenResponse
 {
     [JsonPropertyName("access_token")]
-    public string AccessToken { get; set; }
+    public string? AccessToken { get; set; }
 
     [JsonPropertyName("token_type")]
-    public string TokenType { get; set; }
+    public string? TokenType { get; set; }
 
     [JsonPropertyName("expires_in")]
-    public string ExpiresIn { get; set; }
+    public string? ExpiresIn { get; set; }
 
     [JsonPropertyName("resource")]
-    public string Resource { get; set; }
+    public string? Resource { get; set; }
 }
