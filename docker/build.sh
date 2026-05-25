@@ -30,10 +30,6 @@ dotnet restore
 # test (single run with deterministic junit + coverage outputs)
 dotnet build
 
-# Sanity check that junit logger is discoverable
-dotnet test test/test.csproj --list-loggers | tee /build/available-loggers.txt
-grep -qi "junit" /build/available-loggers.txt
-
 dotnet test test/test.csproj \
   --logger:"junit;LogFilePath=/build/TestResults.xml" \
   --collect:"Code Coverage;Format=Cobertura" \
@@ -41,7 +37,7 @@ dotnet test test/test.csproj \
 
 if [ ! -s /build/TestResults.xml ]; then
   echo "ERROR: JUnit report was not created at /build/TestResults.xml"
-  find /build/TestResults -maxdepth 3 -type f -print || true
+  find /build -maxdepth 4 -type f -name "*.xml" -print || true
   exit 1
 fi
 
