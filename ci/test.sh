@@ -81,19 +81,18 @@ export RUN_AZURE_TESTS="${RUN_AZURE_TESTS:-true}"
 
 docker compose run --rm --entrypoint bash test -lc '
   set -e
-  echo "proxy env:"
-  env | grep -Ei "proxy" || true
+  env | grep -Ei "proxy" >/dev/null 2>&1 || true
 
-  echo "system-assigned IMDS call:"
-  curl -sS -i --noproxy "*" -H Metadata:true \
-    "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com%2F" | head -n 30
+  curl -sS --noproxy "*" -H Metadata:true \
+    "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com%2F" \
+    >/dev/null
 
   if [ -n "${USER_ASSIGNED_IDENTITY_CLIENT_ID:-}" ]; then
-    echo "user-assigned IMDS call:"
-    curl -sS -i --noproxy "*" -H Metadata:true \
-      "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com%2F&client_id=${USER_ASSIGNED_IDENTITY_CLIENT_ID}" | head -n 30
+    curl -sS --noproxy "*" -H Metadata:true \
+      "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com%2F&client_id=${USER_ASSIGNED_IDENTITY_CLIENT_ID}" \
+      >/dev/null
   fi
-'
+' >/dev/null 2>&1
 
 echo "Running test service via docker compose"
 set +e

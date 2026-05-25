@@ -32,7 +32,7 @@ if [ "$RUN_AZURE_TESTS" = "true" ]; then
     RUN_AZURE_TESTS=false
   fi
 else
-  echo "RUN_AZURE_TESTS is not true — Azure tests will be skipped."
+  echo "RUN_AZURE_TESTS is not true - Azure tests will be skipped."
 fi
 
 CONJUR_NETRC_FILE="${CONJUR_NETRC_PATH:-$HOME/.netrc}"
