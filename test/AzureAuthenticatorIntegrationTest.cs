@@ -64,8 +64,7 @@ public class AzureAuthenticatorIntegrationTest : Base
 ";
 
     /// <summary>
-    /// Creates a real authenticated Conjur admin client using the netrc file,
-    /// matching the approach used by conjur-api-go via LoadConfig() / NetRCPath.
+    /// Creates a real authenticated Conjur admin client using the netrc file.
     /// Reads CONJUR_APPLIANCE_URL and CONJUR_ACCOUNT from environment variables.
     /// Credentials are read from the file at CONJUR_NETRC_PATH, or ~/.netrc if
     /// CONJUR_NETRC_PATH is not set (mounted at /root/.netrc inside the container
@@ -97,7 +96,6 @@ public class AzureAuthenticatorIntegrationTest : Base
 
     /// <summary>
     /// Integration test: authn-azure with system-assigned managed identity.
-    /// Mirrors Go's TestAuthnAzure "authn-azure system-assigned identity".
     /// </summary>
     [Test]
     public void AuthnAzure_SystemAssignedIdentity()
@@ -162,7 +160,6 @@ public class AzureAuthenticatorIntegrationTest : Base
 
     /// <summary>
     /// Integration test: authn-azure with user-assigned managed identity.
-    /// Mirrors Go's TestAuthnAzure "authn-azure user-assigned identity".
     /// </summary>
     [Test]
     public void AuthnAzure_UserAssignedIdentity()

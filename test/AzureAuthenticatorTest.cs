@@ -17,7 +17,6 @@ public class AzureAuthenticatorTest : Base
     /// <summary>
     /// Verifies that when an explicit JWT is provided it is forwarded
     /// to the Conjur authenticate endpoint unchanged.
-    /// Mirrors Go's TestAzureAuthenticatorRefreshJWT.
     /// </summary>
     [Test]
     public void TestAzureAuthenticatorPassesJwtToConjur()
@@ -57,7 +56,6 @@ public class AzureAuthenticatorTest : Base
     /// <summary>
     /// Verifies that the IMDS request does not include a client_id
     /// when no client ID is configured (system-assigned identity).
-    /// Mirrors Go's TestAzureTokenRequest "creates a valid request when client ID is empty".
     /// </summary>
     [Test]
     public void TestAzureTokenRequest_NoClientId_OmitsClientIdParam()
@@ -94,7 +92,6 @@ public class AzureAuthenticatorTest : Base
     /// <summary>
     /// Verifies that the IMDS request includes a client_id query parameter
     /// when a user-assigned identity client ID is configured.
-    /// Mirrors Go's TestAzureTokenRequest "creates a valid request when client ID is provided".
     /// </summary>
     [Test]
     public void TestAzureTokenRequest_WithClientId_IncludesClientIdParam()

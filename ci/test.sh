@@ -57,7 +57,7 @@ export CONJUR_APPLIANCE_URL="http://conjur"
 
 export CONJUR_ACCOUNT="conjur"
 
-# Write .netrc with admin credentials, matching conjur-api-go's approach.
+# Write .netrc with admin credentials.
 NETRC_FILE="$(mktemp)"
 cat > "$NETRC_FILE" <<EOF
 machine conjur
@@ -70,7 +70,7 @@ export CONJUR_NETRC_PATH="$NETRC_FILE"
 export CONJUR_NETRC_FILE="$NETRC_FILE"
 ls -l "$NETRC_FILE"
 
-# Azure test env (Go parity: values must come from summon -e azure)
+# Azure test env (values must come from summon -e azure)
 export RUN_AZURE_TESTS="${RUN_AZURE_TESTS:-true}"
 
 # Required vars for Azure tests
