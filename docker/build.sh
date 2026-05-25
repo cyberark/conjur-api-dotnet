@@ -25,14 +25,15 @@ git clean -fdx || :
 cp /src/VERSION /build/VERSION
 
 # Restore nuget packages
-dotnet restore
+dotenv restore
 
 # test (single run with junit + coverage)
 dotnet build
 dotnet test \
-  --logger:"junit;LogFileName=/build/TestResults.xml" \
+  --logger:"junit;LogFilePath=/build/TestResults.xml" \
   --collect:"Code Coverage;Format=Cobertura" \
   --results-directory:"/build/TestResults"
+
 cp /build/TestResults/*/*.cobertura.xml /build/Coverage.xml
 
 # build
