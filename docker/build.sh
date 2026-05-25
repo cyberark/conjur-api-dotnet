@@ -31,13 +31,20 @@ dotnet restore
 dotnet build
 
 dotnet test test/test.csproj \
-  --logger:"junit;LogFilePath=/build/TestResults.xml" \
+  --logger:"junit;LogFileName=TestResults.xml" \
+  --logger:"console;verbosity=normal" \
   --collect:"Code Coverage;Format=Cobertura" \
   --results-directory:"/build/TestResults"
 
+# Resolve junit output deterministically
+found_junit="$(find /build/TestResults -type f -name 'TestResults.xml' | head -n 1 || true)"
+if [ -n "$found_junit" ]; then
+  cp "$found_junit" /build/TestResults.xml
+fi
+
 if [ ! -s /build/TestResults.xml ]; then
-  echo "ERROR: JUnit report was not created at /build/TestResults.xml"
-  find /build -maxdepth 4 -type f -name "*.xml" -print || true
+  echo "ERROR: JUnit report was not created."
+  find /build/TestResults -maxdepth 4 -type f -print || true
   exit 1
 fi
 
