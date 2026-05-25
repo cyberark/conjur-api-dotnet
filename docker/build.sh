@@ -27,10 +27,12 @@ cp /src/VERSION /build/VERSION
 # Restore nuget packages
 dotnet restore
 
-# test
+# test (single run with junit + coverage)
 dotnet build
-dotnet test --logger:"junit;LogFileName=/build/TestResults.xml"
-dotnet test --collect:"Code Coverage;Format=Cobertura" --results-directory:"/build/TestResults"
+dotnet test \
+  --logger:"junit;LogFileName=/build/TestResults.xml" \
+  --collect:"Code Coverage;Format=Cobertura" \
+  --results-directory:"/build/TestResults"
 cp /build/TestResults/*/*.cobertura.xml /build/Coverage.xml
 
 # build
