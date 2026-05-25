@@ -27,26 +27,33 @@ cp /src/VERSION /build/VERSION
 # Restore packages
 dotnet restore
 
-# test (single run with deterministic junit + coverage outputs)
+# test (single run with TRX + coverage)
 dotnet build
 
 dotnet test test/test.csproj \
-  --logger:"junit;LogFileName=TestResults.xml" \
-  --logger:"console;verbosity=normal" \
+  --logger:"trx;LogFileName=TestResults.trx" \
   --collect:"Code Coverage;Format=Cobertura" \
   --results-directory:"/build/TestResults"
 
-# Resolve junit output deterministically
-found_junit="$(find /build/TestResults -type f -name 'TestResults.xml' | head -n 1 || true)"
-if [ -n "$found_junit" ]; then
-  cp "$found_junit" /build/TestResults.xml
-fi
-
-if [ ! -s /build/TestResults.xml ]; then
-  echo "ERROR: JUnit report was not created."
+# find TRX
+found_trx="$(find /build/TestResults -type f -name '*.trx' | head -n 1 || true)"
+if [ -z "$found_trx" ]; then
+  echo "ERROR: TRX report was not created."
   find /build/TestResults -maxdepth 4 -type f -print || true
   exit 1
 fi
+
+# convert TRX -> JUnit XML
+trx2junit "$found_trx"
+
+# normalize paths expected by outer build.sh/Jenkins
+found_junit="$(find /build/TestResults -type f -name '*.xml' ! -name '*.cobertura.xml' | head -n 1 || true)"
+if [ -z "$found_junit" ]; then
+  echo "ERROR: JUnit XML was not created from TRX."
+  find /build/TestResults -maxdepth 4 -type f -print || true
+  exit 1
+fi
+cp "$found_junit" /build/TestResults.xml
 
 cp /build/TestResults/*/*.cobertura.xml /build/Coverage.xml
 
