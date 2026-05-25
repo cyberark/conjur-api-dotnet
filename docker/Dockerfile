@@ -8,4 +8,4 @@ RUN apt-get update -y && \
 
 RUN ln -s /src/docker/build.sh /
 RUN ln -s /src/docker/release.sh /
-CMD ["/build.sh"]
+CMD ["bash", "/build.sh"]
