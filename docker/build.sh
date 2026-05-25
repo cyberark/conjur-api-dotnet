@@ -25,7 +25,7 @@ git clean -fdx || :
 cp /src/VERSION /build/VERSION
 
 # Restore nuget packages
-dotenv restore
+dotnet restore
 
 # test (single run with junit + coverage)
 dotnet build
