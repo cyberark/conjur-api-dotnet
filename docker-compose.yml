@@ -44,7 +44,7 @@ services:
       - test
       - test/test.csproj
       - --filter
-      - FullyQualifiedName~AzureAuthenticatorTest
+      - FullyQualifiedName~AzureAuthenticatorIntegrationTest
       - --logger
       - trx;LogFileName=TestResults.xml
       - --logger
