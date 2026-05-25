@@ -27,21 +27,17 @@ cp /src/VERSION /build/VERSION
 # Restore packages
 dotnet restore
 
-# test (single run, deterministic junit + coverage outputs)
+# test (single run with deterministic junit + coverage outputs)
 dotnet build
-dotnet test \
-  --logger:"junit;LogFileName=TestResults.xml" \
+
+# Sanity check that junit logger is discoverable
+dotnet test test/test.csproj --list-loggers | tee /build/available-loggers.txt
+grep -qi "junit" /build/available-loggers.txt
+
+dotnet test test/test.csproj \
+  --logger:"junit;LogFilePath=/build/TestResults.xml" \
   --collect:"Code Coverage;Format=Cobertura" \
   --results-directory:"/build/TestResults"
-
-# Ensure junit file exists at the exact location expected by outer build.sh
-if [ ! -s /build/TestResults.xml ]; then
-  # fallback: some logger versions write under results directory
-  found_junit="$(find /build/TestResults -type f -name 'TestResults.xml' | head -n 1 || true)"
-  if [ -n "$found_junit" ]; then
-    cp "$found_junit" /build/TestResults.xml
-  fi
-fi
 
 if [ ! -s /build/TestResults.xml ]; then
   echo "ERROR: JUnit report was not created at /build/TestResults.xml"
