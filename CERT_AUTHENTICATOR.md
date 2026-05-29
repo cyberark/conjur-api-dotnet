@@ -155,15 +155,21 @@ When the Client is created with a certificate parameter:
 ## Compatibility
 
 - **Target Framework:** .NET 6.0 or later (.NET 8.0 currently)
-- **Conjur Version:** CyberArk Secrets Manager Self-Hosted v13.8+ (Conjur OSS was not tested)
-- **Not Supported:** Conjur Cloud/SaaS
+- **Conjur Version:** CyberArk Secrets Manager Self-Hosted (DAP/Enterprise) v13.8+
+- **Not Supported:** Conjur OSS, Conjur Cloud/SaaS
+
+> ⚠️ **Important:** `authn-cert` is a **CyberArk Secrets Manager Enterprise (DAP) only** feature.
+> It is **not available** in Conjur Open Source or Conjur Cloud.
+> The Conjur Enterprise appliance must have `authn-cert` listed in `CONJUR_AUTHENTICATORS`
+> and the authenticator must be configured before use.
 
 ## Requirements
 
-1. The authn-cert authenticator must be enabled on the Conjur server
-2. Client certificates must be provisioned out-of-band (e.g., by internal PKI or SPIFFE/SPIRE)
-3. For Request Mode: Conjur host must have matching workload annotations
-4. For SPIFFE Mode: Certificate must contain valid SPIFFE SAN URI
+1. CyberArk Secrets Manager Enterprise (DAP) appliance — Conjur OSS does **not** support `authn-cert`
+2. The `authn-cert/<service-id>` authenticator must be enabled on the Conjur server
+3. Client certificates must be provisioned out-of-band (e.g., by internal PKI or SPIFFE/SPIRE)
+4. For Request Mode: Conjur host must have matching workload annotations
+5. For SPIFFE Mode: Certificate must contain valid SPIFFE SAN URI
 
 ## Testing
 
