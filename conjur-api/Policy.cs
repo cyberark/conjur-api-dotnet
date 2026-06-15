@@ -33,13 +33,23 @@ public class Policy : Resource
 
         using var memoryStream = new MemoryStream();
         policyContent.CopyTo(memoryStream);
+        memoryStream.Position = 0;
 
         using var stream = new StreamContent(memoryStream);
-        stream.Headers.ContentLength = policyContent.Length;
+        stream.Headers.ContentLength = memoryStream.Length;
         loadPolicyRequest.Content = stream;
 
         var response = Client.Send(loadPolicyRequest);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = response.Content is null
+                ? string.Empty
+                : response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
+            throw new HttpRequestException(
+                $"LoadPolicy failed: {(int)response.StatusCode} {response.ReasonPhrase}. " +
+                $"Path='{path}'. Body='{errorBody}'");
+        }
         return response.Content.ReadAsStream();
     }
 
@@ -60,13 +70,24 @@ public class Policy : Resource
 
         await using var memoryStream = new MemoryStream();
         await policyContent.CopyToAsync(memoryStream, cancellationToken);
+        memoryStream.Position = 0;
 
         using var stream = new StreamContent(memoryStream);
-        stream.Headers.ContentLength = policyContent.Length;
+        stream.Headers.ContentLength = memoryStream.Length;
         loadPolicyRequest.Content = stream;
 
         var response = await Client.SendAsync(loadPolicyRequest, cancellationToken);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = response.Content is null
+                ? string.Empty
+                : await response.Content.ReadAsStringAsync(cancellationToken);
+
+            throw new HttpRequestException(
+                $"LoadPolicy failed: {(int)response.StatusCode} {response.ReasonPhrase}. " +
+                $"Path='{path}'. Body='{errorBody}'");
+        }
+
         return await response.Content.ReadAsStreamAsync(cancellationToken);
     }
 }

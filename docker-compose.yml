@@ -1,0 +1,53 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+
+  conjur:
+    image: cyberark/conjur:edge
+    command: server
+    environment:
+      DATABASE_URL: postgres://postgres@postgres/postgres
+      CONJUR_DATA_KEY: ${CONJUR_DATA_KEY}
+      CONJUR_ACCOUNT: conjur
+      CONJUR_AUTHENTICATORS: authn,authn-azure/prod
+    depends_on: [postgres]
+
+  test:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile        # the same image build.sh builds today
+    depends_on: [conjur]
+    working_dir: /src
+    volumes:
+      - .:/src
+      - ${CONJUR_NETRC_FILE:-/dev/null}:/root/.netrc:ro
+    environment:
+      RUN_AZURE_TESTS: ${RUN_AZURE_TESTS}
+      CONJUR_APPLIANCE_URL:   http://conjur
+      CONJUR_ACCOUNT:         conjur
+      CONJUR_AUTHN_API_KEY:   ${CONJUR_AUTHN_API_KEY:-}
+      CONJUR_NETRC_PATH:      /root/.netrc
+      AZURE_SUBSCRIPTION_ID: ${AZURE_SUBSCRIPTION_ID}
+      AZURE_RESOURCE_GROUP: ${AZURE_RESOURCE_GROUP}
+      USER_ASSIGNED_IDENTITY: ${USER_ASSIGNED_IDENTITY}
+      USER_ASSIGNED_IDENTITY_CLIENT_ID: ${USER_ASSIGNED_IDENTITY_CLIENT_ID}
+      NO_PROXY: "169.254.169.254,localhost,127.0.0.1,conjur"
+      no_proxy: "169.254.169.254,localhost,127.0.0.1,conjur"
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      http_proxy: ""
+      https_proxy: ""
+    command:
+      - dotnet
+      - test
+      - test/test.csproj
+      - --filter
+      - FullyQualifiedName~AzureAuthenticatorIntegrationTest
+      - --logger
+      - trx;LogFileName=TestResults.xml
+      - --logger
+      - console;verbosity=detailed
+      - --results-directory
+      - /src
