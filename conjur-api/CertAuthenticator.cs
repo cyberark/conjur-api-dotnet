@@ -17,7 +17,6 @@ public class CertAuthenticator : IAuthenticator
     private readonly SemaphoreSlim semaphoreSlim = new(1, 1);
 
     private volatile string token;
-    private readonly object timerLock = new();
     private Timer timer;
 
     /// <summary>
@@ -39,8 +38,6 @@ public class CertAuthenticator : IAuthenticator
 
         // Build the URI for the cert authentication endpoint
         // authn-cert/<service-id>/<account>[/<host-id>]/authenticate
-        // Host IDs use EscapeDataString (encodes '/' as %2F), matching Go url.PathEscape
-        // and Conjur authn-cert docs (e.g. host%2Fvm-workloads%2Fvm-01).
         if (!string.IsNullOrEmpty(hostId))
         {
             uri = new Uri($"{client.ApplianceUri}authn-cert/{Uri.EscapeDataString(serviceId)}/{Uri.EscapeDataString(client.AccountName)}/{Uri.EscapeDataString(hostId)}/authenticate");
@@ -71,7 +68,7 @@ public class CertAuthenticator : IAuthenticator
                 return localToken;
             }
 
-            var httpRequestMessage = CreateAuthenticateRequest();
+            var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, uri);
 
             localToken = client.Send(httpRequestMessage).Read();
             Interlocked.Exchange(ref token, localToken);
@@ -103,7 +100,7 @@ public class CertAuthenticator : IAuthenticator
                 return localToken;
             }
 
-            var httpRequestMessage = CreateAuthenticateRequest();
+            var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, uri);
 
             localToken = await client.SendAsync(httpRequestMessage, cancellationToken).ReadAsync(cancellationToken);
             Interlocked.Exchange(ref token, localToken);
@@ -120,37 +117,20 @@ public class CertAuthenticator : IAuthenticator
 
     #endregion
 
-    private HttpRequestMessage CreateAuthenticateRequest() =>
-        new(HttpMethod.Post, uri)
-        {
-            // authn-cert uses mTLS for credentials; body must be empty (Go SDK parity).
-            Content = new ByteArrayContent(Array.Empty<byte>())
-        };
-
     internal void StartTokenTimer(TimeSpan timeout)
     {
-        Timer newTimer = null!;
-        newTimer = new Timer(_ => OnTokenExpired(newTimer), null, timeout, Timeout.InfiniteTimeSpan);
-
-        lock (timerLock)
-        {
-            timer?.Dispose();
-            timer = newTimer;
-        }
+        timer = new Timer(TimerCallback, this, timeout, Timeout.InfiniteTimeSpan);
     }
 
-    private void OnTokenExpired(Timer expiredTimer)
+    private static void TimerCallback(object state)
     {
-        lock (timerLock)
-        {
-            if (!ReferenceEquals(timer, expiredTimer))
-                return;
-
-            timer.Dispose();
-            timer = null;
-        }
-
-        Interlocked.Exchange(ref token, null);
+        var authenticator = (CertAuthenticator)state;
+        // timer is disposable resource but there is no way to dispose it from outside
+        // so each time when token expires we dispose it
+        // will allow garbage collection of necessary client and authenticator classes
+        authenticator.timer.Dispose();
+        authenticator.timer = null;
+        Interlocked.Exchange(ref authenticator.token, null);
     }
 }
 
