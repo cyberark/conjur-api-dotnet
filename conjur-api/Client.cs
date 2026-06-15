@@ -476,23 +476,41 @@ public partial class Client
         try
         {
             var certStr = Encoding.UTF8.GetString(certPem);
-            string keyStr = null;
+            X509Certificate2 ephemeral;
 
             if (keyPem != null && keyPem.Length > 0)
             {
-                keyStr = Encoding.UTF8.GetString(keyPem);
-                // Use X509Certificate2.CreateFromPem for .NET 6+
-                return X509Certificate2.CreateFromPem(certStr, keyStr);
+                var keyStr = Encoding.UTF8.GetString(keyPem);
+                ephemeral = X509Certificate2.CreateFromPem(certStr, keyStr);
             }
             else
             {
-                // Certificate might contain the private key
-                return X509Certificate2.CreateFromPem(certStr);
+                ephemeral = X509Certificate2.CreateFromPem(certStr);
             }
+
+            // CreateFromPem uses an ephemeral key; re-import via PKCS#12 so SChannel on Windows
+            // can use the certificate for TLS client authentication.
+            return PersistCertificateForClientAuth(ephemeral);
         }
         catch (Exception ex)
         {
             throw new InvalidOperationException("Failed to load client certificate from PEM data", ex);
+        }
+    }
+
+    private static X509Certificate2 PersistCertificateForClientAuth(X509Certificate2 ephemeral)
+    {
+        try
+        {
+            var pfxBytes = ephemeral.Export(X509ContentType.Pkcs12);
+            return new X509Certificate2(
+                pfxBytes,
+                (string?)null,
+                X509KeyStorageFlags.Exportable | X509KeyStorageFlags.UserKeySet);
+        }
+        finally
+        {
+            ephemeral.Dispose();
         }
     }
 
