@@ -7,6 +7,7 @@
 
 using System.Net.Security;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using System.Reflection;
@@ -169,11 +170,7 @@ public partial class Client
             ServerCertificateCustomValidationCallback = ValidateCertificate
         };
 
-        httpClient = new HttpClient(httpClientHandler)
-        {
-            Timeout = TimeSpan.FromMilliseconds(ApiConfigurationManager.GetInstance().HttpRequestTimeout)
-        };
-        httpClient.DefaultRequestHeaders.Add("x-cybr-telemetry", GetTelemetryHeader());
+        httpClient = CreateHttpClient(httpClientHandler);
     }
 
     /// <summary>
@@ -193,18 +190,23 @@ public partial class Client
             ServerCertificateCustomValidationCallback = ValidateCertificate
         };
 
-        // Add the client certificate for mTLS
         if (clientCertificate != null)
         {
             httpClientHandler.ClientCertificateOptions = ClientCertificateOption.Manual;
             httpClientHandler.ClientCertificates.Add(clientCertificate);
         }
 
-        httpClient = new HttpClient(httpClientHandler)
+        httpClient = CreateHttpClient(httpClientHandler);
+    }
+
+    private static HttpClient CreateHttpClient(HttpClientHandler handler)
+    {
+        var client = new HttpClient(handler)
         {
             Timeout = TimeSpan.FromMilliseconds(ApiConfigurationManager.GetInstance().HttpRequestTimeout)
         };
-        httpClient.DefaultRequestHeaders.Add("x-cybr-telemetry", GetTelemetryHeader());
+        client.DefaultRequestHeaders.Add("x-cybr-telemetry", GetTelemetryHeader());
+        return client;
     }
 
     /// <summary>
@@ -476,21 +478,20 @@ public partial class Client
         try
         {
             var certStr = Encoding.UTF8.GetString(certPem);
-            string keyStr = null;
+            string keyStr = keyPem != null && keyPem.Length > 0 ? Encoding.UTF8.GetString(keyPem) : null;
 
-            if (keyPem != null && keyPem.Length > 0)
-            {
-                keyStr = Encoding.UTF8.GetString(keyPem);
-                // Use X509Certificate2.CreateFromPem for .NET 6+
-                return X509Certificate2.CreateFromPem(certStr, keyStr);
-            }
-            else
-            {
-                // Certificate might contain the private key
-                return X509Certificate2.CreateFromPem(certStr);
-            }
+            var ephemeral = keyStr != null
+                ? X509Certificate2.CreateFromPem(certStr, keyStr)
+                : X509Certificate2.CreateFromPem(certStr);
+
+            // Re-import via PFX so the key is persisted for SChannel on Windows.
+            return new X509Certificate2(ephemeral.Export(X509ContentType.Pfx));
         }
-        catch (Exception ex)
+        catch (CryptographicException ex)
+        {
+            throw new InvalidOperationException("Failed to load client certificate from PEM data", ex);
+        }
+        catch (ArgumentException ex)
         {
             throw new InvalidOperationException("Failed to load client certificate from PEM data", ex);
         }

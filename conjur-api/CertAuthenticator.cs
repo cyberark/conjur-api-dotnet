@@ -33,6 +33,10 @@ public class CertAuthenticator : IAuthenticator
     /// <param name="hostId">The host ID for request mode (optional; leave empty for SPIFFE mode).</param>
     public CertAuthenticator(Client client, string serviceId, string hostId = "")
     {
+        ArgumentNullException.ThrowIfNull(client);
+        if (string.IsNullOrEmpty(serviceId))
+            throw new ArgumentException("serviceId must not be null or empty.", nameof(serviceId));
+
         this.client = client;
         HostId = hostId;
 
@@ -68,7 +72,10 @@ public class CertAuthenticator : IAuthenticator
                 return localToken;
             }
 
-            var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, uri);
+            var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, uri)
+            {
+                Content = new ByteArrayContent(Array.Empty<byte>())
+            };
 
             localToken = client.Send(httpRequestMessage).Read();
             Interlocked.Exchange(ref token, localToken);
@@ -100,7 +107,10 @@ public class CertAuthenticator : IAuthenticator
                 return localToken;
             }
 
-            var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, uri);
+            var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, uri)
+            {
+                Content = new ByteArrayContent(Array.Empty<byte>())
+            };
 
             localToken = await client.SendAsync(httpRequestMessage, cancellationToken).ReadAsync(cancellationToken);
             Interlocked.Exchange(ref token, localToken);
