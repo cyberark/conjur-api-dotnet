@@ -7,6 +7,7 @@
 
 using System.Net.Security;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using System.Reflection;
@@ -169,11 +170,43 @@ public partial class Client
             ServerCertificateCustomValidationCallback = ValidateCertificate
         };
 
-        httpClient = new HttpClient(httpClientHandler)
+        httpClient = CreateHttpClient(httpClientHandler);
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="T:Conjur.Client"/> class with mTLS support.
+    /// </summary>
+    /// <param name="applianceUri">Appliance URI.</param>
+    /// <param name="account">Conjur account.</param>
+    /// <param name="clientCertificate">Client certificate for mTLS.</param>
+    public Client(string applianceUri, string account, X509Certificate2 clientCertificate)
+    {
+        AccountName = account;
+        ApplianceUri = NormalizeBaseUri(applianceUri);
+        TrustedCertificates = [];
+
+        var httpClientHandler = new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = ValidateCertificate
+        };
+
+        if (clientCertificate != null)
+        {
+            httpClientHandler.ClientCertificateOptions = ClientCertificateOption.Manual;
+            httpClientHandler.ClientCertificates.Add(clientCertificate);
+        }
+
+        httpClient = CreateHttpClient(httpClientHandler);
+    }
+
+    private static HttpClient CreateHttpClient(HttpClientHandler handler)
+    {
+        var client = new HttpClient(handler)
         {
             Timeout = TimeSpan.FromMilliseconds(ApiConfigurationManager.GetInstance().HttpRequestTimeout)
         };
-        httpClient.DefaultRequestHeaders.Add("x-cybr-telemetry", GetTelemetryHeader());
+        client.DefaultRequestHeaders.Add("x-cybr-telemetry", GetTelemetryHeader());
+        return client;
     }
 
     /// <summary>
@@ -404,6 +437,89 @@ public partial class Client
 
     [GeneratedRegex("//+")]
     private static partial Regex MultipleSlashesPattern();
+
+    /// <summary>
+    /// Loads a client certificate from file paths (PEM format).
+    /// </summary>
+    /// <param name="certPath">Path to the PEM-encoded client certificate file.</param>
+    /// <param name="keyPath">Path to the PEM-encoded private key file (optional if cert contains both).</param>
+    /// <returns>X509Certificate2 containing the certificate and private key.</returns>
+    public static X509Certificate2 LoadClientCertificateFromFiles(string certPath, string keyPath = null)
+    {
+        if (string.IsNullOrEmpty(certPath))
+        {
+            throw new ArgumentNullException(nameof(certPath));
+        }
+
+        var certData = File.ReadAllBytes(certPath);
+        byte[] keyData = null;
+
+        if (!string.IsNullOrEmpty(keyPath))
+        {
+            keyData = File.ReadAllBytes(keyPath);
+        }
+
+        return LoadClientCertificateFromPem(certData, keyData);
+    }
+
+    /// <summary>
+    /// Loads a client certificate from PEM-encoded strings.
+    /// </summary>
+    /// <param name="certPem">PEM-encoded certificate data.</param>
+    /// <param name="keyPem">PEM-encoded private key data (optional if cert contains both).</param>
+    /// <returns>X509Certificate2 containing the certificate and private key.</returns>
+    public static X509Certificate2 LoadClientCertificateFromPem(byte[] certPem, byte[] keyPem = null)
+    {
+        if (certPem == null || certPem.Length == 0)
+        {
+            throw new ArgumentNullException(nameof(certPem));
+        }
+
+        try
+        {
+            var certStr = Encoding.UTF8.GetString(certPem);
+            string keyStr = keyPem != null && keyPem.Length > 0 ? Encoding.UTF8.GetString(keyPem) : null;
+
+            var ephemeral = keyStr != null
+                ? X509Certificate2.CreateFromPem(certStr, keyStr)
+                : X509Certificate2.CreateFromPem(certStr);
+
+            // Re-import via PFX so the key is persisted for SChannel on Windows.
+            return new X509Certificate2(ephemeral.Export(X509ContentType.Pfx));
+        }
+        catch (CryptographicException ex)
+        {
+            throw new InvalidOperationException("Failed to load client certificate from PEM data", ex);
+        }
+        catch (ArgumentException ex)
+        {
+            throw new InvalidOperationException("Failed to load client certificate from PEM data", ex);
+        }
+    }
+
+    /// <summary>
+    /// Loads a client certificate from PEM-encoded strings.
+    /// </summary>
+    /// <param name="certPem">PEM-encoded certificate data as string.</param>
+    /// <param name="keyPem">PEM-encoded private key data as string (optional).</param>
+    /// <returns>X509Certificate2 containing the certificate and private key.</returns>
+    public static X509Certificate2 LoadClientCertificateFromPem(string certPem, string keyPem = null)
+    {
+        if (string.IsNullOrEmpty(certPem))
+        {
+            throw new ArgumentNullException(nameof(certPem));
+        }
+
+        var certBytes = Encoding.UTF8.GetBytes(certPem);
+        byte[] keyBytes = null;
+
+        if (!string.IsNullOrEmpty(keyPem))
+        {
+            keyBytes = Encoding.UTF8.GetBytes(keyPem);
+        }
+
+        return LoadClientCertificateFromPem(certBytes, keyBytes);
+    }
 
     /// <summary>
     /// Validates the Conjur appliance certificate.
