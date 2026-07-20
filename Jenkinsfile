@@ -40,6 +40,7 @@ pipeline {
 
   parameters {
     booleanParam(name: 'RUN_AZURE_TESTS', defaultValue: false, description: 'Run integration tests against Azure')
+    booleanParam(name: 'RUN_GCP_TESTS', defaultValue: false, description: 'Run integration tests against GCP')
   }
 
   stages {
@@ -77,6 +78,12 @@ pipeline {
         INFRAPOOL_AZURE_EXECUTORV2_AGENTS = getInfraPoolAgent(type: "AzureExecutorV2", quantity: 1, duration: 1)
         INFRAPOOL_AZURE_EXECUTORV2_AGENT_0 = INFRAPOOL_AZURE_EXECUTORV2_AGENTS[0]
         azureInfrapool = infraPoolConnect(INFRAPOOL_AZURE_EXECUTORV2_AGENT_0, {})
+      }
+
+      if (params.RUN_GCP_TESTS) {
+        INFRAPOOL_GCP_EXECUTORV2_AGENTS = getInfraPoolAgent(type: "GcpExecutorV2", quantity: 1, duration: 1)
+        INFRAPOOL_GCP_EXECUTORV2_AGENT_0 = INFRAPOOL_GCP_EXECUTORV2_AGENTS[0]
+        gcpInfrapool = infraPoolConnect(INFRAPOOL_GCP_EXECUTORV2_AGENT_0, {})
       }
     }
   }
@@ -139,9 +146,39 @@ pipeline {
         script {
           azureInfrapool.agentSh '''
             set +e
+            export TEST_FILTER="FullyQualifiedName~AzureAuthenticatorIntegrationTest"
             summon -e azure bash ./ci/test.sh
             rc=$?
             exit $rc
+          '''
+        }
+      }
+    }
+
+    stage('Run GCP tests') {
+      when {
+        expression { params.RUN_GCP_TESTS }
+      }
+      environment {
+        GCP_CTX_DIR = "gcp"
+      }
+      steps {
+        script {
+          // 1) Fetch token + project-id on GCP VM
+          gcpInfrapool.agentSh "bash ./ci/get_gcp_token.sh host/data/test/gcp-apps/test-app conjur ${GCP_CTX_DIR}"
+          gcpInfrapool.agentStash name: 'gcp-token-out', includes: "${GCP_CTX_DIR}/*"
+
+          // 2) Bring token artifacts to regular docker-capable agent
+          infrapool.agentUnstash name: 'gcp-token-out'
+
+          // 3) Run test orchestration with GCP mode enabled
+          infrapool.agentSh '''
+          set -e
+          export TEST_GCP=true
+          export GCP_CTX_DIR=gcp
+          export RUN_AZURE_TESTS=false
+          export TEST_FILTER="FullyQualifiedName~GCPAuthenticatorTest"
+          bash ./ci/test.sh
           '''
         }
       }

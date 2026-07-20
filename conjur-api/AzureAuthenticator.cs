@@ -7,6 +7,7 @@
 
 #nullable enable
 
+using System.Diagnostics;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json.Serialization;
@@ -18,7 +19,7 @@ namespace Conjur;
 /// Authenticates to Conjur using an Azure Managed Identity JWT token
 /// obtained from the Azure Instance Metadata Service (IMDS).
 /// </summary>
-public class AzureAuthenticator : IAuthenticator
+public class AzureAuthenticator : IAuthenticator, IDisposable
 {
     private const string ImdsTokenPath = "/metadata/identity/oauth2/token";
 
@@ -32,8 +33,11 @@ public class AzureAuthenticator : IAuthenticator
     private readonly string imdsBaseUrl;
     private readonly string imdsApiVersion;
     private readonly string? clientId;
+    private readonly bool ownsConjurHttpClient;
+    private readonly bool ownsImdsHttpClient;
 
     private bool disableCertCheck;
+    private bool disposed;
 
     /// <summary>
     /// Gets the collection of extra certificates trusted for authenticating the
@@ -82,12 +86,14 @@ public class AzureAuthenticator : IAuthenticator
         this.clientId = clientId;
         this.imdsBaseUrl = imdsBaseUrl;
         this.imdsApiVersion = imdsApiVersion;
+        ownsConjurHttpClient = false;
+        ownsImdsHttpClient = false;
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AzureAuthenticator"/> class
     /// with production-ready <see cref="HttpClient"/> instances.
-    /// The IMDS client bypasses the system proxy (required on Windows — 169.254.169.254
+    /// The IMDS client bypasses the system proxy (required on Windows ï¿½ 169.254.169.254
     /// is a link-local address and must never be routed through a proxy).
     /// The Conjur client uses certificate validation that supports custom trusted certificates.
     /// </summary>
@@ -136,6 +142,9 @@ public class AzureAuthenticator : IAuthenticator
         {
             ServerCertificateCustomValidationCallback = ValidateCertificate
         });
+
+        ownsConjurHttpClient = true;
+        ownsImdsHttpClient = true;
     }
 
     #region IAuthenticator implementation
@@ -164,7 +173,18 @@ public class AzureAuthenticator : IAuthenticator
     /// Disables SSL certificate validation for the Conjur connection.
     /// Warning: this is a security risk and should only be used for testing purposes.
     /// </summary>
-    public void DisableCertCheck() => disableCertCheck = true;
+    public void DisableCertCheck()
+    {
+        if (!disableCertCheck)
+        {
+            Trace.TraceWarning(
+                "AzureAuthenticator.DisableCertCheck() was invoked. " +
+                "TLS certificate validation for the Conjur connection is now DISABLED. " +
+                "Do not use this in production.");
+        }
+
+        disableCertCheck = true;
+    }
 
     /// <summary>
     /// Re-enables SSL certificate validation for the Conjur connection.
@@ -203,7 +223,8 @@ public class AzureAuthenticator : IAuthenticator
         return sslPolicyErrors switch
         {
             SslPolicyErrors.None => true,
-            SslPolicyErrors.RemoteCertificateChainErrors => chain.VerifyWithExtraRoots(certificate, TrustedCertificates),
+            SslPolicyErrors.RemoteCertificateChainErrors when chain is not null && certificate is not null
+                => chain.VerifyWithExtraRoots(certificate, TrustedCertificates),
             _ => false
         };
     }
@@ -251,12 +272,12 @@ public class AzureAuthenticator : IAuthenticator
     /// </summary>
     private async Task<string> GetConjurTokenAsync(string azureJwt, CancellationToken cancellationToken)
     {
-        var formContent = new FormUrlEncodedContent(
+        using var formContent = new FormUrlEncodedContent(
         [
             new KeyValuePair<string, string>("jwt", azureJwt)
         ]);
 
-        var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, GetConjurAuthenticateUrl())
+        using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, GetConjurAuthenticateUrl())
         {
             Content = formContent
         };
@@ -266,6 +287,24 @@ public class AzureAuthenticator : IAuthenticator
 
         var data = Convert.FromBase64String(stringBase64Response);
         return Encoding.UTF8.GetString(data);
+    }
+
+    /// <summary>
+    /// Disposes resources used by the <see cref="AzureAuthenticator"/>.
+    /// </summary>
+    public void Dispose()
+    {
+        if (disposed)
+            return;
+
+        if (ownsConjurHttpClient)
+            conjurHttpClient.Dispose();
+
+        if (ownsImdsHttpClient)
+            imdsHttpClient.Dispose();
+
+        disposed = true;
+        GC.SuppressFinalize(this);
     }
 }
 
