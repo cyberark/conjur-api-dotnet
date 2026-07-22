@@ -11,7 +11,7 @@ services:
       DATABASE_URL: postgres://postgres@postgres/postgres
       CONJUR_DATA_KEY: ${CONJUR_DATA_KEY}
       CONJUR_ACCOUNT: conjur
-      CONJUR_AUTHENTICATORS: authn,authn-azure/prod
+      CONJUR_AUTHENTICATORS: authn,authn-azure/prod,authn-jwt/gcp
     depends_on: [postgres]
 
   test:
@@ -39,15 +39,15 @@ services:
       HTTPS_PROXY: ""
       http_proxy: ""
       https_proxy: ""
+      TEST_GCP: ${TEST_GCP}
+      GCP_PROJECT_ID: ${GCP_PROJECT_ID}
+      GCP_ID_TOKEN: ${GCP_ID_TOKEN}
     command:
-      - dotnet
-      - test
-      - test/test.csproj
-      - --filter
-      - FullyQualifiedName~AzureAuthenticatorIntegrationTest
-      - --logger
-      - trx;LogFileName=TestResults.xml
-      - --logger
-      - console;verbosity=detailed
-      - --results-directory
-      - /src
+      - bash
+      - -lc
+      - >
+        dotnet test test/test.csproj
+        ${TEST_FILTER:+--filter "$TEST_FILTER"}
+        --logger "trx;LogFileName=TestResults.xml"
+        --logger "console;verbosity=detailed"
+        --results-directory /src

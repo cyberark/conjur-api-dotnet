@@ -70,48 +70,52 @@ export CONJUR_NETRC_PATH="$NETRC_FILE"
 export CONJUR_NETRC_FILE="$NETRC_FILE"
 ls -l "$NETRC_FILE"
 
-# Azure test env (values must come from summon -e azure)
-export RUN_AZURE_TESTS="${RUN_AZURE_TESTS:-true}"
+# modes
+export RUN_AZURE_TESTS="${RUN_AZURE_TESTS:-false}"
+export TEST_GCP="${TEST_GCP:-${INFRAPOOL_TEST_GCP:-false}}"
 
-# Required vars for Azure tests
-: "${AZURE_SUBSCRIPTION_ID:?AZURE_SUBSCRIPTION_ID is required}"
-: "${AZURE_RESOURCE_GROUP:?AZURE_RESOURCE_GROUP is required}"
-: "${USER_ASSIGNED_IDENTITY:?USER_ASSIGNED_IDENTITY is required}"
-: "${USER_ASSIGNED_IDENTITY_CLIENT_ID:?USER_ASSIGNED_IDENTITY_CLIENT_ID is required}"
+# Azure env
+export AZURE_SUBSCRIPTION_ID="${AZURE_SUBSCRIPTION_ID:-${INFRAPOOL_AZURE_SUBSCRIPTION_ID:-}}"
+export AZURE_RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-${INFRAPOOL_AZURE_RESOURCE_GROUP:-}}"
+export USER_ASSIGNED_IDENTITY="${USER_ASSIGNED_IDENTITY:-${INFRAPOOL_USER_ASSIGNED_IDENTITY:-}}"
+export USER_ASSIGNED_IDENTITY_CLIENT_ID="${USER_ASSIGNED_IDENTITY_CLIENT_ID:-${INFRAPOOL_USER_ASSIGNED_IDENTITY_CLIENT_ID:-}}"
 
-docker compose run --rm --entrypoint bash test -lc '
-  set -e
-  env | grep -Ei "proxy" >/dev/null 2>&1 || true
-
-  curl -sS --noproxy "*" -H Metadata:true \
-    "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com%2F" \
-    >/dev/null
-
-  if [ -n "${USER_ASSIGNED_IDENTITY_CLIENT_ID:-}" ]; then
-    curl -sS --noproxy "*" -H Metadata:true \
-      "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com%2F&client_id=${USER_ASSIGNED_IDENTITY_CLIENT_ID}" \
-      >/dev/null
+# GCP env from stashed files
+if [ "${TEST_GCP}" = "true" ]; then
+  GCP_CTX_DIR="${GCP_CTX_DIR:-gcp}"
+  if [ -f "${GCP_CTX_DIR}/project-id" ]; then
+    read -r GCP_PROJECT_ID < "${GCP_CTX_DIR}/project-id"
+    export GCP_PROJECT_ID
   fi
-' >/dev/null 2>&1
+  if [ -f "${GCP_CTX_DIR}/token" ]; then
+    read -r GCP_ID_TOKEN < "${GCP_CTX_DIR}/token"
+    export GCP_ID_TOKEN
+  fi
 
-echo "Running test service via docker compose"
+  : "${GCP_PROJECT_ID:?GCP_PROJECT_ID is required for GCP tests}"
+  : "${GCP_ID_TOKEN:?GCP_ID_TOKEN is required for GCP tests}"
+fi
+
+# Azure checks only when Azure mode is enabled
+if [ "${RUN_AZURE_TESTS}" = "true" ]; then
+  : "${AZURE_SUBSCRIPTION_ID:?AZURE_SUBSCRIPTION_ID is required}"
+  : "${AZURE_RESOURCE_GROUP:?AZURE_RESOURCE_GROUP is required}"
+  : "${USER_ASSIGNED_IDENTITY:?USER_ASSIGNED_IDENTITY is required}"
+  : "${USER_ASSIGNED_IDENTITY_CLIENT_ID:?USER_ASSIGNED_IDENTITY_CLIENT_ID is required}"
+fi
+
+echo "Running tests via docker compose..."
 set +e
-docker compose run --rm test || {
-  rc=$?
-  echo "Docker compose failed rc=$rc"
-  docker compose run --rm --entrypoint sh test -c 'command -v dotnet; dotnet --info' || true
-  exit $rc
-}
+docker compose run --rm test
 rc=$?
 set -e
 
 if [ "$rc" -ne 0 ]; then
-  echo "Test container failed with rc=$rc"
-  echo "Dumping Conjur logs..."
+  echo "ci/test.sh: test container failed with rc=$rc"
+  echo "ci/test.sh: dumping Conjur logs..."
   docker compose logs --no-color --timestamps --tail=200 conjur || true
-  echo "Dumping Postgres logs..."
+  echo "ci/test.sh: dumping Postgres logs..."
   docker compose logs --no-color --timestamps --tail=200 postgres || true
 fi
 
-echo "Docker compose run exit code=$rc"
 exit $rc
