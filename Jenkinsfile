@@ -12,7 +12,7 @@ properties([
 // Performs release promotion.  No other stages will be run
 if (params.MODE == "PROMOTE") {
   release.promote(params.VERSION_TO_PROMOTE) { infrapool, sourceVersion, targetVersion, assetDirectory ->
-    // Release the package to Artifactory and Nuget.org
+    // Push the package to Nuget.org; release.promote() handles Artifactory.
     infrapool.agentSh "ASSET_DIR=${assetDirectory} summon -e promote ./release.sh"
   }
   // Copy Github Enterprise release to Github
@@ -193,11 +193,9 @@ pipeline {
       steps {
         script {
           release(infrapool) { billOfMaterialsDirectory, assetDirectory, toolsDirectory ->
-            // Copy any artifacts to assetDirectory to attach them to the Github release
+            // Copy built artifacts to assetDirectory; release() uploads them to
+            // Artifactory and attaches them to the GitHub release.
             infrapool.agentSh "cp -r bin/* ${assetDirectory}"
-
-            // Release the package to Artifactory
-            infrapool.agentSh "ASSET_DIR=${assetDirectory} summon -e release ./release.sh"
           }
         }
       }
