@@ -3,11 +3,10 @@ set -euo pipefail
 
 cd /artifacts
 
-dotnet nuget add source "https://$WRITE_ARTIFACTORY_URL/artifactory/api/nuget/conjur-api-dotnet" --name "conjur-api-dotnet" \
-     --username "$WRITE_ARTIFACTORY_USERNAME" --password "$WRITE_ARTIFACTORY_PASSWORD" --store-password-in-clear-text
-
-dotnet nuget push conjur-api.*.nupkg --source "conjur-api-dotnet"
-
+# Artifactory no longer hosts a NuGet feed for this package (the old
+# NuGet feed's host is retired). The .nupkg is uploaded to Artifactory
+# as a generic release asset by the shared library's release()/promote()
+# steps instead - see conjEntArtifactory.groovy.
 if [ "${NUGET_API_KEY:-}" != "" ]; then
   dotnet nuget push conjur-api.*.nupkg --source "https://api.nuget.org/v3/index.json" -k "$NUGET_API_KEY"
 fi

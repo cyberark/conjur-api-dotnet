@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+- The Release stage no longer runs a repo-level Artifactory push. Artifactory
+  publishing is now handled entirely by the shared release library; the RELEASE
+  stage only copies build artifacts for it to upload. (CNJR-14561)
+
 ## [3.2.3] - 2025-12-15
 
 ### Changed
