@@ -6,10 +6,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.3.0] - 2026-08-04
+
+### Added
+- `AzureAuthenticator` for authenticating via Azure IMDS, supporting both
+  system-assigned and user-assigned managed identities. (CNJR-13672)
+- `GCPAuthenticator` for authenticating via the GCP instance metadata identity
+  token, with `RefreshJwtAsync` for token renewal. (CNJR-14035)
+- `CertAuthenticator` for certificate-based (mTLS) authentication, plus a new
+  `Client(string applianceUri, string account, X509Certificate2 clientCertificate)`
+  constructor and the `Client.LoadClientCertificateFromFiles` and
+  `Client.LoadClientCertificateFromPem` helpers for loading PEM certificate and
+  key material. (CNJR-13931)
+
 ### Changed
 - The Release stage no longer runs a repo-level Artifactory push. Artifactory
   publishing is now handled entirely by the shared release library; the RELEASE
   stage only copies build artifacts for it to upload. (CNJR-14561)
+
+### Fixed
+- `Policy.LoadPolicy` and `LoadPolicyAsync` now rewind the buffered policy stream
+  before sending, so policy content is no longer transmitted as an empty body.
+- Failed policy loads now raise an `HttpRequestException` that includes the
+  status code, path, and Conjur response body instead of the bare status
+  assertion from `EnsureSuccessStatusCode`.
 
 ## [3.2.3] - 2025-12-15
 
